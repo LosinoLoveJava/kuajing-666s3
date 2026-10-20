@@ -13,8 +13,28 @@ class PhoneAccessController extends Controller
     {
         $mode = $request->query('mode', 'login');
         abort_unless(in_array($mode, ['login', 'register', 'reset_password'], true), 404);
+        // The application can sit behind a reverse proxy that rewrites the
+        // request host. Check both the request and the URL Laravel generates
+        // for the current portal so the seller phone form is selected reliably.
+        $sellerHost = strtolower('seller.'.config('portals.domain'));
+        $hostCandidates = [
+            $request->getHost(),
+            $request->getHttpHost(),
+            parse_url($request->fullUrl(), PHP_URL_HOST),
+            parse_url(url('/'), PHP_URL_HOST),
+        ];
+        $isSellerPortal = false;
+        foreach ($hostCandidates as $host) {
+            if ($host && strtolower($host) === $sellerHost) {
+                $isSellerPortal = true;
+                break;
+            }
+        }
+        if ($isSellerPortal && $mode === 'register') {
+            return redirect()->route('shops.create');
+        }
         $countries = app(PhoneNumber::class)->countries();
-        return view('frontend.phone_access', compact('mode', 'countries'));
+        return view('frontend.phone_access', compact('mode', 'countries', 'isSellerPortal'));
     }
 
     public function sendCode(Request $request)

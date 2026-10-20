@@ -375,7 +375,7 @@ Route::group(['middleware' => ['auth']], function() {
     });
 });
 
-Route::resource('shops', ShopController::class);
+Route::resource('shops', ShopController::class)->middleware(\App\Http\Middleware\VerifyCsrfToken::class);
 
 Route::get('/instamojo/payment/pay-success', [InstamojoController::class, 'success'])->name('instamojo.success');
 

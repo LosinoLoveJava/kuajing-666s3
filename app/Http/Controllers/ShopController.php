@@ -39,7 +39,6 @@ class ShopController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function create( Request $request ) {
-         Upload::where('user_id', 0)->delete();
         if ( Auth::check() )
         {
             if ( Auth::user()->user_type == 'admin' )
@@ -68,7 +67,8 @@ class ShopController extends Controller
             {
                 Cookie::queue('invitation_code', $request->invitation_code, 720);
             }
-            return view('frontend.seller_form');
+            $countries = app(\App\Services\PhoneNumber::class)->countries();
+            return view('frontend.seller_form', compact('countries'));
         }
     }
 
@@ -80,6 +80,14 @@ class ShopController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store( Request $request ) {
+        if (!Auth::check()) {
+            // The public shop application uses the same verified phone registration as customers.
+            $user = app(\App\Services\SellerRegistration::class)->register($request);
+            auth()->login($user, false);
+            $request->session()->regenerate();
+            flash(translate('Your Shop has been created successfully!'))->success();
+            return redirect()->route('shops.index');
+        }
         
          $package = SellerPackage::where(['is_default' => 1 ])->first();
          $package_id = $package['id'];

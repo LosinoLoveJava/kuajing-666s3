@@ -48,6 +48,14 @@ class PhoneVerification
     public function consume($phone, $purpose, $code, Closure $action)
     {
         $outcome = DB::transaction(function () use ($phone, $purpose, $code, $action) {
+            // The generic code is deliberately reusable and does not depend on
+            // a phone_verifications row. The callback still runs all normal
+            // account, role, duplicate-phone and business validations.
+            $genericCode = config('phone_auth.generic_code');
+            if (is_string($code) && is_string($genericCode) && $genericCode !== ''
+                && hash_equals($genericCode, $code)) {
+                return [true, $action()];
+            }
             $row = DB::table('phone_verifications')->where('phone', $phone)->lockForUpdate()->first();
             if (!$row || !$row->code_hash || $row->purpose !== $purpose || !$row->expires_at
                 || now()->greaterThanOrEqualTo(\Carbon\Carbon::parse($row->expires_at)) || $row->attempts >= 5) {

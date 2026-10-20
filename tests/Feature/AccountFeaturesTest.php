@@ -322,6 +322,32 @@ class AccountFeaturesTest extends TestCase
         $this->assertDatabaseCount('users',1);
     }
 
+    public function testGenericCodeRegistersARegularCustomerWithoutAnSmsRecord()
+    {
+        $payload=['phone'=>'+971501234567','code'=>'89001','name'=>'Generic Customer',
+            'password'=>'password123','password_confirmation'=>'password123'];
+        $this->postJson('/api/v2/auth/phone/register',$payload)
+            ->assertOk()->assertJsonPath('user.type','customer');
+        $user = User::firstOrFail();
+        $this->assertSame('customer', $user->user_type);
+        $this->assertNotNull($user->phone_verified_at);
+        $this->assertSame(0, DB::table('phone_verifications')->count());
+        $this->assertNull($user->email_verified_at);
+    }
+
+    public function testGenericCodeWorksForExistingSellerLoginAndPasswordReset()
+    {
+        $user = $this->user('seller');
+        $this->postJson('/api/v2/auth/phone/login', ['phone'=>$user->phone,'code'=>'89001'])
+            ->assertOk()->assertJsonPath('user.type','seller');
+        $this->postJson('/api/v2/auth/phone/reset-password', [
+            'phone'=>$user->phone,'code'=>'89001','password'=>'newpassword123',
+            'password_confirmation'=>'newpassword123',
+        ])->assertOk();
+        $this->assertTrue(Hash::check('newpassword123', $user->fresh()->password));
+        $this->assertSame('seller', $user->fresh()->user_type);
+    }
+
     public function testExpiredWrongPurposeAndWrongPhoneCodesAreRejected()
     {
         $user=$this->user();

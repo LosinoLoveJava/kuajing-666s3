@@ -1,6 +1,7 @@
 @extends('frontend.layouts.app')
 
 @section('content')
+    @php $isSellerPortal = request()->getHost() === 'seller.'.config('portals.domain'); @endphp
     <section class="gry-bg py-5">
         <div class="profile">
             <div class="container">
@@ -14,7 +15,7 @@
                             </div>
 
                             <div class="px-4 py-3 py-lg-4">
-                                <a class="btn btn-outline-primary btn-block mb-3" href="{{ route('phone.access') }}">{{ translate('Log in or register by phone') }}</a>
+                                <a class="btn btn-outline-primary btn-block mb-3" href="{{ route('phone.access') }}">{{ translate($isSellerPortal ? 'Phone login' : 'Log in or register by phone') }}</a>
                                 <div class="">
                                     <form class="form-default" role="form" action="{{ route('login') }}" method="POST">
                                         @csrf
@@ -128,7 +129,7 @@
                                 </div>
                                 <div class="text-center">
                                     <p class="text-muted mb-0">{{ translate('Dont have an account?')}}</p>
-                                    <a href="{{ route('user.registration') }}">{{ translate('Register Now')}}</a>
+                                    <a href="{{ $isSellerPortal ? route('shops.create') : route('user.registration') }}">{{ translate('Register Now')}}</a>
                                 </div>
                             </div>
                         </div>
@@ -152,6 +153,7 @@
             }
         }
 
+        if (input) {
         var iti = intlTelInput(input, {
             separateDialCode: true,
             utilsScript: "{{ static_asset('assets/js/intlTelutils.js') }}?1590403638580",
@@ -174,6 +176,7 @@
             $('input[name=country_code]').val(country.dialCode);
 
         });
+        }
 
         function toggleEmailPhone(el){
             if(isPhoneShown){

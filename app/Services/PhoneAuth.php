@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Closure;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -10,6 +11,12 @@ use Illuminate\Validation\ValidationException;
 
 class PhoneAuth
 {
+    private function verificationCodeRule()
+    {
+        $genericCode = preg_quote((string) config('phone_auth.generic_code', '89001'), '/');
+        return 'regex:/^(?:[0-9]{6}|'.$genericCode.')$/D';
+    }
+
     public function send(Request $request)
     {
         $data = $request->validate(['phone' => 'required|string|max:40', 'country' => 'nullable|string|size:2',
@@ -25,13 +32,13 @@ class PhoneAuth
         app(PhoneVerification::class)->send($phone, $data['purpose'], $request->ip());
     }
 
-    public function register(Request $request)
+    public function register(Request $request, Closure $onRegistered = null)
     {
         $data = $request->validate(['phone' => 'required|string|max:40', 'country' => 'nullable|string|size:2',
             'name' => 'required|string|max:191', 'password' => 'required|string|min:8|max:100|confirmed',
-            'code' => 'required|string|regex:/^[0-9]{6}$/D']);
+            'code' => ['required', 'string', $this->verificationCodeRule()]]);
         $phone = app(PhoneNumber::class)->normalize($data['phone'], $data['country'] ?? null);
-        return app(PhoneVerification::class)->consume($phone, 'register', $data['code'], function () use ($phone, $data) {
+        return app(PhoneVerification::class)->consume($phone, 'register', $data['code'], function () use ($phone, $data, $onRegistered) {
             if (app(PhoneNumber::class)->user($phone)) {
                 throw ValidationException::withMessages(['phone' => 'Phone already registered.']);
             }
@@ -53,6 +60,8 @@ class PhoneAuth
                 if ($parent) { $user->referred_by = $parent->id; $user->pid = $parent->id; }
             }
             $user->save();
+            // Shop creation must succeed in the same transaction as account creation and code consumption.
+            if ($onRegistered) { $onRegistered($user); }
             return $user;
         });
     }
@@ -61,7 +70,7 @@ class PhoneAuth
     {
         $data = $request->validate(['phone' => 'required|string|max:40', 'country' => 'nullable|string|size:2',
             'password' => 'nullable|required_without:code|string|max:100',
-            'code' => 'nullable|required_without:password|string|regex:/^[0-9]{6}$/D']);
+            'code' => ['nullable', 'required_without:password', 'string', $this->verificationCodeRule()]]);
         $phone = app(PhoneNumber::class)->normalize($data['phone'], $data['country'] ?? null);
         $key = 'phone-login:'.hash('sha256', $phone.'|'.$request->ip());
         if (RateLimiter::tooManyAttempts($key, 10)) { abort(429, 'Too many login attempts.'); }
@@ -87,7 +96,8 @@ class PhoneAuth
     public function resetPassword(Request $request)
     {
         $data = $request->validate(['phone' => 'required|string|max:40', 'country' => 'nullable|string|size:2',
-            'password' => 'required|string|min:8|max:100|confirmed', 'code' => 'required|string|regex:/^[0-9]{6}$/D']);
+            'password' => 'required|string|min:8|max:100|confirmed',
+            'code' => ['required', 'string', $this->verificationCodeRule()]]);
         $phone = app(PhoneNumber::class)->normalize($data['phone'], $data['country'] ?? null);
         app(PhoneVerification::class)->consume($phone, 'reset_password', $data['code'], function () use ($phone, $data) {
             $user = app(PhoneNumber::class)->user($phone);

@@ -26,6 +26,8 @@
             <div class="col-xxl-5 col-xl-6 col-md-8 mx-auto">
                 <form id="shop" class="" action="{{ route('shops.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
+                    <input type="hidden" name="mode" value="register">
+                    @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
                     @if (!Auth::check())
                         <div class="bg-white rounded shadow-sm mb-3">
                             <div class="fs-15 fw-600 p-3 border-bottom">
@@ -34,19 +36,23 @@
                             <div class="p-3">
                                 <div class="form-group">
                                     <label>{{ translate('Your Name')}}<span class="text-primary">*</span></label>
-                                    <input type="text" class="form-control{{ $errors->has('name') ? ' is-invalid' : '' }}" value="{{ old('name') }}" placeholder="{{  translate('Name') }}" name="name">
+                                    <input type="text" class="form-control{{ $errors->has('account_name') ? ' is-invalid' : '' }}" value="{{ old('account_name') }}" placeholder="{{  translate('Name') }}" name="account_name" maxlength="191" autocomplete="name" required>
                                 </div>
                                 <div class="form-group">
-                                    <label>{{ translate('Your Email')}} <span class="text-primary">*</span></label>
-                                    <input type="email" class="form-control{{ $errors->has('email') ? ' is-invalid' : '' }}" value="{{ old('email') }}" placeholder="{{  translate('Email') }}" name="email">
+                                    @include('frontend.partials.phone_registration_fields', ['phoneFormId' => 'shop'])
+                                </div>
+                                <div class="form-group" id="phone-code-fields">
+                                    <label class="d-block">{{ translate('Verification code') }}<input class="form-control" name="code" inputmode="numeric" pattern="[0-9]{5,6}" minlength="5" maxlength="6" autocomplete="one-time-code" required></label>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="send-phone-code">{{ translate('Send code') }}</button>
+                                    <p id="phone-feedback" role="status" class="small mt-2"></p>
                                 </div>
                                 <div class="form-group">
                                     <label>{{ translate('Your Password')}} <span class="text-primary">*</span></label>
-                                    <input type="password" class="form-control{{ $errors->has('password') ? ' is-invalid' : '' }}" placeholder="{{  translate('Password') }}" name="password">
+                                    <input type="password" class="form-control{{ $errors->has('password') ? ' is-invalid' : '' }}" placeholder="{{  translate('Password') }}" name="password" minlength="8" maxlength="100" autocomplete="new-password" required>
                                 </div>
                                 <div class="form-group">
                                     <label>{{ translate('Repeat Password')}} <span class="text-primary">*</span></label>
-                                    <input type="password" class="form-control" placeholder="{{  translate('Confirm Password') }}" name="password_confirmation">
+                                    <input type="password" class="form-control" placeholder="{{  translate('Confirm Password') }}" name="password_confirmation" minlength="8" maxlength="100" autocomplete="new-password" required>
                                 </div>
                             </div>
                         </div>
@@ -58,11 +64,11 @@
                         <div class="p-3">
                             <div class="form-group">
                                 <label>{{ translate('Shop Name')}} <span class="text-primary">*</span></label>
-                                <input type="text" class="form-control" placeholder="{{ translate('Shop Name')}}" name="name" required>
+                                <input type="text" class="form-control" placeholder="{{ translate('Shop Name')}}" name="name" value="{{ old('name') }}" maxlength="191" required>
                             </div>
                             <div class="form-group">
                                 <label>{{ translate('Address')}} <span class="text-primary">*</span></label>
-                                <input type="text" class="form-control mb-3" placeholder="{{ translate('Address')}}" name="address" required>
+                                <input type="text" class="form-control mb-3" placeholder="{{ translate('Address')}}" name="address" value="{{ old('address') }}" maxlength="500" required>
                             </div>
                             
                              <div class="form-group">
@@ -83,7 +89,7 @@
                                         <div class="input-group-text bg-soft-secondary font-weight-medium">{{ translate('Browse')}}</div>
                                     </div>
                                     <div class="form-control file-amount">{{ translate('Choose File') }}</div>
-                                    <input type="hidden" name="identity_card_front" value="" class="selected-files">
+                                    <input type="hidden" name="identity_card_front" value="{{ old('identity_card_front') }}" class="selected-files">
                                 </div>
                                 <div class="file-preview box sm">
                                 </div>
@@ -98,7 +104,7 @@
                                         <div class="input-group-text bg-soft-secondary font-weight-medium">{{ translate('Browse')}}</div>
                                     </div>
                                     <div class="form-control file-amount">{{ translate('Choose File') }}</div>
-                                    <input type="hidden" name="identity_card_back" value="" class="selected-files">
+                                    <input type="hidden" name="identity_card_back" value="{{ old('identity_card_back') }}" class="selected-files">
                                 </div>
                                 <div class="file-preview box sm">
                                 </div>
@@ -112,7 +118,7 @@
                                         <div class="input-group-text bg-soft-secondary font-weight-medium">{{ translate('Browse')}}</div>
                                     </div>
                                     <div class="form-control file-amount">{{ translate('Choose File') }}</div>
-                                    <input type="hidden" name="identity_card_back2" value="" class="selected-files">
+                                    <input type="hidden" name="identity_card_back2" value="{{ old('identity_card_back2') }}" class="selected-files">
                                 </div>
                                 <div class="file-preview box sm">
                                 </div>
@@ -129,6 +135,7 @@
                     <div class="text-right">
                         <button type="submit" class="btn btn-primary fw-600">{{ translate('Register Your Shop')}}</button>
                     </div>
+                    <div class="mt-3 text-center"><a href="{{ route('phone.access') }}">{{ translate('Phone login') }}</a></div>
                 </form>
             </div>
         </div>
@@ -138,6 +145,8 @@
 @endsection
 
 @section('script')
+@include('frontend.partials.phone_auth_script', ['mode' => 'register', 'phoneFormId' => 'shop'])
+@if(get_setting('google_recaptcha') == 1)
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script type="text/javascript">
     // making the CAPTCHA  a required field for form submission
@@ -155,8 +164,8 @@
             }
             //captcha verified
             //do the rest of your validations here
-            $("#reg-form").submit();
         });
     });
 </script>
+@endif
 @endsection
