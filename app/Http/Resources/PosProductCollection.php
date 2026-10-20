@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Http\Resources;
+
+use App\Models\ProductTranslation;
+use Illuminate\Http\Resources\Json\ResourceCollection;
+
+class PosProductCollection extends ResourceCollection
+{
+
+    public function toArray($request)
+    {
+        return [
+            'data' => $this->collection->map(function ($data) {
+                $lang = session('locale');
+                $name = $data->name;
+                if ($lang != 'en') {
+                    $name = ProductTranslation::query()->where('product_id', $data->id)->where('lang', $lang)->pluck('name');
+                    $name = isset($name[0]) ? $name[0] : $data->name;
+                }
+                return [
+                    'id' => $data->id,
+                    'stock_id' => $data->stock_id,
+                    'name' => $name,
+                    'thumbnail_image' => ($data->stock_image == null) ? uploaded_asset($data->thumbnail_img) : uploaded_asset($data->stock_image),
+                    'price' => home_discounted_base_price_by_stock_id($data->stock_id),
+                    'base_price' => home_base_price_by_stock_id($data->stock_id),
+                    'qty' => $data->stock_qty,
+                    'variant' => $data->variant,
+                ];
+            })
+        ];
+    }
+
+    public function with($request)
+    {
+        return [
+            'success' => true,
+            'status' => 200
+        ];
+    }
+}

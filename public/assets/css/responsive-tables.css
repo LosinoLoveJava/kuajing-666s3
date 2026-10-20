@@ -1,0 +1,102 @@
+/* Keep operational lists within their panel without discarding columns. */
+.aiz-content-wrapper,
+.aiz-main-content,
+.aiz-main-content > *,
+.aiz-user-panel,
+.aiz-main-wrapper > .flex-grow-1 {
+    min-width: 0;
+}
+
+.aiz-table-scroll {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.aiz-table-scroll > table.table {
+    width: 100%;
+    max-width: none;
+    table-layout: auto;
+}
+
+.aiz-table-scroll > table.table > thead > tr > th {
+    min-width: 5.5rem;
+}
+
+.aiz-table-scroll > table.table > thead > tr > th,
+.aiz-table-scroll > table.table > tbody > tr > td,
+.aiz-table-scroll > table.table > tfoot > tr > td,
+.aiz-table-scroll .footable-details th,
+.aiz-table-scroll .footable-details td {
+    max-width: 24rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+.aiz-table-scroll .aiz-table-control,
+.aiz-table-scroll .aiz-table-actions {
+    width: 3.5rem;
+    min-width: 3.5rem !important;
+}
+
+.aiz-table-scroll .aiz-table-text {
+    min-width: 10rem;
+}
+
+.aiz-table-scroll > table.table > thead > tr > th.aiz-table-text {
+    min-width: 10rem;
+}
+
+.aiz-main-content .pagination,
+.aiz-user-panel .pagination {
+    flex-wrap: wrap;
+}
+
+.aiz-table-scroll td > .d-flex > *,
+.aiz-table-scroll .text-truncate {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.aiz-table-scroll .badge {
+    height: auto;
+    min-height: 20px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+}
+
+.aiz-table-scroll .aiz-switch,
+.aiz-table-scroll .btn-icon {
+    flex-shrink: 0;
+}
+
+.aiz-table-scroll input.form-control,
+.aiz-table-scroll select.form-control,
+.aiz-table-scroll textarea.form-control {
+    min-width: 5rem;
+    max-width: 100%;
+}
+
+/* Menus are temporarily moved outside the scroll container while open. */
+.aiz-table-dropdown-menu {
+    max-width: calc(100vw - 16px);
+}
+
+.aiz-table-dropdown-menu .dropdown-item {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+@media print {
+    .aiz-table-scroll {
+        overflow: visible;
+    }
+    .aiz-table-scroll > table.table > thead > tr > th {
+        min-width: 0;
+    }
+}
