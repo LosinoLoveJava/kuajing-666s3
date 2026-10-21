@@ -468,12 +468,6 @@
                             </a>
                         </li>
                         
-                         <li class="aiz-side-nav-item">
-                                <a href="{{ route('website.guarantee') }}" class="aiz-side-nav-link">
-                                    <span class="aiz-side-nav-text">{{translate('Guarantee')}}</span>
-                                </a>
-                            </li>
-                        
                            @if (addon_is_activated('seller_subscription'))
                                 <li class="aiz-side-nav-item">
                                     <a href="{{ route('seller_packages.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['seller_packages.index', 'seller_packages.create', 'seller_packages.edit'])}}">

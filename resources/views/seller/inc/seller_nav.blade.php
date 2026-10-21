@@ -121,11 +121,6 @@
                 }
             @endphp
             
-           <div class="aiz-topbar-item ml-2">
-                <a class="dropdown-toggle no-arrow" href="javascript:void(0);" >
-                {{translate('Guarantee Money')}}：{{ single_price( Auth::user()->shop->bzj_money) }}</a>
-            </div>
-            
             <div class="aiz-topbar-item ml-2">
                 <div class="align-items-stretch d-flex dropdown " id="lang-change">
                     <a class="dropdown-toggle no-arrow" data-toggle="dropdown" href="javascript:void(0);" role="button" aria-haspopup="false" aria-expanded="false">

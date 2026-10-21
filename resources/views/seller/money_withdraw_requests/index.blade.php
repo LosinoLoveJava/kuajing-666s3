@@ -59,18 +59,6 @@
                 </div>
             </div>
             
-              <div class="col-md-2 mb-3 mr-auto">
-                <div
-                    class="bg-grad-4 p-3 rounded mb-3 c-pointer text-center bg-white shadow-sm hov-shadow-lg has-transition"
-                    onclick="show_make_wallet_recharge_modal(2)">
-              <span
-                  class="size-60px rounded-circle mx-auto bg-secondary d-flex align-items-center justify-content-center mb-3">
-                  <i class="las la-plus la-3x text-white"></i>
-              </span>
-                    <div class="fs-18 text-white">{{ translate('Guarantee Recharge') }}</div>
-                </div>
-            </div>
-            
             
         @endif
     </div>
@@ -363,11 +351,6 @@ IBAN
                                         <h6>{{ translate('Your wallet balance :') }} ${{ $balance }}</h6>
                                     </div>
                                     
-                                    <div class="alert alert-success" role="alert">
-                                        <h6>{{ translate('Your guarantee balance :') }} 
-                                        ${{Auth::user()->shop->bzj_money}} </h6>
-                                    </div>
-                                    
                                     
                                 </div>
                             </div>
@@ -381,19 +364,7 @@ IBAN
                                            placeholder="{{ translate('Amount') }}" required>
                                 </div>
                             </div>
-                             <div class="row" style="margin-bottom:5px;">
-                                
-                                 <div class="col-md-3">
-                                    <label>{{ translate('Opera Type')}}</label>
-                                </div>
-                                 <div class="col-md-9">
-                                     <select name="type" class="form-control">
-                                         <option value="1">{{translate('User Balance')}}</option>
-                                         <option value="2">{{translate('guarantee')}}</option>
-                                     </select>
-                                </div>
-                                
-                                </div>
+                             <input type="hidden" name="type" value="1">
                             <div class="row" style="margin-bottom:5px;">
                                 
                                  <div class="col-md-3">
@@ -453,10 +424,6 @@ IBAN
             });
         }
         function show_make_wallet_recharge_modal(type){
-            if( type == 2 )
-            {
-                $("#exampleModalLabel").text('{{translate('Guarantee Recharge')}}');
-            }
             $.post('{{ route('offline_wallet_recharge_modal') }}', {type:type,_token:'{{ csrf_token() }}'}, function(data){
                 $('#offline_wallet_recharge_modal_body').html(data);
                 $('#offline_wallet_recharge_modal').modal('show');

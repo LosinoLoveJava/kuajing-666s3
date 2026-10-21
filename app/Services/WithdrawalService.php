@@ -48,7 +48,8 @@ class WithdrawalService
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'regex:/^[0-9]{1,10}(\.[0-9]{1,2})?$/D', 'min:0.01'],
             'w_type' => 'required|integer|in:1,2,3,4',
-            'type' => 'nullable|integer|in:1,2',
+            // Deposits are retired. Historical requests remain reviewable above.
+            'type' => 'nullable|integer|in:1',
             'message' => 'nullable|string|max:2000',
             'iban_country' => 'required_if:w_type,4|nullable|string|size:2',
             'iban_holder' => 'required_if:w_type,4|nullable|string|max:200',
@@ -69,9 +70,9 @@ class WithdrawalService
         }
         return DB::transaction(function () use ($principal, $customer, $data, $snapshot) {
             $user = User::whereKey($principal->id)->lockForUpdate()->firstOrFail();
-            $type = $customer ? 1 : (int) ($data['type'] ?? 1);
-            $account = $type === 2 ? Shop::where('user_id', $user->id)->lockForUpdate()->firstOrFail() : $user;
-            $field = $type === 2 ? 'bzj_money' : 'balance';
+            $type = 1;
+            $account = $user;
+            $field = 'balance';
             if (bccomp((string) $account->$field, $data['amount'], 2) < 0) {
                 throw ValidationException::withMessages(['amount' => 'Insufficient balance.']);
             }

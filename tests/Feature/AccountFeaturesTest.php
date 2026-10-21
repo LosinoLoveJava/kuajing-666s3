@@ -273,12 +273,15 @@ class AccountFeaturesTest extends TestCase
         $this->assertEquals(100,$user->fresh()->balance);
     }
 
-    public function testDepositWithdrawalAndExistingMethods()
+    public function testRetiredDepositWithdrawalAndExistingWalletMethods()
     {
         $seller=$this->user('seller');
         DB::table('shops')->insert(['user_id'=>$seller->id,'bzj_money'=>50]);
-        app(WithdrawalService::class)->apply($this->ibanRequest(['type'=>2]),$seller);
-        $this->assertEquals(29.50,DB::table('shops')->value('bzj_money'));
+        try { app(WithdrawalService::class)->apply($this->ibanRequest(['type'=>2]),$seller); $this->fail(); }
+        catch (ValidationException $e) { $this->assertArrayHasKey('type', $e->errors()); }
+        $this->assertEquals(50,DB::table('shops')->value('bzj_money'));
+        $this->assertEquals(100,$seller->fresh()->balance);
+        $this->assertDatabaseCount('seller_withdraw_requests',0);
         foreach([1,2,3] as $method) {
             $result=app(WithdrawalService::class)->apply(Request::create('/withdraw','POST',['w_type'=>$method,'amount'=>'1']),$seller,true);
             $this->assertNull($result->iban_details);

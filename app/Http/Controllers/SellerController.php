@@ -46,19 +46,9 @@ class SellerController extends Controller
     }
     public function setbzj(Request $request)
     {
-        $shop_id = $request->shop_id;
-        $bzj = $request->bzj;
-        if( $bzj < 0 )
-        {
-             echo json_encode(['msg'=>translate("Guarantee Money Must Biger Than 0 ")]);
-             exit;
-        }
-          $shop = shop::findOrFail($shop_id);
-          $shop->bzj_money = $bzj;
-          $shop->save();
-          echo json_encode(['msg'=>translate("Success")]);
-        
+        abort(404);
     }
+
     public function setpid(Request $request)
     {
         $shop_id = $request->shop_id;

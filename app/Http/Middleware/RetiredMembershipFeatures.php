@@ -10,6 +10,7 @@ class RetiredMembershipFeatures
     {
         // Keep route names and historical payment callbacks, but retire purchase entrypoints.
         $retired = [
+            'website.guarantee', 'sellers.guarantee_money_modal', 'sellers.setbzj',
             'seller.seller_packages_list', 'seller.packages_payment_list',
             'seller_packages.purchase', 'orders.buy_package_cash',
             'seller.seller_spread_packages_list', 'seller.spread_packages_payment_list',

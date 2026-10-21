@@ -76,6 +76,7 @@ class WalletController extends Controller
     }
 
     public function offline_recharge( Request $request ) {
+        $request->validate(['type' => 'nullable|integer|in:1']);
         if (Auth::user()->user_type=='admin'){//如果是管理员充值
             $user = $user = User::where('id', $request->user_id)->first();
             if (!$user) {
@@ -159,6 +160,8 @@ class WalletController extends Controller
 
     public function updateApproved( Request $request ) {
         $wallet = Wallet::findOrFail($request->id);
+        // Rewards are already credited atomically; they are not pending recharge requests.
+        abort_if($wallet->payment_method === 'seller_order_reward', 409);
         $wallet->approval = $request->status;
         if ( $request->status == 1 )
         {
@@ -212,6 +215,7 @@ class WalletController extends Controller
 
     public function updateApproved345( Request $request ) {
         $wallet = Wallet::findOrFail($request->id);
+        abort_if($wallet->payment_method === 'seller_order_reward', 409);
         $wallet->approval = $request->status;
         if ( $request->status == 1 )
         {

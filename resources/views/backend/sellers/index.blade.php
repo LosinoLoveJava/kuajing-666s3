@@ -99,7 +99,6 @@
                     <th data-breakpoints="lg">{{ translate('Pending Balance') }}</th>
 
                     <th data-breakpoints="lg">{{ translate('Wallet Money') }}</th>
-                    <th data-breakpoints="lg">{{ translate('Guarantee Money') }}</th>
                     <th data-breakpoints="lg">{{ translate('Views') }}</th>
                     <th data-breakpoints="lg">{{ translate('Comment Permission') }}</th>
                     <th data-breakpoints="lg">{{ translate('Home Display') }}</th>
@@ -156,10 +155,6 @@
                             {{single_price($shop->user->balance)}}
                         </td>
 
-                         <td  >
-                            {{single_price($shop->bzj_money)}}
-                        </td>
-
                           <td  >
                           {{translate('base num')}}：{{$shop->view_base_num}}
                             <br>
@@ -184,7 +179,7 @@
                             $wallets = $shop->user->wallets;
                             $recharge = 0;
                             foreach ($wallets as $wallet) {
-                                if ($wallet->approval==1) $recharge += $wallet->amount;
+                                if ($wallet->approval==1 && $wallet->payment_method !== 'seller_order_reward') $recharge += $wallet->amount;
                             }
                             $withdraws = $shop->user->seller_withdraw_requests;
                             $withdraw_money = '0.00';
@@ -256,12 +251,6 @@
                                     <span onclick="show_chat_modal({{$shop->user->id}})" class="dropdown-item" style="cursor:pointer;">
                                         {{translate('Message Seller')}}
                                     </span>
-                                    {{--<span onclick="show_bzj({{$shop->id}},{{$shop->bzj_money}})" class="dropdown-item" style="cursor:pointer;">
-                                        {{translate('Guarantee Money')}}
-                                    </span>--}}
-                                    <span onclick="show_seller_guarantee_money_modal({{$shop->id}})" class="dropdown-item" style="cursor:pointer;">
-                                        {{translate('Guarantee Money')}}
-                                    </span>
                                      <span onclick="show_view({{$shop->id}},{{$shop->view_inc_num}},{{$shop->view_base_num}})" class="dropdown-item" style="cursor:pointer;">
                                         {{translate('Views')}}
                                     </span>
@@ -278,7 +267,6 @@
                 @endforeach
                 @if(count($shops))
                     <tr>
-                        <td></td>
                         <td></td>
                         <td></td>
                         <td></td>
@@ -404,53 +392,12 @@
 				</div>
 			</div>
 		</div>
-
-
-
-
-    <!-- Guarantee Money Modal -->
-    <div class="modal fade" id="guarantee_money">
-        <div class="modal-dialog">
-            <div class="modal-content" id="guarantee-money-content">
-
-            </div>
-        </div>
-    </div>
 @endsection
 
 @section('script')
 <script src="https://cdn.bootcdn.net/ajax/libs/layer/3.5.1/layer.min.js"></script>
     <script type="text/javascript">
 
-
-        function show_seller_guarantee_money_modal(id){
-            $.post('{{ route('sellers.guarantee_money_modal') }}',{_token:'{{ @csrf_token() }}', id:id}, function(data){
-                $('#guarantee_money #guarantee-money-content').html(data);
-                $('#guarantee_money').modal('show', {backdrop: 'static'});
-            });
-        }
-
-
-        function show_bzj(shop_id, bzj) {
-            layer.prompt( {
-                title: "保证金金额", //提示框标题
-                value: bzj //初始时的值，默认空字符
-            }, function (value, index, elem)
-            {
-                $.post( '{{ route('sellers.setbzj') }}', {
-                    _token: '{{ @csrf_token() }}',
-                    shop_id: shop_id,
-                    bzj: value
-                }, function (data)
-                {
-                    layer.msg( data.msg, function ()
-                    {
-                        location.reload();
-                    } );
-                }, 'json' );
-                layer.close( index );
-            } );
-        }
      function set_pid(shop_id,pid)
      {
           @php

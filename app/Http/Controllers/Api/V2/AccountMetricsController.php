@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\V2;
 
 use App\Models\Currency;
-use App\Models\Order;
+use App\Services\CompletedOrders;
 use Illuminate\Http\Request;
 
 class AccountMetricsController extends Controller
@@ -30,19 +30,7 @@ class AccountMetricsController extends Controller
     {
         $user = $request->user();
         abort_unless(in_array($user->user_type, ['customer', 'seller'], true), 403);
-        $owner = $user->user_type === 'seller' ? 'seller_id' : 'user_id';
-        $count = Order::where($owner, $user->id)->where('payment_status', 'paid')
-            ->where('delivery_status', 'delivered')
-            // A paid refund covers an entire order detail in the existing refund workflow.
-            ->whereExists(function ($details) {
-                $details->selectRaw('1')->from('order_details')
-                    ->whereColumn('order_details.order_id', 'orders.id')
-                    ->whereNotExists(function ($refund) {
-                        $refund->selectRaw('1')->from('refund_requests')
-                            ->whereColumn('refund_requests.order_detail_id', 'order_details.id')
-                            ->where('refund_requests.refund_status', 1);
-                    });
-            })->count();
+        $count = app(CompletedOrders::class)->count($user);
         return response()->json(['success' => true, 'data' => ['count' => $count, 'role' => $user->user_type]]);
     }
 

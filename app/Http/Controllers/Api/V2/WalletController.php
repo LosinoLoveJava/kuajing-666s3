@@ -51,6 +51,7 @@ class WalletController extends Controller
 
     public function offline_recharge(Request $request)
     {
+        $request->validate(['type' => 'nullable|integer|in:1']);
         $wallet = new Wallet;
         $wallet->user_id = auth()->user()->id;
         $wallet->amount = $request->amount;

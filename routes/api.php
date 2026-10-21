@@ -44,6 +44,10 @@ Route::group(['prefix' => 'v2', 'middleware' => ['app_language']], function() {
     });
 
     Route::prefix('seller')->group(function () {
+        Route::get('reputation', 'App\Http\Controllers\Api\V2\SellerDashboardController@reputation')->middleware('auth:sanctum');
+        Route::get('reputation/history', 'App\Http\Controllers\Api\V2\SellerDashboardController@reputationHistory')->middleware('auth:sanctum');
+        Route::get('rewards/progress', 'App\Http\Controllers\Api\V2\SellerDashboardController@rewardProgress')->middleware('auth:sanctum');
+        Route::post('rewards/{milestone}/claim', 'App\Http\Controllers\Api\V2\SellerDashboardController@claimReward')->middleware(['auth:sanctum', 'throttle:30,1']);
         Route::get('orders', 'App\Http\Controllers\Api\V2\SellerController@getOrderList')->middleware('auth:sanctum');;
         Route::get('orders-details/{id}', 'App\Http\Controllers\Api\V2\SellerController@getOrderDetails')->middleware('auth:sanctum');
     });
