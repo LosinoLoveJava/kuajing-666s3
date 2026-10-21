@@ -22,9 +22,8 @@ class SellerRegistration
             'name' => 'required|string|max:191',
             'address' => 'required|string|max:500',
             'certtype' => ['required', Rule::in(['idcard', 'passport', 'driving license', 'social security card'])],
-            'identity_card_front' => ['nullable', 'integer', Rule::exists('uploads', 'id')->where('user_id', 0)->where('type', 'image')],
+            'identity_card_front' => ['required', 'integer', Rule::exists('uploads', 'id')->where('user_id', 0)->where('type', 'image')],
             'identity_card_back' => ['nullable', 'integer', Rule::exists('uploads', 'id')->where('user_id', 0)->where('type', 'image')],
-            'identity_card_back2' => ['nullable', 'integer', Rule::exists('uploads', 'id')->where('user_id', 0)->where('type', 'image')],
         ]);
         $package = SellerPackage::where('is_default', 1)->first();
         if (!$package) {
@@ -32,14 +31,14 @@ class SellerRegistration
         }
 
         return app(PhoneAuth::class)->register($request, function (User $user) use ($data, $package) {
-            $uploads = array_values(array_unique(array_filter([$data['identity_card_front'] ?? null, $data['identity_card_back'] ?? null, $data['identity_card_back2'] ?? null])));
+            $uploads = array_values(array_unique(array_filter([$data['identity_card_front'], $data['identity_card_back'] ?? null])));
             $available = DB::table('uploads')->where('user_id', 0)->whereIn('id', $uploads)->lockForUpdate()->get();
             if ($available->count() !== count($uploads)) {
                 throw ValidationException::withMessages(['identity_card_front' => translate('Choose File')]);
             }
             $user->name = $data['account_name'];
             $user->user_type = 'seller';
-            $user->identity_card_front = $data['identity_card_front'] ?? '';
+            $user->identity_card_front = $data['identity_card_front'];
             $user->identity_card_back = $data['identity_card_back'] ?? '';
             $user->certtype = $data['certtype'];
             $inviter = User::find(Cookie::get('invitation_code'));

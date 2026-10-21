@@ -83,13 +83,13 @@
                                 
                                 </div>
                             <div class="form-group">
-                                <label>{{ translate('Certificates Front')}}</label>
+                                <label>{{ translate('Certificates Front')}} <span class="text-primary">*</span></label>
                                 <div class="input-group" data-toggle="aizuploader" data-type="image">
                                     <div class="input-group-prepend">
                                         <div class="input-group-text bg-soft-secondary font-weight-medium">{{ translate('Browse')}}</div>
                                     </div>
                                     <div class="form-control file-amount">{{ translate('Choose File') }}</div>
-                                    <input type="hidden" name="identity_card_front" value="{{ old('identity_card_front') }}" class="selected-files">
+                                    <input type="hidden" name="identity_card_front" value="{{ old('identity_card_front') }}" class="selected-files" required>
                                 </div>
                                 <div class="file-preview box sm">
                                 </div>
@@ -110,19 +110,6 @@
                                 </div>
                             </div>
 
-                            <div class="form-group">
-                                {{-- <label>{{ translate('Ying YE')}} 营业执照 <span class="text-primary">*</span></label> --}}
-                                <label> 营业执照 <span class="text-primary">*</span></label>
-                                <div class="input-group" data-toggle="aizuploader" data-type="image">
-                                    <div class="input-group-prepend">
-                                        <div class="input-group-text bg-soft-secondary font-weight-medium">{{ translate('Browse')}}</div>
-                                    </div>
-                                    <div class="form-control file-amount">{{ translate('Choose File') }}</div>
-                                    <input type="hidden" name="identity_card_back2" value="{{ old('identity_card_back2') }}" class="selected-files">
-                                </div>
-                                <div class="file-preview box sm">
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -145,6 +132,7 @@
 @endsection
 
 @section('script')
+@include('frontend.partials.seller_document_validation')
 @include('frontend.partials.phone_auth_script', ['mode' => 'register', 'phoneFormId' => 'shop'])
 @if(get_setting('google_recaptcha') == 1)
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>

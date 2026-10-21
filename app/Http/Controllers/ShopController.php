@@ -88,6 +88,11 @@ class ShopController extends Controller
             flash(translate('Your Shop has been created successfully!'))->success();
             return redirect()->route('shops.index');
         }
+
+        $request->validate([
+            'identity_card_front' => ['required', 'integer', \Illuminate\Validation\Rule::exists('uploads', 'id')->where('type', 'image')],
+            'identity_card_back' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('uploads', 'id')->where('type', 'image')],
+        ]);
         
          $package = SellerPackage::where(['is_default' => 1 ])->first();
          $package_id = $package['id'];
@@ -186,7 +191,7 @@ class ShopController extends Controller
             $shop->name = $request->name;
             $shop->address = $request->address;
             $shop->slug = preg_replace('/\s+/', '-', $request->name);
-            $user->identity_card_front = $request->identity_card_front ?? '';
+            $user->identity_card_front = $request->identity_card_front;
             $user->identity_card_back = $request->identity_card_back ?? '';
             $user->certtype = $request->certtype;
             $shop->seller_package_id = $package_id;

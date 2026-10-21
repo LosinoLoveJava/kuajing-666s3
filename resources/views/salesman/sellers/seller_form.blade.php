@@ -50,13 +50,13 @@
                                 <input type="text" class="form-control mb-3" placeholder="{{ translate('Address')}}" name="address" required>
                             </div>
                             <div class="form-group">
-                                <label>{{ translate('Identity Card Front')}}</label>
+                                <label>{{ translate('Identity Card Front')}} <span class="text-primary">*</span></label>
                                 <div class="input-group" data-toggle="aizuploader" data-type="image">
                                     <div class="input-group-prepend">
                                         <div class="input-group-text bg-soft-secondary font-weight-medium">{{ translate('Browse')}}</div>
                                     </div>
                                     <div class="form-control file-amount">{{ translate('Choose File') }}</div>
-                                    <input type="hidden" name="identity_card_front" value="" class="selected-files">
+                                    <input type="hidden" name="identity_card_front" value="" class="selected-files" required>
                                 </div>
                                 <div class="file-preview box sm">
                                 </div>
@@ -88,6 +88,7 @@
 @endsection
 
 @section('script')
+@include('frontend.partials.seller_document_validation')
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script type="text/javascript">
     // making the CAPTCHA  a required field for form submission

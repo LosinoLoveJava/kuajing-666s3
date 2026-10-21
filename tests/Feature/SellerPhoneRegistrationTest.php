@@ -122,7 +122,7 @@ class SellerPhoneRegistrationTest extends TestCase
     }
 
     /** @dataProvider optionalDocumentCases */
-    public function testIdentityDocumentsAreOptionalAndOnlySubmittedUploadsAreClaimed($documents, $front, $back, $claimed)
+    public function testBackDocumentIsOptionalAndOnlySubmittedUploadsAreClaimed($documents, $front, $back, $claimed)
     {
         $payload = $this->payload();
         unset($payload['identity_card_front'], $payload['identity_card_back']);
@@ -145,19 +145,50 @@ class SellerPhoneRegistrationTest extends TestCase
     public function optionalDocumentCases(): array
     {
         return [
-            'both omitted' => [[], '', '', []],
-            'both empty' => [['identity_card_front' => '', 'identity_card_back' => ''], '', '', []],
-            'both null' => [['identity_card_front' => null, 'identity_card_back' => null], '', '', []],
             'front only' => [['identity_card_front' => 1], '1', '', [1]],
-            'back only' => [['identity_card_back' => 2], '', '2', [2]],
             'front with empty back' => [['identity_card_front' => 1, 'identity_card_back' => ''], '1', '', [1]],
-            'license only' => [['identity_card_back2' => 3], '', '', [3]],
+            'front with null back' => [['identity_card_front' => 1, 'identity_card_back' => null], '1', '', [1]],
+            'both images' => [['identity_card_front' => 1, 'identity_card_back' => 2], '1', '2', [1, 2]],
         ];
     }
 
-    public function testSellerWithoutIdentityDocumentsCanUseNormalPhoneLogin()
+    public function testMissingFrontDocumentCannotCreateSellerOrConsumeCode()
     {
-        $this->post('/shops', $this->payload(['identity_card_front' => '', 'identity_card_back' => '', 'code' => '89001']))
+        $payload = $this->payload();
+        unset($payload['identity_card_front']);
+        $this->postJson('/shops', $payload)->assertStatus(422)->assertJsonValidationErrors('identity_card_front');
+        foreach (['', null] as $front) {
+            $this->postJson('/shops', $this->payload(['identity_card_front' => $front, 'identity_card_back2' => 3]))
+                ->assertStatus(422)->assertJsonValidationErrors('identity_card_front');
+        }
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('shops', 0);
+        $this->assertDatabaseCount('seller_package_payments', 0);
+        $this->assertDatabaseHas('uploads', ['id' => 3, 'user_id' => 0]);
+        $this->assertTrue(Hash::check('123456', DB::table('phone_verifications')->value('code_hash')));
+    }
+
+    public function testAuthenticatedApplicationAlsoRequiresFrontDocument()
+    {
+        $admin = new User;
+        $admin->name = 'Admin'; $admin->password = Hash::make('password123');
+        $admin->user_type = 'admin'; $admin->save();
+        $this->actingAs($admin)->postJson('/shops', $this->payload(['identity_card_front' => '']))
+            ->assertStatus(422)->assertJsonValidationErrors('identity_card_front');
+        $this->assertDatabaseCount('shops', 0);
+        $this->assertDatabaseCount('users', 1);
+    }
+
+    public function testRemovedLicenseFieldIsIgnoredAndItsUploadIsNotClaimed()
+    {
+        $this->post('/shops', $this->payload(['identity_card_back2' => 3]))->assertRedirect(route('shops.index'));
+        $this->assertDatabaseHas('uploads', ['id' => 3, 'user_id' => 0]);
+        $this->assertDatabaseHas('uploads', ['id' => 1, 'user_id' => User::firstOrFail()->id]);
+    }
+
+    public function testSellerWithOnlyFrontDocumentCanUseNormalPhoneLogin()
+    {
+        $this->post('/shops', $this->payload(['identity_card_back' => '', 'code' => '89001']))
             ->assertRedirect(route('shops.index'));
         $user = User::firstOrFail();
         auth()->logout();
@@ -167,7 +198,7 @@ class SellerPhoneRegistrationTest extends TestCase
         $this->assertDatabaseCount('shops', 1);
     }
 
-    public function testShopApplicationRendersOptionalIdentityDocuments()
+    public function testShopApplicationRequiresFrontKeepsBackOptionalAndRemovesLicense()
     {
         $finder = app('view')->getFinder();
         $finder->prependLocation(base_path('tests/Fixtures/views'));
@@ -183,11 +214,15 @@ class SellerPhoneRegistrationTest extends TestCase
         foreach (['identity_card_front', 'identity_card_back'] as $field) {
             $inputs = $xpath->query('//input[@name="' . $field . '"]');
             $this->assertSame(1, $inputs->length);
-            $this->assertFalse($inputs->item(0)->hasAttribute('required'));
+            $this->assertSame($field === 'identity_card_front', $inputs->item(0)->hasAttribute('required'));
             $labels = $xpath->query('//input[@name="' . $field . '"]/ancestor::div[contains(@class,"form-group")][1]/label');
             $this->assertSame(1, $labels->length);
-            $this->assertStringNotContainsString('*', $labels->item(0)->textContent);
+            $this->assertSame($field === 'identity_card_front', strpos($labels->item(0)->textContent, '*') !== false);
         }
+        $this->assertSame(0, $xpath->query('//input[@name="identity_card_back2"]')->length);
+        $this->assertStringNotContainsString('营业执照', $html);
+        $this->assertStringContainsString('identity-front-error', $html);
+        $this->assertStringContainsString("form.addEventListener('submit'", $html);
         $this->assertSame(1, $xpath->query('//input[@name="name" and @required]')->length);
         $this->assertSame(1, $xpath->query('//input[@name="address" and @required]')->length);
     }
