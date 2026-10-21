@@ -28,6 +28,29 @@ class LoginController extends Controller
 
     use AuthenticatesUsers { login as protected originalLogin; }
 
+    public function adminPhoneLogin(Request $request)
+    {
+        $user = app(\App\Services\PhoneAuth::class)->loginAdmin($request);
+        auth()->login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
+        return redirect()->route($user->user_type === 'salesman' ? 'dashboard' : 'admin.dashboard');
+    }
+
+    public function adminPhoneCode(Request $request)
+    {
+        app(\App\Services\PhoneAuth::class)->sendAdminCode($request);
+        return response()->json(['result' => true, 'message' => 'SMS submitted. Code expires in 5 minutes.']);
+    }
+
+    public function adminPhoneSubmit(Request $request)
+    {
+        $request->validate(['mode' => 'required|in:login']);
+        $user = app(\App\Services\PhoneAuth::class)->loginAdmin($request);
+        auth()->login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
+        return redirect()->route($user->user_type === 'salesman' ? 'dashboard' : 'admin.dashboard');
+    }
+
     public function showLoginForm()
     {
         $hosts = [request()->getHost(), parse_url(url('/'), PHP_URL_HOST)];

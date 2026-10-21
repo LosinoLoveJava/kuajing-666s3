@@ -2,68 +2,73 @@
 
 @section('panel_content')
 
+    <style>
+        .seller-wallet-page .wallet-card {
+            min-height: 132px;
+            border-radius: 6px;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(35, 45, 65, .08);
+        }
+        .seller-wallet-page .wallet-card-action { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+        .seller-wallet-page .wallet-card-action:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(35, 45, 65, .14); }
+        .seller-wallet-page .wallet-card-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .28);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        .seller-wallet-page .wallet-card-value { font-size: 24px; line-height: 1.2; font-weight: 700; }
+        .seller-wallet-page .wallet-card-label { font-size: 14px; opacity: .92; }
+        .seller-wallet-page .wallet-card-balance { background: linear-gradient(135deg, #6c8fdb, #51bde7); }
+        .seller-wallet-page .wallet-card-wallet { background: linear-gradient(135deg, #b34bb0, #e83f83); }
+        .seller-wallet-page .wallet-card-withdraw { background: linear-gradient(135deg, #5541bb, #8054c7); }
+        .seller-wallet-page .wallet-card-recharge { background: linear-gradient(135deg, #f57b58, #f7b52d); }
+        .seller-wallet-page .wallet-history-card { border: 1px solid #edf0f5; border-radius: 6px; }
+    </style>
+
+    <div class="seller-wallet-page">
     <div class="aiz-titlebar mt-2 mb-4">
         <div class="row align-items-center">
             <div class="col-md-6">
-                <h1 class="h3">{{ translate('Money Withdraw') }}</h1>
+                <h1 class="h3">{{ translate('My Wallet') }}</h1>
             </div>
         </div>
     </div>
 
-    <div class="row gutters-0">
-        <div class="col-md-2 mb-3 mx-auto">
-            <div class="bg-grad-3 text-white rounded-lg overflow-hidden">
-              <span
-                  class="size-30px rounded-circle mx-auto bg-soft-primary d-flex align-items-center justify-content-center mt-3">
-                  <i class="las la-dollar-sign la-2x text-black-50"></i>
-              </span>
-                <div class="px-3 pt-3 pb-3">
-                    <div class="h4 fw-700 text-center">{{ single_price(Auth::user()->shop->admin_to_pay) }}</div>
-                    <div class="opacity-50 text-center">{{ translate('Pending Balance') }}</div>
-                </div>
+    <div class="row gutters-10">
+        <div class="col-12 col-sm-6 col-xl-3 mb-3">
+            <div class="wallet-card wallet-card-balance p-4 d-flex flex-column justify-content-between">
+                <span class="wallet-card-icon"><i class="las la-dollar-sign"></i></span>
+                <div><div class="wallet-card-value">{{ single_price(Auth::user()->shop->admin_to_pay) }}</div><div class="wallet-card-label">{{ translate('Pending Balance') }}</div></div>
             </div>
         </div>
-        <div class="col-md-2 mb-3 mx-auto">
-            <div class="bg-grad-1 text-white rounded-lg overflow-hidden">
-              <span
-                  class="size-30px rounded-circle mx-auto bg-soft-primary d-flex align-items-center justify-content-center mt-3">
-                  <i class="las la-dollar-sign la-2x  text-black-50"></i>
-              </span>
-                <div class="px-3 pt-3 pb-3">
-                    <div class="h4 fw-700 text-center">{{ single_price(Auth::user()->balance) }}</div>
-                    <div class="opacity-50 text-center">{{ translate('Wallet Money') }}</div>
-                </div>
+        <div class="col-12 col-sm-6 col-xl-3 mb-3">
+            <div class="wallet-card wallet-card-wallet p-4 d-flex flex-column justify-content-between">
+                <span class="wallet-card-icon"><i class="las la-wallet"></i></span>
+                <div><div class="wallet-card-value">{{ single_price(Auth::user()->balance) }}</div><div class="wallet-card-label">{{ translate('Wallet Money') }}</div></div>
             </div>
         </div>
-        <div class="col-md-2 mb-3 mx-auto">
-            <div
-                class="bg-grad-2 p-3 rounded mb-3 c-pointer text-center bg-white shadow-sm hov-shadow-lg has-transition"
-                onclick="show_request_modal()">
-              <span
-                  class="size-60px rounded-circle mx-auto bg-secondary d-flex align-items-center justify-content-center mb-3">
-                  <i class="las la-plus la-3x text-white"></i>
-              </span>
-                <div class="fs-18 text-white">{{ translate('Send Withdraw Request') }}</div>
+        <div class="col-12 col-sm-6 col-xl-3 mb-3">
+            <div class="wallet-card wallet-card-withdraw wallet-card-action p-4 d-flex flex-column justify-content-between" onclick="show_request_modal()">
+                <span class="wallet-card-icon"><i class="las la-arrow-down"></i></span>
+                <div class="wallet-card-label">{{ translate('Send Withdraw Request') }}</div>
             </div>
         </div>
         @if (addon_is_activated('offline_payment'))
-            <div class="col-md-2 mb-3 mr-auto">
-                <div
-                    class="bg-grad-4 p-3 rounded mb-3 c-pointer text-center bg-white shadow-sm hov-shadow-lg has-transition"
-                    onclick="show_make_wallet_recharge_modal(1)">
-              <span
-                  class="size-60px rounded-circle mx-auto bg-secondary d-flex align-items-center justify-content-center mb-3">
-                  <i class="las la-plus la-3x text-white"></i>
-              </span>
-                    <div class="fs-18 text-white">{{ translate('Offline Recharge Wallet') }}</div>
+            <div class="col-12 col-sm-6 col-xl-3 mb-3">
+                <div class="wallet-card wallet-card-recharge wallet-card-action p-4 d-flex flex-column justify-content-between" onclick="show_make_wallet_recharge_modal(1)">
+                    <span class="wallet-card-icon"><i class="las la-wallet"></i></span>
+                    <div class="wallet-card-label">{{ translate('Offline Recharge Wallet') }}</div>
                 </div>
             </div>
-            
-            
         @endif
     </div>
 
-    <div class="card">
+    <div class="card wallet-history-card">
         <div class="card-header">
             <h5 class="mb-0 h6">{{ translate('Withdraw Request history')}}</h5>
         </div>
@@ -331,6 +336,7 @@ IBAN
             </div>
         </div>
     </div>
+    </div>
 
 
     <div class="modal fade" id="request_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
@@ -374,7 +380,6 @@ IBAN
                                      <select name="w_type" class="form-control" id="p">
                                         <option value="1">{{translate('Cash')}}</option>
                                         <option value="2">{{translate('Bank')}}</option>
-                                        <option value="3">{{translate('USDT')}}</option>
 <option value="4">IBAN</option>
                             
                                      </select>
@@ -430,14 +435,9 @@ IBAN
             });
         }
         $("#p").change(function(){
-            var usdt_status = {{$shop->usdt_payment_status}}
             var bank_payment_status = {{$shop->bank_payment_status}}
             var cash_on_delivery_status = {{$shop->cash_on_delivery_status}}
             var type = $(this).val();
-            if (type == 3 && usdt_status == 0) {
-                window.location.href = "/seller/profile#usdt"
-                $(".btn").attr("disabled")
-            }
             if (type == 2 && bank_payment_status == 0) {
                 window.location.href = "/seller/profile#bank"
                  $(".btn").attr("disabled")

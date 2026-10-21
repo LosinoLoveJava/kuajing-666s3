@@ -29,6 +29,13 @@
                     </a>
                 </li>
                 <li class="aiz-side-nav-item">
+                    <a href="{{ route('seller.money_withdraw_requests.index') }}"
+                        class="aiz-side-nav-link {{ areActiveRoutes(['seller.money_withdraw_requests.index']) }}">
+                        <i class="las la-wallet aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">{{ translate('My Wallet') }}</span>
+                    </a>
+                </li>
+                <li class="aiz-side-nav-item">
                     <a href="#" class="aiz-side-nav-link">
                         <i class="las la-shopping-cart aiz-side-nav-icon"></i>
                         <span class="aiz-side-nav-text">{{ translate('Products') }}</span>
@@ -78,16 +85,6 @@
                         <span class="aiz-side-nav-text">{{ translate('Orders') }}</span>
                     </a>
                 </li>
-
-                  <!--财务中心-->
-                <li class="aiz-side-nav-item">
-                    <a href="{{ route('seller.money_withdraw_requests.index') }}"
-                        class="aiz-side-nav-link {{ areActiveRoutes(['seller.money_withdraw_requests.index']) }}">
-                        <i class="las la-money-bill-wave-alt aiz-side-nav-icon"></i>
-                        <span class="aiz-side-nav-text">{{ translate('Money Withdraw') }}</span>
-                    </a>
-                </li>
-
 
                   <!--对话-->
                 @if (get_setting('conversation_system') == 1)
@@ -209,48 +206,6 @@
                         <span class="aiz-side-nav-text">{{ translate('Commission History') }}</span>
                     </a>
                 </li>
-
-
-
-                @if (get_setting('product_query_activation') == 1)
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('seller.product_query.index') }}"
-                            class="aiz-side-nav-link {{ areActiveRoutes(['seller.product_query.index']) }}">
-                            <i class="las la-question-circle aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Product Queries') }}</span>
-                        </a>
-                    </li>
-                @endif
-
-                @php
-                    $support_ticket = DB::table('tickets')
-                        ->where('client_viewed', 0)
-                        ->where('user_id', Auth::user()->id)
-                        ->count();
-                @endphp
-                <li class="aiz-side-nav-item">
-                    <a href="{{ route('seller.support_ticket.index') }}"
-                        class="aiz-side-nav-link {{ areActiveRoutes(['seller.support_ticket.index']) }}">
-                        <i class="las la-atom aiz-side-nav-icon"></i>
-                        <span class="aiz-side-nav-text">{{ translate('Support Ticket') }}</span>
-                        @if ($support_ticket > 0)
-                            <span class="badge badge-inline badge-success">{{ $support_ticket }}</span>
-                        @endif
-                    </a>
-                </li>
-
-
-
-
-                <!--上传的文件-->
-                <li class="aiz-side-nav-item">
-                    <a href="{{ route('seller.uploaded-files.index') }}"
-                        class="aiz-side-nav-link {{ areActiveRoutes(['seller.uploaded-files.index', 'seller.uploads.create']) }}">
-                        <i class="las la-folder-open aiz-side-nav-icon"></i>
-                        <span class="aiz-side-nav-text">{{ translate('Uploaded Files') }}</span>
-                    </a>
-                </li>
-
 
                     <li class="aiz-side-nav-item">
                         <a href="javascript:void(0);" class="aiz-side-nav-link">

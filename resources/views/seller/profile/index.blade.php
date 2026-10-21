@@ -133,30 +133,6 @@
                     </div>
                 </div>
 
-               <div class="row"  id="usdt">
-                    <label class="col-md-3 col-form-label">{{ translate('USDT Payment') }}</label>
-                    <div class="col-md-9">
-                        <label class="aiz-switch aiz-switch-success mb-3">
-                            <input value="1" name="usdt_payment_status" type="checkbox" @if ($user->shop->usdt_payment_status == 1) checked @endif>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                </div>
-                <div class="row">
-                    <label class="col-md-3 col-form-label" for="usdt_type">{{ translate('USDT Link') }}</label>
-                    <div class="col-md-9">
-                        <input type="text" name="usdt_type" value="{{ $user->shop->usdt_type }}" id="usdt_type" class="form-control mb-3" placeholder="{{ translate('USDT Link')}}">
-                    </div>
-                </div>
-                <div class="row">
-                    <label class="col-md-3 col-form-label" for="usdt_address">{{ translate('USDT Address') }}</label>
-                    <div class="col-md-9">
-                        <input type="text" name="usdt_address" value="{{ $user->shop->usdt_address }}" id="usdt_address" class="form-control mb-3" placeholder="{{ translate('USDT Address')}}">
-                        @error('usdt_address')
-                            <small class="form-text text-danger">{{ $message }}</small>
-                        @enderror
-                    </div>
-                </div>
             </div>
         </div>
 

@@ -32,6 +32,17 @@ class PhoneAuth
         app(PhoneVerification::class)->send($phone, $data['purpose'], $request->ip());
     }
 
+    public function sendAdminCode(Request $request)
+    {
+        $data = $request->validate(['phone' => 'required|string|max:40', 'purpose' => 'required|in:login']);
+        $phone = app(PhoneNumber::class)->normalize($data['phone']);
+        $user = app(PhoneNumber::class)->user($phone);
+        if (!$user || !in_array($user->user_type, ['admin', 'staff', 'salesman'], true) || $user->banned) {
+            throw ValidationException::withMessages(['phone' => 'Account not found.']);
+        }
+        app(PhoneVerification::class)->send($phone, 'login', $request->ip());
+    }
+
     public function register(Request $request, Closure $onRegistered = null)
     {
         $data = $request->validate(['phone' => 'required|string|max:40', 'country' => 'nullable|string|size:2',
@@ -88,6 +99,36 @@ class PhoneAuth
             });
         } elseif (!Hash::check($data['password'], $user->password) || (!$user->phone_verified_at && !$user->email_verified_at)) {
             throw ValidationException::withMessages(['password' => 'Invalid credentials or unverified phone.']);
+        }
+        RateLimiter::clear($key);
+        return $user;
+    }
+
+    public function loginAdmin(Request $request)
+    {
+        $data = $request->validate([
+            'phone' => 'required|string|max:40',
+            'password' => 'nullable|required_without:code|string|max:100',
+            'code' => ['nullable', 'required_without:password', 'string', $this->verificationCodeRule()],
+        ]);
+        $phone = app(PhoneNumber::class)->normalize($data['phone']);
+        $key = 'admin-phone-login:'.hash('sha256', $phone.'|'.$request->ip());
+        if (RateLimiter::tooManyAttempts($key, 10)) { abort(429, 'Too many login attempts.'); }
+        RateLimiter::hit($key, 900);
+        $user = app(PhoneNumber::class)->user($phone);
+        if (!$user || !in_array($user->user_type, ['admin', 'staff', 'salesman'], true)
+            || $user->banned) {
+            throw ValidationException::withMessages(['phone' => 'Invalid account or credentials.']);
+        }
+        if (!empty($data['code'])) {
+            $user = app(PhoneVerification::class)->consume($phone, 'login', $data['code'], function () use ($user, $phone) {
+                $user->phone_normalized = $phone;
+                $user->phone_verified_at = now();
+                $user->save();
+                return $user;
+            });
+        } elseif (!Hash::check($data['password'], $user->password)) {
+            throw ValidationException::withMessages(['phone' => 'Invalid account or credentials.']);
         }
         RateLimiter::clear($key);
         return $user;

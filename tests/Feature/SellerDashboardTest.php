@@ -16,6 +16,79 @@ use Tests\TestCase;
 
 class SellerDashboardTest extends TestCase
 {
+    private function websiteSession($seller = null)
+    {
+        $this->withoutMiddleware([
+            \App\Http\Middleware\Language::class,
+            \App\Http\Middleware\HttpsProtocol::class,
+            \App\Http\Middleware\CheckForMaintenanceMode::class,
+        ]);
+        if ($seller) {
+            // Exercise real session authentication, without actingAs or a bearer token.
+            $guard = auth()->guard('web');
+            session()->start();
+            session()->put($guard->getName(), $seller->id);
+            session()->save();
+            $this->withUnencryptedCookies([config('session.cookie') => session()->getId()]);
+            auth()->forgetGuards();
+        }
+        return $this;
+    }
+
+    public function testWebsiteCardsReadCurrentSellerWithExistingSession()
+    {
+        $seller = $this->account();
+        $seller->reputation_score = 87; $seller->save();
+        $this->websiteSession($seller)->getJson('/seller/dashboard/reputation?user_id=999')
+            ->assertOk()->assertJsonPath('data.score', 87);
+        $this->getJson('/seller/dashboard/reputation/history')->assertOk()->assertJsonCount(0, 'data');
+        $this->getJson('/seller/dashboard/rewards/progress')->assertOk()
+            ->assertJsonPath('data.completed_orders', 0)->assertJsonCount(2, 'data.milestones');
+    }
+
+    public function testWebsiteCardsRequireLogin()
+    {
+        $this->websiteSession();
+        foreach (['reputation', 'reputation/history', 'rewards/progress'] as $path) {
+            $this->getJson('/seller/dashboard/'.$path)->assertUnauthorized();
+        }
+    }
+
+    public function testWebsiteRewardClaimRequiresCsrfAndCreditsOnlyOnce()
+    {
+        $seller = $this->account(); $this->orders($seller, 7);
+        $this->websiteSession($seller);
+        $token = session()->token();
+        $this->app->instance('env', 'production');
+        $url = '/seller/dashboard/rewards/orders_7/claim';
+        $this->postJson($url)->assertStatus(419);
+        $this->assertDatabaseCount('seller_reward_claims', 0);
+        $this->withHeader('X-CSRF-TOKEN', $token)->postJson($url)->assertOk()
+            ->assertJsonPath('data.amount', '100.00');
+        $this->postJson($url)->assertOk()->assertJsonPath('data.already_claimed', true);
+        $this->assertDatabaseCount('seller_reward_claims', 1);
+        $this->assertSame('112.34', $seller->fresh()->getRawOriginal('balance'));
+    }
+
+    public function testWebsiteCardTranslationsRenderAndPreserveCustomTranslations()
+    {
+        Schema::create('translations', function (Blueprint $t) {
+            $t->increments('id'); $t->string('lang'); $t->string('lang_key'); $t->text('lang_value'); $t->timestamps();
+        });
+        DB::table('translations')->insert(['lang'=>'cn', 'lang_key'=>'healthy', 'lang_value'=>'自定义状态']);
+        require_once database_path('migrations/2026_10_22_120000_add_seller_dashboard_translations.php');
+        $migration = new \AddSellerDashboardTranslations;
+        $migration->up(); $migration->up();
+        $this->assertDatabaseCount('translations', 288);
+        app()->setLocale('cn');
+        $html = view('seller.partials.dashboard_account_cards')->render();
+        $this->assertStringContainsString('信誉分', $html);
+        $this->assertStringContainsString('奖励进度', $html);
+        $this->assertSame('自定义状态', translate('Healthy'));
+        app()->setLocale('sa');
+        $this->assertStringContainsString('تقدم المكافآت', view('seller.partials.dashboard_account_cards')->render());
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

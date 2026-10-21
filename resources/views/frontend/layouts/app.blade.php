@@ -513,5 +513,6 @@
         echo get_setting('footer_script');
     @endphp
 
+    @include('frontend.partials.salesmartly')
 </body>
 </html>

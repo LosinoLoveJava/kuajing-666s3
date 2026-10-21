@@ -10,7 +10,7 @@
     </div>
 
     <div class="row">
-        <div class="col-sm-6 col-md-6 col-xxl-3">
+        <!-- <div class="col-sm-6 col-md-6 col-xxl-3">
             <div class="card shadow-none mb-4 bg-primary py-4">
                 <div class="card-body">
                     <div class="row align-items-center">
@@ -59,7 +59,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
         <div class="col-sm-6 col-md-6 col-xxl-3">
             <div class="card shadow-none mb-4 bg-primary py-4">
                 <div class="card-body">
@@ -70,7 +70,7 @@
                                 <span class="fs-16 text-info">{{ translate('Total Order') }}</span>
                             </p>
                             <h3 class="mb-0 text-white fs-30">
-                                {{ \App\Models\Order::where('seller_id', Auth::user()->id)->where('delivery_status', 'delivered')->count() }}
+                                {{ $total_orders }}
                             </h3>
                         </div>
                         <div class="col-auto text-right">
@@ -123,19 +123,10 @@
                         <div class="col">
                             <p class="small text-muted mb-0">
                                 <span class="fe fe-arrow-down fe-12"></span>
-                                <span class="fs-16 text-info">{{ translate('Total Sales') }}</span>
+                                <span class="fs-16 text-info">{{ translate('Total Profit') }}</span>
                             </p>
                             <h3 class="mb-0 text-white fs-30">
-                                @php
-                                    $orderDetails = \App\Models\OrderDetail::where('seller_id', Auth::user()->id)->get();
-                                    $total = 0;
-                                    foreach ($orderDetails as $key => $orderDetail) {
-                                        if ($orderDetail->order != null && $orderDetail->order->payment_status == 'paid') {
-                                            $total += $orderDetail->price;
-                                        }
-                                    }
-                                @endphp
-                                {{ single_price($total) }}
+                                {{ single_price($total_profit) }}
                             </h3>
 
                         </div>
@@ -162,6 +153,8 @@
             </div>
         </div>
     </div>
+
+    @include('seller.partials.dashboard_account_cards')
 
     <div class="row">
         <div class="col-sm-6 col-md-6 col-lg-3 mb-4">
@@ -559,6 +552,7 @@
 @endsection
 
 @section('script')
+    <script src="{{ static_asset('assets/js/seller-dashboard-cards.js') }}"></script>
     <script type="text/javascript">
         AIZ.plugins.chart('#graph-1', {
             type: 'bar',

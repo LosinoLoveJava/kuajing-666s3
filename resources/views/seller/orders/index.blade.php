@@ -89,7 +89,7 @@
                             <th data-breakpoints="lg">{{ translate('Customer')}}</th>
                             <th data-breakpoints="md">{{ translate('Amount')}}</th>
                             <th data-breakpoints="md">{{ translate('Profit')}}</th>
-                            <th data-breakpoints="md">{{ translate('Pick Up Status') }}</th>
+                            <th data-breakpoints="md">{{ translate('Purchase Status') }}</th>
                             <th data-breakpoints="lg">{{ translate('Delivery Status')}}</th>
                             <th>{{ translate('Payment Status')}}</th>
                             <th class="text-right">{{ translate('Options')}}</th>
@@ -130,10 +130,10 @@
                                     </td>
                                     <td>
                                         @if ($order->product_storehouse_status)
-                                            <span class="badge badge-inline badge-success">{{translate('Picked Up')}}</span>
+                                            <span class="badge badge-inline badge-success">{{translate('Done')}}</span>
                                         @else
                                             @if ($order->product_storehouse_total)
-                                                <span class="badge badge-inline badge-danger">{{translate('Unpicked Up')}}</span>
+                                                <span class="badge badge-inline badge-danger">{{translate('Not Yet')}}</span>
                                             @endif
                                         @endif
                                     </td>

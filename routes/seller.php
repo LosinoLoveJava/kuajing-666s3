@@ -2,6 +2,15 @@
 
 use App\Http\Controllers\AizUploadController;
 
+// Reuse the four seller API handlers with the website's existing session login.
+Route::prefix('seller/dashboard')->name('seller.dashboard.')->middleware(['auth', 'seller'])->group(function () {
+    Route::get('/reputation', [\App\Http\Controllers\Api\V2\SellerDashboardController::class, 'reputation'])->name('reputation');
+    Route::get('/reputation/history', [\App\Http\Controllers\Api\V2\SellerDashboardController::class, 'reputationHistory'])->name('reputation.history');
+    Route::get('/rewards/progress', [\App\Http\Controllers\Api\V2\SellerDashboardController::class, 'rewardProgress'])->name('rewards.progress');
+    Route::post('/rewards/{milestone}/claim', [\App\Http\Controllers\Api\V2\SellerDashboardController::class, 'claimReward'])
+        ->middleware([\App\Http\Middleware\VerifyCsrfToken::class, 'throttle:30,1'])->name('rewards.claim');
+});
+
 //Upload
 Route::group(['prefix' => 'seller', 'middleware' => ['seller', 'verified', 'user'], 'as' => 'seller.'], function () {
     Route::controller(AizUploadController::class)->group(function () {

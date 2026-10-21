@@ -34,7 +34,9 @@ class PhoneAccessController extends Controller
             return redirect()->route('shops.create');
         }
         $countries = app(PhoneNumber::class)->countries();
-        return view('frontend.phone_access', compact('mode', 'countries', 'isSellerPortal'));
+        $defaultCountryData = collect($countries)->firstWhere('dial_code', '+971');
+        $defaultCountry = $defaultCountryData['country'] ?? ($countries[0]['country'] ?? 'AE');
+        return view('frontend.phone_access', compact('mode', 'countries', 'defaultCountry', 'isSellerPortal'));
     }
 
     public function sendCode(Request $request)

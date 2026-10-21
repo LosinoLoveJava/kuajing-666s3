@@ -108,6 +108,13 @@ Route::controller(AizUploadController::class)->group(function () {
 });
 
 Auth::routes(['verify' => true]);
+Route::post('/admin/phone-login', [LoginController::class, 'adminPhoneLogin'])
+    ->middleware(\App\Http\Middleware\VerifyCsrfToken::class)->name('admin.phone.login');
+Route::post('/admin/phone-send-code', [LoginController::class, 'adminPhoneCode'])
+    ->middleware(\App\Http\Middleware\VerifyCsrfToken::class)->name('admin.phone.send');
+Route::post('/admin/phone-submit', [LoginController::class, 'adminPhoneSubmit'])
+    ->middleware(\App\Http\Middleware\VerifyCsrfToken::class)->name('admin.phone.submit');
+
 
 // Login
 Route::controller(LoginController::class)->group(function () {

@@ -151,7 +151,6 @@
                             <option value="bank_payment">{{translate('Bank Payment')}}</option>
                         @endif
                         @if($user->shop->usdt_payment_status == 1 || true)
-                            <option value="usdt_payment">{{translate('USDT Payment')}}</option>
                         @endif
                     </select>
                 </div>

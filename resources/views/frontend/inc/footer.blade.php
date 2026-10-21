@@ -41,10 +41,10 @@
                             <img class="lazyload" src="{{ static_asset('assets/img/placeholder-rect.jpg') }}" data-src="{{ static_asset('assets/img/logo.png') }}" alt="{{ env('APP_NAME') }}" height="44">
                         @endif
                     </a>
-                    <div class="my-3">
+                    <!-- <div class="my-3">
                         {!! get_setting('about_us_description',null,App::getLocale()) !!}
-                    </div>
-                    <div class="d-inline-block d-md-block mb-4">
+                    </div> -->
+                    <div class="d-inline-block d-md-block mb-4 mt-4">
                         <form class="form-inline" method="POST" action="{{ route('subscribers.store') }}">
                             @csrf
                             <div class="form-group mb-0">
@@ -57,30 +57,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-3 ml-xl-auto col-md-4 mr-0">
-                <div class="text-center text-md-left mt-4">
-                    <h4 class="fs-13 text-uppercase fw-600 border-bottom border-gray-900 pb-2 mb-4">
-                        {{ translate('Contact Info') }}
-                    </h4>
-                    <ul class="list-unstyled">
-                        <li class="mb-2">
-                           <span class="d-block opacity-30">{{ translate('Address') }}:</span>
-                           <span class="d-block opacity-70">{{ get_setting('contact_address',null,App::getLocale()) }}</span>
-                        </li>
-                        <li class="mb-2">
-                           <span class="d-block opacity-30">{{translate('Phone')}}:</span>
-                           <span class="d-block opacity-70">{{ get_setting('contact_phone') }}</span>
-                        </li>
-                        <li class="mb-2">
-                           <span class="d-block opacity-30">{{translate('Email')}}:</span>
-                           <span class="d-block opacity-70">
-                               <a href="mailto:{{ get_setting('contact_email') }}" class="text-reset">{{ get_setting('contact_email')  }}</a>
-                            </span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div class="col-lg-2 col-md-4">
+            <div class="col-lg-3 col-md-6 ml-lg-auto">
                 <div class="text-center text-md-left mt-4">
                     <h4 class="fs-13 text-uppercase fw-600 border-bottom border-gray-900 pb-2 mb-4">
                         {{ get_setting('widget_one',null,App::getLocale()) }}
@@ -99,7 +76,7 @@
                 </div>
             </div>
 
-            <div class="col-md-4 col-lg-2">
+            <div class="col-md-6 col-lg-3 pb-5">
                 <div class="text-center text-md-left mt-4">
                     <h4 class="fs-13 text-uppercase fw-600 border-bottom border-gray-900 pb-2 mb-4">
                         {{ translate('My Account') }}
@@ -155,62 +132,7 @@
     </div>
 </section>
 
-<!-- FOOTER -->
-<footer class="pt-3 pb-7 pb-xl-3 bg-black text-light">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-4">
-                <div class="text-center text-md-left" current-verison="{{get_setting("current_version")}}">
-                    {!! get_setting('frontend_copyright_text',null,App::getLocale()) !!}
-                </div>
-            </div>
-            <div class="col-lg-4">
-                @if ( get_setting('show_social_links') )
-                <ul class="list-inline my-3 my-md-0 social colored text-center">
-                    @if ( get_setting('facebook_link') !=  null )
-                    <li class="list-inline-item">
-                        <a href="{{ get_setting('facebook_link') }}" target="_blank" class="facebook"><i class="lab la-facebook-f"></i></a>
-                    </li>
-                    @endif
-                    @if ( get_setting('twitter_link') !=  null )
-                    <li class="list-inline-item">
-                        <a href="{{ get_setting('twitter_link') }}" target="_blank" class="twitter"><i class="lab la-twitter"></i></a>
-                    </li>
-                    @endif
-                    @if ( get_setting('instagram_link') !=  null )
-                    <li class="list-inline-item">
-                        <a href="{{ get_setting('instagram_link') }}" target="_blank" class="instagram"><i class="lab la-instagram"></i></a>
-                    </li>
-                    @endif
-                    @if ( get_setting('youtube_link') !=  null )
-                    <li class="list-inline-item">
-                        <a href="{{ get_setting('youtube_link') }}" target="_blank" class="youtube"><i class="lab la-youtube"></i></a>
-                    </li>
-                    @endif
-                    @if ( get_setting('linkedin_link') !=  null )
-                    <li class="list-inline-item">
-                        <a href="{{ get_setting('linkedin_link') }}" target="_blank" class="linkedin"><i class="lab la-linkedin-in"></i></a>
-                    </li>
-                    @endif
-                </ul>
-                @endif
-            </div>
-            <div class="col-lg-4">
-                <div class="text-center text-md-right">
-                    <ul class="list-inline mb-0">
-                        @if ( get_setting('payment_method_images') !=  null )
-                            @foreach (explode(',', get_setting('payment_method_images')) as $key => $value)
-                                <li class="list-inline-item">
-                                    <img src="{{ uploaded_asset($value) }}" height="30" class="mw-100 h-auto" style="max-height: 30px">
-                                </li>
-                            @endforeach
-                        @endif
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</footer>
+
 
 
 <div class="aiz-mobile-bottom-nav d-xl-none fixed-bottom bg-white shadow-lg border-top rounded-top" style="box-shadow: 0px -1px 10px rgb(0 0 0 / 15%)!important; ">

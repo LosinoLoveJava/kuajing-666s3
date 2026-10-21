@@ -134,5 +134,6 @@
         }
     </script>
 
+    @include('frontend.partials.salesmartly')
 </body>
 </html>
