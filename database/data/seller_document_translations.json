@@ -1,0 +1,86 @@
+{
+  "en": {
+    "ID Card": "ID Card",
+    "Passport": "Passport",
+    "Driving License": "Driving License",
+    "Mobile Phone Bill": "Mobile Phone Bill",
+    "Water/Electric Bill": "Water/Electric Bill"
+  },
+  "cn": {
+    "ID Card": "身份证",
+    "Passport": "护照",
+    "Driving License": "驾驶证",
+    "Mobile Phone Bill": "手机账单",
+    "Water/Electric Bill": "水电账单"
+  },
+  "hk": {
+    "ID Card": "身分證",
+    "Passport": "護照",
+    "Driving License": "駕駛執照",
+    "Mobile Phone Bill": "手機帳單",
+    "Water/Electric Bill": "水電帳單"
+  },
+  "sa": {
+    "ID Card": "بطاقة الهوية",
+    "Passport": "جواز السفر",
+    "Driving License": "رخصة القيادة",
+    "Mobile Phone Bill": "فاتورة الهاتف المحمول",
+    "Water/Electric Bill": "فاتورة المياه والكهرباء"
+  },
+  "bd": {
+    "ID Card": "জাতীয় পরিচয়পত্র",
+    "Passport": "পাসপোর্ট",
+    "Driving License": "ড্রাইভিং লাইসেন্স",
+    "Mobile Phone Bill": "মোবাইল ফোনের বিল",
+    "Water/Electric Bill": "পানি/বিদ্যুৎ বিল"
+  },
+  "jp": {
+    "ID Card": "身分証明書",
+    "Passport": "パスポート",
+    "Driving License": "運転免許証",
+    "Mobile Phone Bill": "携帯電話料金請求書",
+    "Water/Electric Bill": "水道・電気料金請求書"
+  },
+  "kr": {
+    "ID Card": "신분증",
+    "Passport": "여권",
+    "Driving License": "운전면허증",
+    "Mobile Phone Bill": "휴대전화 요금 청구서",
+    "Water/Electric Bill": "수도/전기 요금 청구서"
+  },
+  "in": {
+    "ID Card": "Kartu Identitas",
+    "Passport": "Paspor",
+    "Driving License": "SIM",
+    "Mobile Phone Bill": "Tagihan Telepon Seluler",
+    "Water/Electric Bill": "Tagihan Air/Listrik"
+  },
+  "vi": {
+    "ID Card": "Căn cước công dân",
+    "Passport": "Hộ chiếu",
+    "Driving License": "Giấy phép lái xe",
+    "Mobile Phone Bill": "Hóa đơn điện thoại di động",
+    "Water/Electric Bill": "Hóa đơn nước/điện"
+  },
+  "ms": {
+    "ID Card": "Kad Pengenalan",
+    "Passport": "Pasport",
+    "Driving License": "Lesen Memandu",
+    "Mobile Phone Bill": "Bil Telefon Mudah Alih",
+    "Water/Electric Bill": "Bil Air/Elektrik"
+  },
+  "be": {
+    "ID Card": "Пасведчанне асобы",
+    "Passport": "Пашпарт",
+    "Driving License": "Вадзіцельскае пасведчанне",
+    "Mobile Phone Bill": "Рахунак за мабільную сувязь",
+    "Water/Electric Bill": "Рахунак за ваду/электрычнасць"
+  },
+  "th": {
+    "ID Card": "บัตรประชาชน",
+    "Passport": "หนังสือเดินทาง",
+    "Driving License": "ใบขับขี่",
+    "Mobile Phone Bill": "ใบแจ้งค่าบริการโทรศัพท์มือถือ",
+    "Water/Electric Bill": "ใบแจ้งค่าน้ำ/ค่าไฟ"
+  }
+}

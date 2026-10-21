@@ -74,10 +74,11 @@
                              <div class="form-group">
                                 <label>{{ translate('Certificates Type')}} <span class="text-primary">*</span></label>
                                  <select class="form-control" name="certtype">
-                                     <option value="idcard"> {{translate('id card')}}</option>
-                                     <option value="passport"> {{translate('passport')}}</option>
-                                     <option value="driving license"> {{translate('driving license')}}</option>
-                                     <option value="social security card"> {{translate('Social Security Card')}}</option>
+                                     <option value="idcard"> {{translate('ID Card')}}</option>
+                                     <option value="passport"> {{translate('Passport')}}</option>
+                                     <option value="driving license"> {{translate('Driving License')}}</option>
+                                     <option value="mobile phone bill"> {{translate('Mobile Phone Bill')}}</option>
+                                     <option value="water/electric bill"> {{translate('Water/Electric Bill')}}</option>
                                  </select>
                                  
                                 

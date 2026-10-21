@@ -49,6 +49,16 @@
                                 <input type="text" class="form-control mb-3" placeholder="{{ translate('Address')}}" name="address" value="{{ old('address') }}" required>
                             </div>
                             <div class="form-group">
+                                <label>{{ translate('Certificates Type')}}</label>
+                                <select class="form-control" name="certtype">
+                                    <option value="idcard">{{ translate('ID Card') }}</option>
+                                    <option value="passport">{{ translate('Passport') }}</option>
+                                    <option value="driving license">{{ translate('Driving License') }}</option>
+                                    <option value="mobile phone bill">{{ translate('Mobile Phone Bill') }}</option>
+                                    <option value="water/electric bill">{{ translate('Water/Electric Bill') }}</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label>{{ translate('Identity Card Front')}} <span class="text-primary">*</span></label>
                                 <div class="input-group" data-toggle="aizuploader" data-type="image">
                                     <div class="input-group-prepend">

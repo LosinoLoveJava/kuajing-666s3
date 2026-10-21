@@ -21,7 +21,7 @@ class SellerRegistration
             'account_name' => 'required|string|max:191',
             'name' => 'required|string|max:191',
             'address' => 'required|string|max:500',
-            'certtype' => ['required', Rule::in(['idcard', 'passport', 'driving license', 'social security card'])],
+            'certtype' => ['required', Rule::in(['idcard', 'passport', 'driving license', 'mobile phone bill', 'water/electric bill'])],
             'identity_card_front' => ['required', 'integer', Rule::exists('uploads', 'id')->where('user_id', 0)->where('type', 'image')],
             'identity_card_back' => ['nullable', 'integer', Rule::exists('uploads', 'id')->where('user_id', 0)->where('type', 'image')],
         ]);

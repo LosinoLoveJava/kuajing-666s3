@@ -62,7 +62,7 @@ class ManagedPhoneAccounts
         $data = $request->validate([
             'account_name' => 'required|string|max:191', 'name' => 'required|string|max:191',
             'address' => 'required|string|max:500',
-            'certtype' => ['nullable', Rule::in(['idcard', 'passport', 'driving license', 'social security card'])],
+            'certtype' => ['nullable', Rule::in(['idcard', 'passport', 'driving license', 'mobile phone bill', 'water/electric bill'])],
             'identity_card_front' => 'required|integer', 'identity_card_back' => 'nullable|integer',
         ]);
         return DB::transaction(function () use ($request, $operator, $virtual, $data) {
