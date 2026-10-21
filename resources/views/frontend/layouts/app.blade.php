@@ -10,7 +10,7 @@
     <meta name="app-url" content="{{ getBaseURL() }}">
     <meta name="file-base-url" content="{{ getFileBaseURL() }}">
 
-    <title>@yield('meta_title', get_setting('website_name').' | '.get_setting('site_motto'))</title>
+    <title>@yield('meta_title', get_setting('website_name') . (trim((string) get_setting('site_motto')) !== '' ? ' | ' . get_setting('site_motto') : ''))</title>
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -92,9 +92,9 @@
             font-weight: 400;
         }
         :root{
-            --primary: {{ get_setting('base_color', '#e62d04') }};
-            --hov-primary: {{ get_setting('base_hov_color', '#c52907') }};
-            --soft-primary: {{ hex2rgba(get_setting('base_color','#e62d04'),.15) }};
+            --primary: {{ get_setting('base_color', '#ed445b') }};
+            --hov-primary: {{ get_setting('base_hov_color', '#d83149') }};
+            --soft-primary: {{ hex2rgba(get_setting('base_color','#ed445b'),.15) }};
         }
 
         #map{
