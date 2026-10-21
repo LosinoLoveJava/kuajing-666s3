@@ -242,7 +242,7 @@
 @endsection
 
 @section('script')
-    <script src="/public/assets/js/md5.min.js"></script>
+    <script src="{{ static_asset('assets/js/md5.min.js') }}"></script>
     <script type="text/javascript">
 
         function select_payment_type(id){

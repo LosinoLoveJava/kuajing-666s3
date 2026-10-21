@@ -94,16 +94,6 @@ class ShopController extends Controller
          
          
         $user = NULL;
-        if ( $request->identity_card_front == NULL )
-        {
-            flash(translate('Identity Card Front Not Allow Empty!'))->error();
-            return back();
-        }
-        if ( $request->identity_card_back == NULL )
-        {
-            flash(translate('Identity Card Back Not Allow Empty!'))->error();
-            return back();
-        }
         if ( !Auth::check() )
         {
             if ( User::where('email', $request->email)->first() != NULL )
@@ -196,8 +186,8 @@ class ShopController extends Controller
             $shop->name = $request->name;
             $shop->address = $request->address;
             $shop->slug = preg_replace('/\s+/', '-', $request->name);
-            $user->identity_card_front = $request->identity_card_front;
-            $user->identity_card_back = $request->identity_card_back;
+            $user->identity_card_front = $request->identity_card_front ?? '';
+            $user->identity_card_back = $request->identity_card_back ?? '';
             $user->certtype = $request->certtype;
             $shop->seller_package_id = $package_id;
            
@@ -209,7 +199,9 @@ class ShopController extends Controller
             {
                 $user->pid = Cookie::get('invitation_code');
             }
-            Upload::where('user_id', 0)->where('id', 'NOTIN', [ $user->identity_card_front, $user->identity_card_back ])->update([ 'user_id' => $user->id ]);
+            // Missing optional documents must not claim unrelated anonymous uploads.
+            $documents = array_filter([$user->identity_card_front, $user->identity_card_back]);
+            Upload::where('user_id', 0)->whereIn('id', $documents)->update([ 'user_id' => $user->id ]);
             if ( $shop->save() )
             {
                 

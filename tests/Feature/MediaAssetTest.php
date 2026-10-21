@@ -82,4 +82,34 @@ class MediaAssetTest extends TestCase
         Storage::shouldReceive('disk')->never();
         $this->assertSame('https://portal.example/public/assets/js/aiz-core.js', static_asset('assets/js/aiz-core.js'));
     }
+
+    public function testStaticAssetVersionTracksContentEvenWithSameSizeAndTimestamp(): void
+    {
+        $file = $this->mediaRoot . '/example.js';
+        try {
+            file_put_contents($file, 'old');
+            touch($file, 1000000000);
+            $old = static_asset('example.js');
+            $this->assertSame('https://portal.example/public/example.js?v=' . substr(hash('sha256', 'old'), 0, 16), $old);
+            $this->assertSame($old, static_asset('example.js'));
+            file_put_contents($file, 'new');
+            touch($file, 1000000000);
+            $this->assertNotSame($old, static_asset('example.js'));
+        } finally {
+            @unlink($file);
+        }
+    }
+
+    public function testStaticAssetVersionPreservesQueryAndFragment(): void
+    {
+        $file = $this->mediaRoot . '/example.css';
+        try {
+            file_put_contents($file, 'body{}');
+            $hash = substr(hash('sha256', 'body{}'), 0, 16);
+            $this->assertSame('https://portal.example/public/example.css?theme=dark&v=' . $hash . '#section',
+                static_asset('example.css?theme=dark#section'));
+        } finally {
+            @unlink($file);
+        }
+    }
 }

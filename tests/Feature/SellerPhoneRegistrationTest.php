@@ -121,6 +121,77 @@ class SellerPhoneRegistrationTest extends TestCase
         Http::assertNothingSent();
     }
 
+    /** @dataProvider optionalDocumentCases */
+    public function testIdentityDocumentsAreOptionalAndOnlySubmittedUploadsAreClaimed($documents, $front, $back, $claimed)
+    {
+        $payload = $this->payload();
+        unset($payload['identity_card_front'], $payload['identity_card_back']);
+        $this->post('/shops', array_merge($payload, $documents))->assertRedirect(route('shops.index'));
+        $user = User::firstOrFail();
+        $this->assertSame('seller', $user->user_type);
+        $this->assertNotNull($user->phone_verified_at);
+        $this->assertSame($front, $user->identity_card_front);
+        $this->assertSame($back, $user->identity_card_back);
+        $this->assertDatabaseHas('shops', ['user_id' => $user->id, 'verification_status' => 0]);
+        $this->assertDatabaseHas('seller_package_payments', ['user_id' => $user->id]);
+        foreach ([1, 2, 3] as $id) {
+            $this->assertDatabaseHas('uploads', ['id' => $id, 'user_id' => in_array($id, $claimed, true) ? $user->id : 0]);
+        }
+        $this->assertDatabaseHas('uploads', ['id' => 4, 'user_id' => 999]);
+        $this->assertNull(DB::table('phone_verifications')->value('code_hash'));
+        Notification::assertNothingSent(); Http::assertNothingSent();
+    }
+
+    public function optionalDocumentCases(): array
+    {
+        return [
+            'both omitted' => [[], '', '', []],
+            'both empty' => [['identity_card_front' => '', 'identity_card_back' => ''], '', '', []],
+            'both null' => [['identity_card_front' => null, 'identity_card_back' => null], '', '', []],
+            'front only' => [['identity_card_front' => 1], '1', '', [1]],
+            'back only' => [['identity_card_back' => 2], '', '2', [2]],
+            'front with empty back' => [['identity_card_front' => 1, 'identity_card_back' => ''], '1', '', [1]],
+            'license only' => [['identity_card_back2' => 3], '', '', [3]],
+        ];
+    }
+
+    public function testSellerWithoutIdentityDocumentsCanUseNormalPhoneLogin()
+    {
+        $this->post('/shops', $this->payload(['identity_card_front' => '', 'identity_card_back' => '', 'code' => '89001']))
+            ->assertRedirect(route('shops.index'));
+        $user = User::firstOrFail();
+        auth()->logout();
+        $this->post('/users/phone', ['mode' => 'login', 'phone' => $user->phone, 'password' => 'password123'])
+            ->assertRedirect(route('seller.dashboard'));
+        $this->assertAuthenticatedAs($user);
+        $this->assertDatabaseCount('shops', 1);
+    }
+
+    public function testShopApplicationRendersOptionalIdentityDocuments()
+    {
+        $finder = app('view')->getFinder();
+        $finder->prependLocation(base_path('tests/Fixtures/views'));
+        $finder->flush();
+        view()->share('errors', new \Illuminate\Support\ViewErrorBag);
+        app('request')->setLaravelSession(app('session.store'));
+        \Illuminate\Support\Facades\Cache::put('business_settings', collect(), 60);
+        $view = app(\App\Http\Controllers\ShopController::class)->create(Request::create('/shops/create'));
+        $html = $view->render();
+        $dom = new \DOMDocument;
+        @$dom->loadHTML('<?xml encoding="utf-8" ?>' . $html);
+        $xpath = new \DOMXPath($dom);
+        foreach (['identity_card_front', 'identity_card_back'] as $field) {
+            $inputs = $xpath->query('//input[@name="' . $field . '"]');
+            $this->assertSame(1, $inputs->length);
+            $this->assertFalse($inputs->item(0)->hasAttribute('required'));
+            $labels = $xpath->query('//input[@name="' . $field . '"]/ancestor::div[contains(@class,"form-group")][1]/label');
+            $this->assertSame(1, $labels->length);
+            $this->assertStringNotContainsString('*', $labels->item(0)->textContent);
+        }
+        $this->assertSame(1, $xpath->query('//input[@name="name" and @required]')->length);
+        $this->assertSame(1, $xpath->query('//input[@name="address" and @required]')->length);
+    }
+
     public function testNewSellerCanLogInWithPhonePasswordAndSms()
     {
         $this->post('/shops', $this->payload())->assertRedirect();
@@ -186,7 +257,8 @@ class SellerPhoneRegistrationTest extends TestCase
 
     public function testInvalidShopDetailsAndDocumentsDoNotConsumeCode()
     {
-        foreach ([['identity_card_front'=>null], ['identity_card_front'=>4], ['identity_card_back'=>5],
+        foreach ([['identity_card_front'=>'not-an-id'], ['identity_card_front'=>4], ['identity_card_back'=>5],
+            ['identity_card_front'=>999], ['identity_card_back'=>'1,2'],
             ['account_name'=>''], ['address'=>''], ['password_confirmation'=>'other-password']] as $case) {
             $this->postJson('/shops', $this->payload($case))->assertStatus(422);
         }

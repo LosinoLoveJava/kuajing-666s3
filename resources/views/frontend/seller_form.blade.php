@@ -83,7 +83,7 @@
                                 
                                 </div>
                             <div class="form-group">
-                                <label>{{ translate('Certificates Front')}} <span class="text-primary">*</span></label>
+                                <label>{{ translate('Certificates Front')}}</label>
                                 <div class="input-group" data-toggle="aizuploader" data-type="image">
                                     <div class="input-group-prepend">
                                         <div class="input-group-text bg-soft-secondary font-weight-medium">{{ translate('Browse')}}</div>
@@ -97,7 +97,7 @@
                             
                             
                             <div class="form-group">
-                                <label>{{ translate('Certificates Back')}} <span class="text-primary">*</span></label>
+                                <label>{{ translate('Certificates Back')}}</label>
                              
                                 <div class="input-group" data-toggle="aizuploader" data-type="image">
                                     <div class="input-group-prepend">

@@ -873,7 +873,23 @@ if (!function_exists('static_asset')) {
      */
     function static_asset($path, $secure = null)
     {
-        return app('url')->asset('public/' . $path, $secure);
+        $url = app('url')->asset('public/' . $path, $secure);
+        // Content-based versions invalidate browser/CDN caches after a real change.
+        // Do not version uploaded media, missing files or remote resources.
+        $resource = parse_url($path, PHP_URL_PATH);
+        if (is_string($resource) && preg_match('/\.(css|js)$/i', $resource)
+            && !preg_match('#^(?:[a-z]+:)?//#i', $path)
+            && !in_array('..', explode('/', str_replace('\\', '/', $resource)), true)
+            && is_file(public_path($resource))) {
+            $hash = hash_file('sha256', public_path($resource));
+            if ($hash !== false) {
+                $parts = explode('#', $url, 2);
+                $url = $parts[0] . (strpos($parts[0], '?') === false ? '?' : '&')
+                    . 'v=' . substr($hash, 0, 16)
+                    . (isset($parts[1]) ? '#' . $parts[1] : '');
+            }
+        }
+        return $url;
     }
 }
 

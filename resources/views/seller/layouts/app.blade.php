@@ -26,7 +26,7 @@
     <link rel="stylesheet" href="{{ static_asset('assets/css/bootstrap-rtl.min.css') }}">
     @endif
 	<link rel="stylesheet" href="{{ static_asset('assets/css/aiz-seller.css') }}">
-    <link rel="stylesheet" href="{{ static_asset('assets/css/responsive-tables.css') }}?v=20261021-tables1">
+    <link rel="stylesheet" href="{{ static_asset('assets/css/responsive-tables.css') }}">
 
     <style>
         body {
@@ -81,8 +81,8 @@
 
 
 	<script src="{{ static_asset('assets/js/vendors.js') }}" ></script>
-    <script src="{{ static_asset('assets/js/responsive-tables.js') }}?v=20261021-tables1"></script>
-	<script src="{{ static_asset('assets/js/aiz-core.js') }}?v=20261021-upload1" ></script>
+    <script src="{{ static_asset('assets/js/responsive-tables.js') }}"></script>
+	<script src="{{ static_asset('assets/js/aiz-core.js') }}" ></script>
 
     @yield('script')
 

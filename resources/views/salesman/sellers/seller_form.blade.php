@@ -50,7 +50,7 @@
                                 <input type="text" class="form-control mb-3" placeholder="{{ translate('Address')}}" name="address" required>
                             </div>
                             <div class="form-group">
-                                <label>{{ translate('Identity Card Front')}} <span class="text-primary">*</span></label>
+                                <label>{{ translate('Identity Card Front')}}</label>
                                 <div class="input-group" data-toggle="aizuploader" data-type="image">
                                     <div class="input-group-prepend">
                                         <div class="input-group-text bg-soft-secondary font-weight-medium">{{ translate('Browse')}}</div>
@@ -62,7 +62,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label>{{ translate('Identity Card Back')}} <span class="text-primary">*</span></label>
+                                <label>{{ translate('Identity Card Back')}}</label>
                                 <div class="input-group" data-toggle="aizuploader" data-type="image">
                                     <div class="input-group-prepend">
                                         <div class="input-group-text bg-soft-secondary font-weight-medium">{{ translate('Browse')}}</div>

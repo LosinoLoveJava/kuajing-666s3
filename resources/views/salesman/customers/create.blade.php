@@ -123,7 +123,7 @@
 
         var iti = intlTelInput(input, {
             separateDialCode: true,
-            utilsScript: "{{ static_asset('assets/js/intlTelutils.js') }}?1590403638580",
+            utilsScript: "{{ static_asset('assets/js/intlTelutils.js') }}",
             onlyCountries: @php echo json_encode(\App\Models\Country::where('status', 1)->pluck('code')->toArray()) @endphp,
             customPlaceholder: function(selectedCountryPlaceholder, selectedCountryData) {
                 if(selectedCountryData.iso2 == 'bd'){
