@@ -2,17 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Upload;
 use Cookie;
 use Illuminate\Http\Request;
 use App\Models\Shop;
 use App\Models\User;
-use App\Models\SellerPackage;
-use App\Models\BusinessSetting;
-use App\Models\SellerPackagePayment;
 use Auth;
-use Hash;
-use App\Notifications\EmailVerificationNotification;
 use function dd;
 use function view;
 
@@ -41,13 +35,13 @@ class ShopController extends Controller
     public function create( Request $request ) {
         if ( Auth::check() )
         {
-            if ( Auth::user()->user_type == 'admin' )
+            if ( in_array(Auth::user()->user_type, ['admin', 'staff'], true) )
             {
-                return view('backend.sellers.seller_form');
+                return view('backend.sellers.seller_form', ['countries' => app(\App\Services\PhoneNumber::class)->countries()]);
             }
             else if ( Auth::user()->user_type == 'salesman' )
             {
-                return view('salesman.sellers.seller_form');
+                return view('salesman.sellers.seller_form', ['countries' => app(\App\Services\PhoneNumber::class)->countries()]);
             }
             else if ( Auth::user()->user_type == 'customer' )
             {
@@ -89,190 +83,9 @@ class ShopController extends Controller
             return redirect()->route('shops.index');
         }
 
-        $request->validate([
-            'identity_card_front' => ['required', 'integer', \Illuminate\Validation\Rule::exists('uploads', 'id')->where('type', 'image')],
-            'identity_card_back' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('uploads', 'id')->where('type', 'image')],
-        ]);
-        
-         $package = SellerPackage::where(['is_default' => 1 ])->first();
-         $package_id = $package['id'];
-         
-         
-        $user = NULL;
-        if ( !Auth::check() )
-        {
-            if ( User::where('email', $request->email)->first() != NULL )
-            {
-                flash(translate('Email already exists!'))->error();
-                return back();
-            }
-            if ( $request->password == $request->password_confirmation )
-            {
-                $user = new User;
-                $user->name = $request->name;
-                $user->email = $request->email;
-                $user->user_type = "seller";
-                $user->password = Hash::make($request->password);
-                $user->save();
-            }
-            else
-            {
-                flash(translate('Sorry! Password did not match.'))->error();
-                return back();
-            }
-        }
-        else
-        {//如果有登录用户
-            if ( Auth::user()->user_type == 'admin' )
-            {//管理后台
-                if ( User::where('email', $request->email)->first() != NULL )
-                {
-                    flash(translate('Email already exists!'))->error();
-                    return back();
-                }
-                if ( $request->password == $request->password_confirmation )
-                {
-                    $user = new User;
-                    $user->name = $request->name;
-                    $user->email = $request->email;
-                    $user->user_type = "seller";
-                    $user->is_virtual = "1";
-                    $user->password = Hash::make($request->password);
-                    $user->email_verified_at = date('Y-m-d H:m:s');
-                    $user->save();
-                }
-                else
-                {
-                    flash(translate('Sorry! Password did not match.'))->error();
-                    return back();
-                }
-            }
-            else if ( Auth::user()->user_type == 'salesman' )
-            {//推销员
-                if ( User::where('email', $request->email)->first() != NULL )
-                {
-                    flash(translate('Email already exists!'))->error();
-                    return back();
-                }
-                if ( $request->password == $request->password_confirmation )
-                {
-                    $user = new User;
-                    $user->name = $request->name;
-                    $user->email = $request->email;
-                    $user->user_type = "seller";
-                    $user->is_virtual = "1";
-                    $user->pid = Auth::user()->id;
-                    $user->password = Hash::make($request->password);
-                    $user->email_verified_at = date('Y-m-d H:m:s');
-                    $user->save();
-                }
-                else
-                {
-                    flash(translate('Sorry! Password did not match.'))->error();
-                    return back();
-                }
-            }
-            else
-            {
-                $user = Auth::user();
-                if ( $user->customer != NULL )
-                {
-                    $user->customer->delete();
-                }
-                $user->user_type = "seller";
-                $user->save();
-            }
-        }
-
-        if ( Shop::where('user_id', $user->id)->first() == NULL )
-        {
-            $shop = new Shop;
-            $shop->user_id = $user->id;
-            $shop->name = $request->name;
-            $shop->address = $request->address;
-            $shop->slug = preg_replace('/\s+/', '-', $request->name);
-            $user->identity_card_front = $request->identity_card_front;
-            $user->identity_card_back = $request->identity_card_back ?? '';
-            $user->certtype = $request->certtype;
-            $shop->seller_package_id = $package_id;
-           
-           
-           
-               
-               
-            if ( Cookie::get('invitation_code') )
-            {
-                $user->pid = Cookie::get('invitation_code');
-            }
-            // Missing optional documents must not claim unrelated anonymous uploads.
-            $documents = array_filter([$user->identity_card_front, $user->identity_card_back]);
-            Upload::where('user_id', 0)->whereIn('id', $documents)->update([ 'user_id' => $user->id ]);
-            if ( $shop->save() )
-            {
-                
-                
-                #####################################
-                
-          
-            $shop->seller_package_id = $package_id;
-            $seller_package = SellerPackage::findOrFail( $package_id );
-            $shop->product_upload_limit = $seller_package->product_upload_limit;
-            $shop->package_invalid_at = date('Y-m-d', strtotime($seller->package_invalid_at . ' +' . $seller_package->duration . 'days'));
-            $shop->save();
-    
-            $seller_package = new SellerPackagePayment;
-            $seller_package->user_id = $user->id;
-            $seller_package->seller_package_id =  $package_id;
-            $seller_package->payment_method = 'free';
-            $seller_package->payment_details = '';
-            $seller_package->approval = 1;
-            $seller_package->offline_payment = 0;
-            $seller_package->save();
-            
-        
-                #####################################
-                
-                
-                
-                
-                if ( Auth::check() )
-                {
-                    if ( Auth::user()->user_type == 'admin' )
-                    {//管理后台
-                        flash(translate('Virtual Seller has been created successfully!'))->success();
-                        return redirect()->route('sellers.index');
-                    }
-                    else if ( Auth::user()->user_type == 'salesman' )
-                    {//推销员
-                        flash(translate('Virtual Seller has been created successfully!'))->success();
-                        return redirect()->route('salesman.sellers_index');
-                    }
-                }
-                else
-                {
-                    auth()->login($user, false);
-                }
-                if ( BusinessSetting::where('type', 'email_verification')->first()->value != 1 )
-                {
-                    $user->email_verified_at = date('Y-m-d H:m:s');
-                    $user->save();
-                }
-                else
-                {
-                    $user->notify(new EmailVerificationNotification());
-                }
-                flash(translate('Your Shop has been created successfully!'))->success();
-                return redirect()->route('shops.index');
-            }
-            else
-            {
-                $user->user_type == 'customer';
-                $user->save();
-            }
-        }
-
-        flash(translate('Sorry! Something went wrong.'))->error();
-        return back();
+        app(\App\Services\ManagedPhoneAccounts::class)->createSeller($request, Auth::user());
+        flash(translate('Virtual Seller has been created successfully!'))->success();
+        return redirect()->route(Auth::user()->user_type === 'salesman' ? 'salesman.sellers_index' : 'sellers.index');
     }
 
     /**

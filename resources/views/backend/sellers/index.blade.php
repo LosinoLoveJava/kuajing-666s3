@@ -69,7 +69,7 @@
             </div>
             <div class="col-md-2">
                 <div class="form-group mb-0">
-                  <input type="text" class="form-control" id="search" name="search"@isset($sort_search) value="{{ $sort_search }}" @endisset placeholder="{{ translate('Type name or email & Enter') }}">
+                  <input type="text" class="form-control" id="search" name="search"@isset($sort_search) value="{{ $sort_search }}" @endisset placeholder="{{ translate('Name') }} / {{ translate('Phone') }}">
                 </div>
             </div>
             <button type="submit" class="btn btn-success btn-styled">{{ translate('Search') }}</button>

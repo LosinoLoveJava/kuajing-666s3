@@ -25,13 +25,13 @@ class CustomerController extends Controller
     public function index( Request $request ) {
         $sort_search = NULL;
 
-        $users = User::where('user_type', 'customer')->where('email_verified_at', '!=', NULL)->where('is_virtual', 0)->orderBy('created_at', 'desc');
+        $users = User::where('user_type', 'customer')->where(function ($q) { $q->whereNotNull('phone_verified_at')->orWhereNotNull('email_verified_at'); })->where('is_virtual', 0)->orderBy('created_at', 'desc');
         if ( $request->has('search') )
         {
             $sort_search = $request->search;
             $users->where(function ( $q ) use ( $sort_search )
             {
-                $q->where('name', 'like', '%' . $sort_search . '%')->orWhere('email', 'like', '%' . $sort_search . '%');
+                $q->where('name', 'like', '%' . $sort_search . '%')->orWhere('phone', 'like', '%' . $sort_search . '%')->orWhere('phone_normalized', 'like', '%' . $sort_search . '%')->orWhere('email', 'like', '%' . $sort_search . '%');
             });
         }
         $users = $users->paginate(15);
@@ -107,7 +107,7 @@ class CustomerController extends Controller
             $sort_search = $request->search;
             $users->where(function ( $q ) use ( $sort_search )
             {
-                $q->where('name', 'like', '%' . $sort_search . '%')->orWhere('email', 'like', '%' . $sort_search . '%');
+                $q->where('name', 'like', '%' . $sort_search . '%')->orWhere('phone', 'like', '%' . $sort_search . '%')->orWhere('phone_normalized', 'like', '%' . $sort_search . '%')->orWhere('email', 'like', '%' . $sort_search . '%');
             });
         }
         $users = $users->paginate(15);
@@ -141,7 +141,7 @@ class CustomerController extends Controller
             {
             }
         }
-        return view('backend.customer.customers.create');
+        return view('backend.customer.customers.create', ['countries' => app(\App\Services\PhoneNumber::class)->countries()]);
     }
 
     /**
@@ -171,7 +171,7 @@ class CustomerController extends Controller
             {
             }
         }
-        return view('salesman.customers.create');
+        return view('salesman.customers.create', ['countries' => app(\App\Services\PhoneNumber::class)->countries()]);
     }
 
     /**
@@ -182,90 +182,14 @@ class CustomerController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store( Request $request ) {
-        if ( filter_var($request->email, FILTER_VALIDATE_EMAIL) )
-        {
-            if ( User::where('email', $request->email)->first() != NULL )
-            {
-                flash(translate('Email or Phone already exists.'));
-                return back();
-            }
-        }
-        else if ( User::where('phone', '+' . $request->country_code . $request->phone)->first() != NULL )
-        {
-            flash(translate('Phone already exists.'));
-            return back();
-        }
-        $user = User::create($request->all());
-        $user->email_verified_at = date('Y-m-d H:m:s');
-        $user->user_type = 'customer';
-        $user->is_virtual = '1';
-        if ( $user->balance != $request->balance ) $user->balance = (float)$request->balance;
-        $user->save();
+        app(\App\Services\ManagedPhoneAccounts::class)->createCustomer($request, Auth::user());
         flash(translate('Add successful.'))->success();
-
         return redirect()->route('customers.index');
-
-
-        /*$request->validate([
-            'name' => 'required',
-            'email' => 'required|unique:users|email',
-            'phone' => 'required|unique:users',
-        ]);
-
-        $response['status'] = 'Error';
-
-        $user = User::create($request->all());
-
-        $customer = new Customer;
-
-        $customer->user_id = $user->id;
-        $customer->save();
-
-        if ( isset($user->id) )
-        {
-            $html = '';
-            $html .= '<option value="">
-                        ' . translate("Walk In Customer") . '
-                    </option>';
-            foreach ( Customer::all() as $key => $customer )
-            {
-                if ( $customer->user )
-                {
-                    $html .= '<option value="' . $customer->user->id . '" data-contact="' . $customer->user->email . '">
-                                ' . $customer->user->name . '
-                            </option>';
-                }
-            }
-
-            $response['status'] = 'Success';
-            $response['html'] = $html;
-        }
-
-        echo json_encode($response);*/
     }
 
-    public function salesman_store( Request $request ) {
-        if ( filter_var($request->email, FILTER_VALIDATE_EMAIL) )
-        {
-            if ( User::where('email', $request->email)->first() != NULL )
-            {
-                flash(translate('Email or Phone already exists.'));
-                return back();
-            }
-        }
-        else if ( User::where('phone', '+' . $request->country_code . $request->phone)->first() != NULL )
-        {
-            flash(translate('Phone already exists.'));
-            return back();
-        }
-        $user = User::create($request->all());
-        $user->email_verified_at = date('Y-m-d H:m:s');
-        $user->user_type = 'customer';
-        $user->is_virtual = '1';
-        if ( $user->balance != $request->balance ) $user->balance = (float)$request->balance;
-        $user->save();
+    public function salesman_store(Request $request) {
+        app(\App\Services\ManagedPhoneAccounts::class)->createCustomer($request, Auth::user());
         flash(translate('Add successful.'))->success();
-
         return redirect()->route('salesman.customers.index');
     }
 

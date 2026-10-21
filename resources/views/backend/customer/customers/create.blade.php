@@ -12,7 +12,7 @@
                                     <form id="reg-form" class="form-default" role="form" action="{{ route('customers.store') }}" method="POST">
                                         @csrf
                                         <div class="form-group">
-                                            <input type="text" class="form-control{{ $errors->has('name') ? ' is-invalid' : '' }}" value="{{ old('name') }}" placeholder="{{  translate('Full Name') }}" name="name">
+                                            <input type="text" class="form-control{{ $errors->has('name') ? ' is-invalid' : '' }}" value="{{ old('name') }}" placeholder="{{  translate('Full Name') }}" name="name" required>
                                             @if ($errors->has('name'))
                                                 <span class="invalid-feedback" role="alert">
                                                     <strong>{{ $errors->first('name') }}</strong>
@@ -20,38 +20,15 @@
                                             @endif
                                         </div>
 
-                                        @if (addon_is_activated('otp_system'))
-                                            <div class="form-group phone-form-group mb-1">
-                                                <input type="tel" id="phone-code" class="form-control{{ $errors->has('phone') ? ' is-invalid' : '' }}" value="{{ old('phone') }}" placeholder="" name="phone" autocomplete="off">
-                                            </div>
-
-                                            <input type="hidden" name="country_code" value="">
-
-                                            <div class="form-group email-form-group mb-1 d-none">
-                                                <input type="email" class="form-control {{ $errors->has('email') ? ' is-invalid' : '' }}" value="{{ old('email') }}" placeholder="{{  translate('Email') }}" name="email"  autocomplete="off">
-                                                @if ($errors->has('email'))
-                                                    <span class="invalid-feedback" role="alert">
-                                                        <strong>{{ $errors->first('email') }}</strong>
-                                                    </span>
-                                                @endif
-                                            </div>
-
-                                            <div class="form-group text-right">
-                                                <button class="btn btn-link p-0 opacity-50 text-reset" type="button" onclick="toggleEmailPhone(this)">{{ translate('Use Email Instead') }}</button>
-                                            </div>
-                                        @else
-                                            <div class="form-group">
-                                                <input type="email" class="form-control{{ $errors->has('email') ? ' is-invalid' : '' }}" value="{{ old('email') }}" placeholder="{{  translate('Email') }}" name="email">
-                                                @if ($errors->has('email'))
-                                                    <span class="invalid-feedback" role="alert">
-                                                        <strong>{{ $errors->first('email') }}</strong>
-                                                    </span>
-                                                @endif
-                                            </div>
+                                        @if($errors->any())
+                                            <div class="alert alert-danger" role="alert"><ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
                                         @endif
+                                        <div class="form-group">
+                                            @include('frontend.partials.phone_registration_fields', ['phoneFormId' => 'reg-form'])
+                                        </div>
 
                                         <div class="form-group">
-                                            <input type="password" class="form-control{{ $errors->has('password') ? ' is-invalid' : '' }}" placeholder="{{  translate('Password') }}" name="password">
+                                            <input type="password" class="form-control{{ $errors->has('password') ? ' is-invalid' : '' }}" placeholder="{{  translate('Password') }}" name="password" minlength="8" maxlength="100" required>
                                             @if ($errors->has('password'))
                                                 <span class="invalid-feedback" role="alert">
                                                     <strong>{{ $errors->first('password') }}</strong>
@@ -60,7 +37,7 @@
                                         </div>
 
                                         <div class="form-group">
-                                            <input type="password" class="form-control" placeholder="{{  translate('Confirm Password') }}" name="password_confirmation">
+                                            <input type="password" class="form-control" placeholder="{{  translate('Confirm Password') }}" name="password_confirmation" minlength="8" maxlength="100" required>
                                         </div>
                                         <div class="form-group">
                                             <input type="number" class="form-control" placeholder="{{  translate('Wallet Balance') }}" name="balance">
@@ -83,80 +60,5 @@
 
 
 @section('script')
-    @if(get_setting('google_recaptcha') == 1)
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    @endif
-
-    <script type="text/javascript">
-
-        @if(get_setting('google_recaptcha') == 1)
-        // making the CAPTCHA  a required field for form submission
-        $(document).ready(function(){
-            // alert('helloman');
-            $("#reg-form").on("submit", function(evt)
-            {
-                var response = grecaptcha.getResponse();
-                if(response.length == 0)
-                {
-                //reCaptcha not verified
-                    alert("please verify you are humann!");
-                    evt.preventDefault();
-                    return false;
-                }
-                //captcha verified
-                //do the rest of your validations here
-                $("#reg-form").submit();
-            });
-        });
-        @endif
-
-        var isPhoneShown = true,
-            countryData = window.intlTelInputGlobals.getCountryData(),
-            input = document.querySelector("#phone-code");
-
-        for (var i = 0; i < countryData.length; i++) {
-            var country = countryData[i];
-            if(country.iso2 == 'bd'){
-                country.dialCode = '88';
-            }
-        }
-
-        var iti = intlTelInput(input, {
-            separateDialCode: true,
-            utilsScript: "{{ static_asset('assets/js/intlTelutils.js') }}",
-            onlyCountries: @php echo json_encode(\App\Models\Country::where('status', 1)->pluck('code')->toArray()) @endphp,
-            customPlaceholder: function(selectedCountryPlaceholder, selectedCountryData) {
-                if(selectedCountryData.iso2 == 'bd'){
-                    return "01xxxxxxxxx";
-                }
-                return selectedCountryPlaceholder;
-            }
-        });
-
-        var country = iti.getSelectedCountryData();
-        $('input[name=country_code]').val(country.dialCode);
-
-        input.addEventListener("countrychange", function(e) {
-            // var currentMask = e.currentTarget.placeholder;
-
-            var country = iti.getSelectedCountryData();
-            $('input[name=country_code]').val(country.dialCode);
-
-        });
-
-        function toggleEmailPhone(el){
-            if(isPhoneShown){
-                $('.phone-form-group').addClass('d-none');
-                $('.email-form-group').removeClass('d-none');
-                isPhoneShown = false;
-                $(el).html('{{ translate('Use Phone Instead') }}');
-            }
-            else{
-                $('.phone-form-group').removeClass('d-none');
-                $('.email-form-group').addClass('d-none');
-                isPhoneShown = true;
-                $(el).html('{{ translate('Use Email Instead') }}');
-            }
-        }
-    </script>
+@include('frontend.partials.phone_auth_script', ['mode' => 'register', 'phoneFormId' => 'reg-form'])
 @endsection

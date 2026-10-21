@@ -1,6 +1,6 @@
-@extends('backend.layouts.app')
+@extends(auth()->user()->user_type === 'salesman' ? 'salesman.layouts.app' : 'backend.layouts.app')
 
-@section('content')
+@section(auth()->user()->user_type === 'salesman' ? 'panel_content' : 'content')
 
 <div class="aiz-titlebar text-left mt-2 mb-3">
     <h5 class="mb-0 h6">{{translate('Edit Seller Information')}}</h5>
@@ -13,7 +13,7 @@
         </div>
 
         <div class="card-body">
-          <form action="{{ route('sellers.update', $shop->id) }}" method="POST">
+          <form id="seller-edit" action="{{ route(auth()->user()->user_type === 'salesman' ? 'salesman.sellers.update' : 'sellers.update', $shop->id) }}" method="POST">
                 <input name="_method" type="hidden" value="PATCH">
                 @csrf
                 <div class="form-group row">
@@ -22,11 +22,11 @@
                         <input type="text" placeholder="{{translate('Name')}}" id="name" name="name" class="form-control" value="{{$shop->user->name}}" required>
                     </div>
                 </div>
-                <div class="form-group row">
-                    <label class="col-sm-3 col-from-label" for="email">{{translate('Email Address')}}</label>
-                    <div class="col-sm-9">
-                        <input type="text" placeholder="{{translate('Email Address')}}" id="email" name="email" class="form-control" value="{{$shop->user->email}}" required>
-                    </div>
+                @if($errors->any())
+                    <div class="alert alert-danger" role="alert"><ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+                @endif
+                <div class="form-group">
+                    @include('frontend.partials.phone_registration_fields', ['phoneFormId' => 'seller-edit', 'phoneValue' => $shop->user->phone_normalized ?: $shop->user->phone])
                 </div>
                 <div class="form-group row">
                     <label class="col-sm-3 col-from-label" for="password">{{translate('Password')}}</label>
@@ -54,4 +54,8 @@
     </div>
 </div>
 
+@endsection
+
+@section('script')
+@include('frontend.partials.phone_auth_script', ['mode' => 'register', 'phoneFormId' => 'seller-edit'])
 @endsection

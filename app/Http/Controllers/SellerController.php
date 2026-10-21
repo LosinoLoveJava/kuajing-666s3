@@ -13,7 +13,6 @@ use App\Models\OrderDetail;
 use Illuminate\Support\Facades\Hash;
 use App\Models\SellerPackagePayment;
 use App\Models\SellerPackage;
-use App\Notifications\EmailVerificationNotification;
 use Cache;
 use function compact;
 use function dd;
@@ -134,7 +133,7 @@ class SellerController extends Controller
         if ($request->has('search')) {
             $sort_search = $request->search;
             $user_ids = User::where('user_type', 'seller')->where(function ($user) use ($sort_search) {
-                $user->where('name', 'like', '%' . $sort_search . '%')->orWhere('email', 'like', '%' . $sort_search . '%');
+                $user->where('name', 'like', '%' . $sort_search . '%')->orWhere('phone', 'like', '%' . $sort_search . '%')->orWhere('phone_normalized', 'like', '%' . $sort_search . '%')->orWhere('email', 'like', '%' . $sort_search . '%');
             })->pluck('id')->toArray();
             $shops = $shops->where(function ($shops) use ($user_ids) {
                 $shops->whereIn('user_id', $user_ids);
@@ -155,7 +154,7 @@ class SellerController extends Controller
      */
     public function create()
     {
-        return view('backend.sellers.create');
+        return view('backend.sellers.create', ['countries' => app(\App\Services\PhoneNumber::class)->countries()]);
     }
 
     /**
@@ -166,39 +165,14 @@ class SellerController extends Controller
      */
     public function store(Request $request)
     {
-        if (User::where('email', $request->email)->first() != null) {
-            flash(translate('Email already exists!'))->error();
-            return back();
-        }
-        $user = new User;
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->user_type = "seller";
-        $user->password = Hash::make($request->password);
-
-        if ($user->save()) {
-            if (get_setting('email_verification') != 1) {
-                $user->email_verified_at = date('Y-m-d H:m:s');
-            } else {
-                $user->notify(new EmailVerificationNotification());
-            }
-            $user->save();
-
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+            $user = app(\App\Services\ManagedPhoneAccounts::class)->createSeller($request, Auth::user(), false);
             $seller = new Seller;
             $seller->user_id = $user->id;
-
-            if ($seller->save()) {
-                $shop = new Shop;
-                $shop->user_id = $user->id;
-                $shop->slug = 'demo-shop-' . $user->id;
-                $shop->save();
-
-                flash(translate('Seller has been inserted successfully'))->success();
-                return redirect()->route('sellers.index');
-            }
-        }
-        flash(translate('Something went wrong'))->error();
-        return back();
+            $seller->save();
+        });
+        flash(translate('Seller has been inserted successfully'))->success();
+        return redirect()->route(Auth::user()->user_type === 'salesman' ? 'salesman.sellers_index' : 'sellers.index');
     }
 
     /**
@@ -221,7 +195,8 @@ class SellerController extends Controller
     public function edit($id)
     {
         $shop = Shop::findOrFail(decrypt($id));
-        return view('backend.sellers.edit', compact('shop'));
+        app(\App\Services\ManagedPhoneAccounts::class)->authorize(Auth::user(), $shop->user);
+        return view('backend.sellers.edit', ['shop' => $shop, 'countries' => app(\App\Services\PhoneNumber::class)->countries()]);
     }
 
     /**
@@ -234,25 +209,9 @@ class SellerController extends Controller
     public function update(Request $request, $id)
     {
         $shop = Shop::findOrFail($id);
-        $user = $shop->user;
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $shop->views = (int)$request->views;
-        if (strlen($request->password) > 0) {
-            $user->password = Hash::make($request->password);
-        }
-        if (strlen($request->tpwd) > 0) {
-            $user->tpwd = md5($request->tpwd);
-        }
-        if ($user->save()) {
-            if ($shop->save()) {
-                flash(translate('Seller has been updated successfully'))->success();
-                return redirect()->route('sellers.index');
-            }
-        }
-
-        flash(translate('Something went wrong'))->error();
-        return back();
+        app(\App\Services\ManagedPhoneAccounts::class)->updateSeller($request, $shop, Auth::user());
+        flash(translate('Seller has been updated successfully'))->success();
+        return redirect()->route(Auth::user()->user_type === 'salesman' ? 'salesman.sellers_index' : 'sellers.index');
     }
 
     /**
@@ -424,7 +383,7 @@ class SellerController extends Controller
         if ($request->has('search')) {
             $sort_search = $request->search;
             $user_ids = User::where('user_type', 'seller')->where(function ($user) use ($sort_search) {
-                $user->where('name', 'like', '%' . $sort_search . '%')->orWhere('email', 'like', '%' . $sort_search . '%');
+                $user->where('name', 'like', '%' . $sort_search . '%')->orWhere('phone', 'like', '%' . $sort_search . '%')->orWhere('phone_normalized', 'like', '%' . $sort_search . '%')->orWhere('email', 'like', '%' . $sort_search . '%');
             })->pluck('id')->toArray();
             $shops = $shops->where(function ($shops) use ($user_ids) {
                 $shops->whereIn('user_id', $user_ids);

@@ -53,7 +53,7 @@
         form.elements.password.disabled = useCode; form.elements.password.required = !useCode;
         form.elements.password.minLength = 1;
     });
-    button.addEventListener('click', async function () {
+    if (button) button.addEventListener('click', async function () {
         if (!syncPhone()) { form.elements.national_phone.reportValidity(); return; }
         button.disabled = true; feedback.textContent = @json(translate('Sending...'));
         try {

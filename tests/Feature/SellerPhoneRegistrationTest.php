@@ -28,6 +28,7 @@ class SellerPhoneRegistrationTest extends TestCase
             $t->string('phone')->nullable(); $t->string('phone_normalized')->nullable()->unique();
             $t->timestamp('phone_verified_at')->nullable(); $t->timestamp('email_verified_at')->nullable();
             $t->string('password'); $t->string('user_type')->default('customer');
+            $t->boolean('is_virtual')->default(false); $t->decimal('balance',20,2)->default(0);
             $t->boolean('banned')->default(false); $t->integer('reputation_score')->default(100);
             $t->string('remember_token')->nullable(); $t->integer('pid')->default(0); $t->integer('referred_by')->nullable();
             foreach (['tpwd','usdt_address','node','deep','identity_card_front','identity_card_back','certtype'] as $column) { $t->string($column)->default(''); }
@@ -36,7 +37,7 @@ class SellerPhoneRegistrationTest extends TestCase
         Schema::create('shops', function (Blueprint $t) {
             $t->increments('id'); $t->integer('user_id')->unique(); $t->string('name'); $t->string('address');
             $t->string('phone'); $t->string('slug'); $t->integer('seller_package_id'); $t->integer('product_upload_limit');
-            $t->date('package_invalid_at'); $t->integer('verification_status')->default(0);
+            $t->integer('views')->default(0); $t->date('package_invalid_at'); $t->integer('verification_status')->default(0);
             $t->integer('seller_spread_package_id'); $t->integer('product_spread_limit');
             $t->decimal('bzj_money',20,2); $t->string('usdt_address'); $t->integer('views_up_time'); $t->timestamps();
         });
@@ -65,6 +66,11 @@ class SellerPhoneRegistrationTest extends TestCase
             ['code'=>'AE','name'=>'United Arab Emirates','status'=>1], ['code'=>'GB','name'=>'United Kingdom','status'=>0],
         ]);
         Schema::create('translations', function (Blueprint $t) { $t->increments('id'); $t->string('lang'); $t->string('lang_key'); $t->text('lang_value'); $t->timestamps(); });
+        Schema::create('sellers', function (Blueprint $t) { $t->increments('id'); $t->integer('user_id')->unique(); $t->timestamps(); });
+        Schema::create('personal_access_tokens', function (Blueprint $t) {
+            $t->increments('id'); $t->string('tokenable_type'); $t->integer('tokenable_id'); $t->string('name');
+            $t->string('token')->unique(); $t->text('abilities')->nullable(); $t->timestamp('last_used_at')->nullable(); $t->timestamps();
+        });
         $this->seedCode();
     }
 
@@ -356,6 +362,227 @@ class SellerPhoneRegistrationTest extends TestCase
             $this->assertStringContainsString('assets/js/intlTelutils.js', $html);
             $this->assertStringNotContainsString('International phone number', $html);
         }
+    }
+
+    private function operator($role = 'admin')
+    {
+        $user = new User;
+        $user->name = 'Management'; $user->password = Hash::make('password123');
+        $user->user_type = $role; $user->email = $role.'@example.test'; $user->save();
+        return $user;
+    }
+
+    /** @dataProvider managedSellerEntrypoints */
+    public function testManagedSellerCreationUsesPhoneAndCanReallyLogIn($role, $route, $virtual)
+    {
+        $operator = $this->operator($role);
+        $payload = $this->payload(); unset($payload['code']);
+        $this->actingAs($operator)->post(route($route), $payload)
+            ->assertRedirect(route($role === 'salesman' ? 'salesman.sellers_index' : 'sellers.index'));
+        $seller = User::where('user_type', 'seller')->firstOrFail();
+        $this->assertSame('Test Merchant', $seller->name);
+        $this->assertSame('+971501234567', $seller->phone);
+        $this->assertSame($seller->phone, $seller->phone_normalized);
+        $this->assertNotNull($seller->phone_verified_at);
+        $this->assertNull($seller->email); $this->assertNull($seller->email_verified_at);
+        $this->assertSame($virtual, (int) $seller->is_virtual);
+        $this->assertSame($role === 'salesman' ? $operator->id : 0, (int) $seller->pid);
+        $this->assertDatabaseHas('shops', ['user_id' => $seller->id, 'name' => 'Test Shop', 'phone' => $seller->phone]);
+        $this->assertDatabaseCount('seller_package_payments', 1);
+        $this->assertDatabaseHas('uploads', ['id' => 1, 'user_id' => $seller->id]);
+        if ($route === 'sellers.store') { $this->assertDatabaseHas('sellers', ['user_id' => $seller->id]); }
+        Notification::assertNothingSent(); Http::assertNothingSent();
+        auth()->logout();
+        $this->post('/users/phone', ['mode' => 'login', 'phone' => $seller->phone, 'password' => 'password123'])
+            ->assertRedirect(route('seller.dashboard'));
+        $this->assertAuthenticatedAs($seller);
+    }
+
+    public function managedSellerEntrypoints(): array
+    {
+        return [['admin', 'shops.store', 1], ['salesman', 'shops.store', 1], ['staff', 'shops.store', 1],
+            ['admin', 'sellers.store', 0], ['salesman', 'sellers.store', 0]];
+    }
+
+    /** @dataProvider invalidManagedSellerData */
+    public function testManagementCannotCreateInvalidOrEmailOnlySeller($changes, $field)
+    {
+        $this->actingAs($this->operator())->postJson('/shops', $this->payload($changes))
+            ->assertStatus(422)->assertJsonValidationErrors($field);
+        $this->assertDatabaseCount('users', 1); $this->assertDatabaseCount('shops', 0);
+        $this->assertDatabaseCount('seller_package_payments', 0);
+        $this->assertDatabaseHas('uploads', ['id' => 1, 'user_id' => 0]);
+    }
+
+    public function invalidManagedSellerData(): array
+    {
+        return [
+            [['phone' => '', 'email' => 'new@example.test'], 'phone'],
+            [['email' => 'new@example.test'], 'email'], [['phone' => 'not a phone'], 'phone'],
+            [['phone' => '+447911123456', 'country' => 'GB'], 'phone'],
+            [['password' => 'short', 'password_confirmation' => 'short'], 'password'],
+            [['password_confirmation' => 'different'], 'password'],
+            [['account_name' => ''], 'account_name'], [['identity_card_front' => ''], 'identity_card_front'],
+            [['identity_card_front' => 4], 'identity_card_front'], [['identity_card_front' => 5], 'identity_card_front'],
+        ];
+    }
+
+    public function testManagementChecksLegacyPhoneDuplicatesAcrossRoles()
+    {
+        $operator = $this->operator();
+        $existing = $this->operator('customer'); $existing->phone = '+971 (50) 123-4567'; $existing->save();
+        foreach (['shops.store', 'sellers.store'] as $route) {
+            $this->actingAs($operator)->postJson(route($route), $this->payload())
+                ->assertStatus(422)->assertJsonValidationErrors('phone');
+        }
+        $this->assertDatabaseCount('shops', 0); $this->assertDatabaseCount('users', 2);
+    }
+
+    public function testManagementMissingPackageDoesNotLeavePartialAccounts()
+    {
+        DB::table('seller_packages')->delete();
+        $this->actingAs($this->operator())->postJson('/shops', $this->payload())->assertStatus(422);
+        $this->assertDatabaseCount('users', 1); $this->assertDatabaseCount('shops', 0);
+        $this->assertDatabaseHas('uploads', ['id' => 1, 'user_id' => 0]);
+    }
+
+    public function testShopFailureRollsBackManagementAccountAndMedia()
+    {
+        $operator = $this->operator();
+        Shop::creating(function () { throw new \RuntimeException('Simulated shop failure'); });
+        try {
+            app(\App\Services\ManagedPhoneAccounts::class)->createSeller(Request::create('/', 'POST', $this->payload()), $operator);
+            $this->fail('Expected the simulated persistence failure');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('Simulated shop failure', $e->getMessage());
+        } finally { Shop::flushEventListeners(); }
+        $this->assertDatabaseCount('users', 1); $this->assertDatabaseCount('shops', 0);
+        $this->assertDatabaseCount('seller_package_payments', 0);
+        $this->assertDatabaseHas('uploads', ['id' => 1, 'user_id' => 0]);
+    }
+
+    public function testManagementOwnedImagesAreAcceptedWithoutTransferringOwnership()
+    {
+        $operator = $this->operator();
+        DB::table('uploads')->where('id', 1)->update(['user_id' => $operator->id]);
+        $seller = app(\App\Services\ManagedPhoneAccounts::class)->createSeller(Request::create('/', 'POST', $this->payload(['identity_card_back' => ''])), $operator);
+        $this->assertSame('1', $seller->fresh()->identity_card_front);
+        $this->assertSame('', $seller->fresh()->identity_card_back);
+        $this->assertDatabaseHas('uploads', ['id' => 1, 'user_id' => $operator->id]);
+        $this->assertDatabaseHas('uploads', ['id' => 2, 'user_id' => 0]);
+    }
+
+    public function testCustomerCannotUseAuthenticatedShopCreationAsSmsBypass()
+    {
+        $this->actingAs($this->operator('customer'))->postJson('/shops', $this->payload())->assertStatus(403);
+        $this->assertDatabaseCount('users', 1); $this->assertDatabaseCount('shops', 0);
+    }
+
+    public function testSellerEditingMigratesOldAccountToPhoneWithoutDeletingHistoricalEmail()
+    {
+        $operator = $this->operator();
+        $seller = app(\App\Services\ManagedPhoneAccounts::class)->createSeller(Request::create('/', 'POST', $this->payload()), $operator);
+        $seller->phone = null; $seller->phone_normalized = null; $seller->phone_verified_at = null;
+        $seller->email = 'legacy@example.test'; $seller->save();
+        $seller->createToken('old-device');
+        $shop = $seller->shop;
+        $this->actingAs($operator)->patch(route('sellers.update', $shop->id), [
+            'name' => 'Updated Merchant', 'phone' => '+971-50-123-4567', 'country' => 'AE', 'views' => 4,
+        ])->assertRedirect(route('sellers.index'));
+        $seller->refresh();
+        $this->assertSame('+971501234567', $seller->phone_normalized);
+        $this->assertSame('legacy@example.test', $seller->email);
+        $this->assertNotNull($seller->phone_verified_at);
+        $this->assertDatabaseHas('shops', ['id' => $shop->id, 'phone' => $seller->phone, 'views' => 4]);
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+        auth()->logout();
+        $this->post('/users/phone', ['mode' => 'login', 'phone' => $seller->phone, 'password' => 'password123'])->assertRedirect(route('seller.dashboard'));
+        $this->assertAuthenticatedAs($seller);
+    }
+
+    public function testSalesmanCanOnlyEditOwnSellersAndCannotStealAnotherNumber()
+    {
+        $operator = $this->operator('salesman');
+        $seller = app(\App\Services\ManagedPhoneAccounts::class)->createSeller(Request::create('/', 'POST', $this->payload()), $operator);
+        $shop = $seller->shop;
+        $this->actingAs($operator)->patch(route('salesman.sellers.update', $shop->id), [
+            'name' => 'Updated', 'phone' => $seller->phone,
+        ])->assertRedirect(route('salesman.sellers_index'));
+        $other = $this->operator(); $other->phone = '+971501234568'; $other->phone_normalized = $other->phone; $other->save();
+        $this->patchJson(route('salesman.sellers.update', $shop->id), ['name' => 'Bad', 'phone' => $other->phone])
+            ->assertStatus(422)->assertJsonValidationErrors('phone');
+        $seller->pid = $other->id; $seller->save();
+        $this->getJson(route('salesman.sellers.edit', encrypt($shop->id)))->assertStatus(403);
+        $this->patchJson(route('salesman.sellers.update', $shop->id), ['name' => 'Bad', 'phone' => $seller->phone])->assertStatus(403);
+        $this->assertSame('Updated', $seller->fresh()->name);
+    }
+
+    /** @dataProvider managedCustomerEntrypoints */
+    public function testManagementCustomerCreationAlsoUsesPhoneAndHashesPasswords($role, $route)
+    {
+        $operator = $this->operator($role);
+        $this->actingAs($operator)->post(route($route), ['name' => 'Customer', 'phone' => '+971 50 123 4567',
+            'country' => 'AE', 'password' => 'password123', 'password_confirmation' => 'password123', 'balance' => '12.50'])
+            ->assertRedirect(route($role === 'salesman' ? 'salesman.customers.index' : 'customers.index'));
+        $user = User::where('user_type', 'customer')->firstOrFail();
+        $this->assertNull($user->email); $this->assertNotNull($user->phone_verified_at);
+        $this->assertTrue(Hash::check('password123', $user->password));
+        $this->assertSame('+971501234567', $user->phone_normalized);
+        $this->assertEquals(12.50, $user->balance);
+        if ($role === 'salesman') { $this->assertSame($operator->id, (int) $user->referred_by); }
+        auth()->logout();
+        $this->post('/users/phone', ['mode' => 'login', 'phone' => $user->phone, 'password' => 'password123'])->assertRedirect(route('dashboard'));
+        $this->assertAuthenticatedAs($user);
+        Notification::assertNothingSent(); Http::assertNothingSent();
+    }
+
+    public function managedCustomerEntrypoints(): array
+    {
+        return [['admin', 'customers.store'], ['salesman', 'salesman.customers.store']];
+    }
+
+    public function testAllManagementCreationFormsUseSharedPhoneFieldsWithDefaultAeAndNoEmail()
+    {
+        $finder = app('view')->getFinder();
+        $finder->prependLocation(base_path('tests/Fixtures/views')); $finder->flush();
+        view()->share('errors', new \Illuminate\Support\ViewErrorBag);
+        app('request')->setLaravelSession(app('session.store'));
+        \Illuminate\Support\Facades\Cache::put('business_settings', collect(), 60);
+        $this->actingAs($this->operator());
+        foreach (['backend.sellers.seller_form', 'salesman.sellers.seller_form', 'backend.sellers.create',
+            'backend.customer.customers.create', 'salesman.customers.create'] as $view) {
+            $html = view($view, ['countries' => app(\App\Services\PhoneNumber::class)->countries()])->render();
+            $dom = new \DOMDocument; @$dom->loadHTML($html); $xpath = new \DOMXPath($dom);
+            $this->assertSame(0, $xpath->query('//input[@name="email"]')->length, $view);
+            $this->assertSame(1, $xpath->query('//input[@name="phone" and @type="hidden"]')->length, $view);
+            $this->assertSame(1, $xpath->query('//input[@name="national_phone" and @required]')->length, $view);
+            $this->assertSame(1, $xpath->query('//option[@value="AE" and @selected]')->length, $view);
+            $this->assertSame(1, $xpath->query('//input[@name="name"]')->length, $view);
+            $this->assertStringNotContainsString('grecaptcha', $html);
+            $this->assertStringContainsString('if (button) button.addEventListener', $html);
+        }
+    }
+
+    public function testSellerEditingFormDisplaysExistingPhoneNotEmail()
+    {
+        $finder = app('view')->getFinder(); $finder->prependLocation(base_path('tests/Fixtures/views')); $finder->flush();
+        view()->share('errors', new \Illuminate\Support\ViewErrorBag);
+        app('request')->setLaravelSession(app('session.store'));
+        $operator = $this->operator(); $this->actingAs($operator);
+        $seller = app(\App\Services\ManagedPhoneAccounts::class)->createSeller(Request::create('/', 'POST', $this->payload()), $operator);
+        $html = app(\App\Http\Controllers\SellerController::class)->edit(encrypt($seller->shop->id))->render();
+        $this->assertStringNotContainsString('name="email"', $html);
+        $this->assertStringContainsString('name="phone" value="+971501234567"', $html);
+        $this->assertStringContainsString('name="national_phone" value="+971501234567"', $html);
+    }
+
+    public function testPhoneOnlyCustomersAreVisibleInManagementAndSearchable()
+    {
+        $user = $this->operator('customer'); $user->phone = '+971501234567'; $user->phone_normalized = $user->phone;
+        $user->phone_verified_at = now(); $user->email = null; $user->save();
+        $this->actingAs($this->operator());
+        $view = app(\App\Http\Controllers\CustomerController::class)->index(Request::create('/', 'GET', ['search' => '501234567']));
+        $this->assertSame([$user->id], $view->getData()['users']->pluck('id')->all());
     }
 
     public function testShopSubmissionRequiresCsrfOutsideTheTestingBypass()
