@@ -29,7 +29,7 @@
         </div>
         <button class="btn btn-primary btn-block mt-3">{{ translate($mode === 'register' ? 'Create Account' : ($mode === 'reset_password' ? 'Reset password' : 'Login')) }}</button>
     </form>
-    <div class="mt-3 d-flex flex-wrap" style="gap:12px"><a href="{{ route('phone.access') }}">{{ translate('Phone login') }}</a><a href="{{ $isSellerPortal ? route('shops.create') : route('phone.access', ['mode'=>'register']) }}">{{ translate('Register') }}</a><a href="{{ route('phone.access', ['mode'=>'reset_password']) }}">{{ translate('Forgot password?') }}</a><a href="{{ route('user.login') }}">{{ translate('Email login') }}</a></div>
+    <div class="mt-3 d-flex flex-wrap" style="gap:12px"><a href="{{ route('phone.access') }}">{{ translate('Phone login') }}</a><a href="{{ $isSellerPortal ? route('shops.create') : route('phone.access', ['mode'=>'register']) }}">{{ translate('Register') }}</a><a href="{{ route('phone.access', ['mode'=>'reset_password']) }}">{{ translate('Forgot password?') }}</a></div>
     @if($mode === 'register')<p class="small text-muted mt-3">{{ translate('Merchant accounts must complete the existing shop application and approval process.') }}</p>@endif
 </div></div></div></section>
 @endsection

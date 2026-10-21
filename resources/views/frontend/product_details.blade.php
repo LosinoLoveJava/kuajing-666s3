@@ -899,50 +899,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="p-3">
-                        <form class="form-default" role="form" action="{{ route('cart.login.submit') }}"
-                            method="POST">
-                            @csrf
-                            <div class="form-group">
-                                @if (addon_is_activated('otp_system'))
-                                    <input type="text"
-                                        class="form-control h-auto form-control-lg {{ $errors->has('email') ? ' is-invalid' : '' }}"
-                                        value="{{ old('email') }}" placeholder="{{ translate('Email Or Phone') }}"
-                                        name="email" id="email">
-                                @else
-                                    <input type="email"
-                                        class="form-control h-auto form-control-lg {{ $errors->has('email') ? ' is-invalid' : '' }}"
-                                        value="{{ old('email') }}" placeholder="{{ translate('Email') }}"
-                                        name="email">
-                                @endif
-                                @if (addon_is_activated('otp_system'))
-                                    <span class="opacity-60">{{ translate('Use country code before number') }}</span>
-                                @endif
-                            </div>
-
-                            <div class="form-group">
-                                <input type="password" name="password" class="form-control h-auto form-control-lg"
-                                    placeholder="{{ translate('Password') }}">
-                            </div>
-
-                            <div class="row mb-2">
-                                <div class="col-6">
-                                    <label class="aiz-checkbox">
-                                        <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}>
-                                        <span class=opacity-60>{{ translate('Remember Me') }}</span>
-                                        <span class="aiz-square-check"></span>
-                                    </label>
-                                </div>
-                                <div class="col-6 text-right">
-                                    <a href="{{ route('password.request') }}"
-                                        class="text-reset opacity-60 fs-14">{{ translate('Forgot password?') }}</a>
-                                </div>
-                            </div>
-
-                            <div class="mb-5">
-                                <button type="submit"
-                                    class="btn btn-primary btn-block fw-600">{{ translate('Login') }}</button>
-                            </div>
-                        </form>
+                        @include('frontend.partials.phone_login_prompt')
 
                         <div class="text-center mb-3">
                             <p class="text-muted mb-0">{{ translate('Dont have an account?') }}</p>

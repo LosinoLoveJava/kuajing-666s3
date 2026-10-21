@@ -20,63 +20,10 @@ class AuthController extends Controller
 {
     public function signup(Request $request)
     {
-        if ($request->register_by !== 'email') {
-            $request->merge(['phone' => $request->input('phone', $request->email_or_phone), 'code' => $request->input('code', $request->verification_code)]);
-            return $this->loginSuccess(app(\App\Services\PhoneAuth::class)->register($request));
-        }
-        if (User::where('email', $request->email_or_phone)->orWhere('phone', $request->email_or_phone)->first() != null) {
-            return response()->json([
-                'result' => false,
-                'message' => translate('User already exists.'),
-                'user_id' => 0
-            ], 201);
-        }
-
-        if ($request->register_by == 'email') {
-            $user = new User([
-                'name' => $request->name,
-                'email' => $request->email_or_phone,
-                'password' => bcrypt($request->password),
-                'verification_code' => rand(100000, 999999)
-            ]);
-        } else {
-            $user = new User([
-                'name' => $request->name,
-                'phone' => $request->email_or_phone,
-                'password' => bcrypt($request->password),
-                'verification_code' => rand(100000, 999999)
-            ]);
-        }
-
-        $user->email_verified_at = null;
-        if (BusinessSetting::where('type', 'email_verification')->first()->value != 1) {
-            $user->email_verified_at = date('Y-m-d H:m:s');
-        }
-
-        if($user->email_verified_at == null){
-            if ($request->register_by == 'email') {
-                try {
-                    $user->notify(new AppEmailVerificationNotification());
-                } catch (\Exception $e) {
-                }
-            } else {
-                $otpController = new OTPVerificationController();
-                $otpController->send_code($user);
-            }
-        }
-
-        $user->save();
-
-        //create token
-        $user->createToken('tokens')->plainTextToken;
-
-        return response()->json([
-            'result' => true,
-            'message' => translate('Registration Successful. Please verify and log in to your account.'),
-            'user_id' => $user->id
-        ], 201);
+        $request->validate(['register_by' => 'nullable|in:phone', 'email' => 'prohibited']);
+        $request->merge(['phone' => $request->input('phone', $request->email_or_phone), 'code' => $request->input('code', $request->verification_code)]);
+        return $this->loginSuccess(app(\App\Services\PhoneAuth::class)->register($request));
     }
-
     public function resendCode(Request $request)
     {
         $user = User::findOrFail($request->user_id);
@@ -132,27 +79,15 @@ class AuthController extends Controller
             $request->merge(['phone' => $request->input('phone', $request->email)]);
             return $this->loginSuccess(app(\App\Services\PhoneAuth::class)->login($request));
         }
-        /*$request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-            'remember_me' => 'boolean'
-        ]);*/
-
-        $delivery_boy_condition = $request->has('user_type') && $request->user_type == 'delivery_boy';
-
-        if ($delivery_boy_condition) {
-            $user = User::whereIn('user_type', ['delivery_boy'])->where('email', $request->email)->first();
-        } else {
-            $user = User::whereIn('user_type', ['customer', 'seller'])->where('email', $request->email)->first();
+        // Delivery accounts retain their existing login. Public customer and
+        // seller APIs must use phone authentication, regardless of user_type.
+        if ($request->input('user_type') !== 'delivery_boy') {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'email' => translate('Phone login'),
+            ]);
         }
-
-        if (!$delivery_boy_condition) {
-            if (\App\Utility\PayhereUtility::create_wallet_reference($request->identity_matrix) == false) {
-                return response()->json(['result' => false, 'message' => 'Identity matrix error', 'user' => null], 401);
-            }
-        }
-
-
+        $request->validate(['email' => 'required|string|email', 'password' => 'required|string']);
+        $user = User::where('user_type', 'delivery_boy')->where('email', $request->email)->first();
         if ($user != null) {
             if (Hash::check($request->password, $user->password)) {
 

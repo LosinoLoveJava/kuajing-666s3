@@ -28,6 +28,17 @@ class LoginController extends Controller
 
     use AuthenticatesUsers { login as protected originalLogin; }
 
+    public function showLoginForm()
+    {
+        $hosts = [request()->getHost(), parse_url(url('/'), PHP_URL_HOST)];
+        foreach (['admin', 'sales', 'assig'] as $portal) {
+            if (in_array($portal.'.'.config('portals.domain'), $hosts, true)) {
+                return view('auth.login');
+            }
+        }
+        return redirect()->route('phone.access');
+    }
+
     public function login(Request $request)
     {
         if ($request->filled('phone')) {
@@ -163,8 +174,7 @@ class LoginController extends Controller
     protected function validateLogin(Request $request)
     {
         $request->validate([
-            'email'    => 'required_without:phone',
-            'phone'    => 'required_without:email',
+            'email'    => 'required|string|email',
             'password' => 'required|string',
         ]);
     }
@@ -177,11 +187,12 @@ class LoginController extends Controller
      */
     protected function credentials(Request $request)
     {
-        if ($request->get('phone') != null) {
-            return ['phone' => "+{$request['country_code']}{$request['phone']}", 'password' => $request->get('password')];
-        } elseif ($request->get('email') != null) {
-            return $request->only($this->username(), 'password');
-        }
+        // Enforce the role in the authentication query, not after login.
+        // Customer/seller email credentials cannot bypass the phone-only UI
+        // by posting directly to the management login endpoint.
+        return array_merge($request->only('email', 'password'), [
+            'user_type' => ['admin', 'staff', 'salesman', 'delivery_boy'],
+        ]);
     }
 
     /**

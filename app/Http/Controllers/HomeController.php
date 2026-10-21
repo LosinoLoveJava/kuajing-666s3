@@ -93,7 +93,7 @@ class HomeController extends Controller
         if (Auth::check()) {
             return redirect()->route('home');
         }
-        return view('frontend.user_login');
+        return app(\App\Http\Controllers\Auth\LoginController::class)->showLoginForm();
     }
 
     public function registration(Request $request)
@@ -117,39 +117,20 @@ class HomeController extends Controller
             } catch (\Exception $e) {
             }
         }
-        return view('frontend.user_registration');
+        return redirect()->route('phone.access', ['mode' => 'register']);
     }
 
     public function cart_login(Request $request)
     {
-        $user = null;
-        if ($request->get('phone') != null) {
-            $phone = $request->phone;
-            if (substr($phone, 0, 1) !== '+' && substr($phone, 0, 2) !== '00') {
-                $phone = '+'.$request->country_code.$phone;
-            }
-            $request->merge(['phone' => $phone]);
-            $user = app(\App\Services\PhoneAuth::class)->login($request);
-            auth()->login($user, $request->boolean('remember'));
-            $request->session()->regenerate();
-            return back();
-        } elseif ($request->get('email') != null) {
-            $user = User::whereIn('user_type', ['customer', 'seller'])->where('email', $request->email)->first();
+        $request->validate(['email' => 'prohibited', 'phone' => 'required|string|max:40']);
+        $phone = $request->phone;
+        if (substr($phone, 0, 1) !== '+' && substr($phone, 0, 2) !== '00') {
+            $phone = '+'.$request->country_code.$phone;
         }
-
-        if ($user != null) {
-            if (Hash::check($request->password, $user->password)) {
-                if ($request->has('remember')) {
-                    auth()->login($user, true);
-                } else {
-                    auth()->login($user, false);
-                }
-            } else {
-                flash(translate('Invalid email or password!'))->warning();
-            }
-        } else {
-            flash(translate('Invalid email or password!'))->warning();
-        }
+        $request->merge(['phone' => $phone]);
+        $user = app(\App\Services\PhoneAuth::class)->login($request);
+        auth()->login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
         return back();
     }
 

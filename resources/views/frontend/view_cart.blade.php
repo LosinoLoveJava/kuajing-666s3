@@ -200,72 +200,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="p-3">
-                        <form class="form-default" role="form" action="{{ route('cart.login.submit') }}" method="POST">
-                            @csrf
-                            @if (addon_is_activated('otp_system') && env('DEMO_MODE') != 'On')
-                                <div class="form-group phone-form-group mb-1">
-                                    <input type="tel" id="phone-code"
-                                        class="form-control{{ $errors->has('phone') ? ' is-invalid' : '' }}"
-                                        value="{{ old('phone') }}" placeholder="" name="phone" autocomplete="off">
-                                </div>
-
-                                <input type="hidden" name="country_code" value="">
-
-                                <div class="form-group email-form-group mb-1 d-none">
-                                    <input type="email"
-                                        class="form-control {{ $errors->has('email') ? ' is-invalid' : '' }}"
-                                        value="{{ old('email') }}" placeholder="{{ translate('Email') }}" name="email"
-                                        id="email" autocomplete="off">
-                                    @if ($errors->has('email'))
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $errors->first('email') }}</strong>
-                                        </span>
-                                    @endif
-                                </div>
-
-                                <div class="form-group text-right">
-                                    <button class="btn btn-link p-0 opacity-50 text-reset" type="button"
-                                        onclick="toggleEmailPhone(this)">{{ translate('Use Email Instead') }}</button>
-                                </div>
-                            @else
-                                <div class="form-group">
-                                    <input type="email"
-                                        class="form-control{{ $errors->has('email') ? ' is-invalid' : '' }}"
-                                        value="{{ old('email') }}" placeholder="{{ translate('Email') }}" name="email"
-                                        id="email" autocomplete="off">
-                                    @if ($errors->has('email'))
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $errors->first('email') }}</strong>
-                                        </span>
-                                    @endif
-                                </div>
-                            @endif
-
-                            <div class="form-group">
-                                <input type="password"
-                                    class="form-control {{ $errors->has('password') ? ' is-invalid' : '' }}"
-                                    placeholder="{{ translate('Password') }}" name="password" id="password">
-                            </div>
-
-                            <div class="row mb-2">
-                                <div class="col-6">
-                                    <label class="aiz-checkbox">
-                                        <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}>
-                                        <span class=opacity-60>{{ translate('Remember Me') }}</span>
-                                        <span class="aiz-square-check"></span>
-                                    </label>
-                                </div>
-                                <div class="col-6 text-right">
-                                    <a href="{{ route('password.request') }}"
-                                        class="text-reset opacity-60 fs-14">{{ translate('Forgot password?') }}</a>
-                                </div>
-                            </div>
-
-                            <div class="mb-5">
-                                <button type="submit"
-                                    class="btn btn-primary btn-block fw-600">{{ translate('Login') }}</button>
-                            </div>
-                        </form>
+                        @include('frontend.partials.phone_login_prompt')
 
                     </div>
                     <div class="text-center mb-3">
@@ -331,55 +266,5 @@
             $('#login-modal').modal();
         }
 
-        // Country Code
-        var isPhoneShown = true,
-            countryData = window.intlTelInputGlobals.getCountryData(),
-            input = document.querySelector("#phone-code");
-
-        for (var i = 0; i < countryData.length; i++) {
-            var country = countryData[i];
-            if (country.iso2 == 'bd') {
-                country.dialCode = '88';
-            }
-        }
-
-        var iti = intlTelInput(input, {
-            separateDialCode: true,
-            utilsScript: "{{ static_asset('assets/js/intlTelutils.js') }}",
-            onlyCountries: @php echo json_encode(\App\Models\Country::where('status', 1)); @endphp,
-            customPlaceholder: function(selectedCountryPlaceholder, selectedCountryData) {
-                if (selectedCountryData.iso2 == 'bd') {
-                    return "01xxxxxxxxx";
-                }
-                return selectedCountryPlaceholder;
-            }
-        });
-
-        var country = iti.getSelectedCountryData();
-        $('input[name=country_code]').val(country.dialCode);
-
-        input.addEventListener("countrychange", function(e) {
-            // var currentMask = e.currentTarget.placeholder;
-
-            var country = iti.getSelectedCountryData();
-            $('input[name=country_code]').val(country.dialCode);
-
-        });
-
-        function toggleEmailPhone(el) {
-            if (isPhoneShown) {
-                $('.phone-form-group').addClass('d-none');
-                $('.email-form-group').removeClass('d-none');
-                $('input[name=phone]').val(null);
-                isPhoneShown = false;
-                $(el).html('{{ translate('Use Phone Instead') }}');
-            } else {
-                $('.phone-form-group').removeClass('d-none');
-                $('.email-form-group').addClass('d-none');
-                $('input[name=email]').val(null);
-                isPhoneShown = true;
-                $(el).html('{{ translate('Use Email Instead') }}');
-            }
-        }
     </script>
 @endsection
