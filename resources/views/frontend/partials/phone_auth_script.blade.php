@@ -1,48 +1,32 @@
-@if($mode === 'register' || ($isSellerPortal ?? false))
 <script src="{{ static_asset('assets/js/intlTelutils.js') }}"></script>
-@endif
 <script>
 (function () {
     var form = document.getElementById(@json($phoneFormId)), button = document.getElementById('send-phone-code'), feedback = document.getElementById('phone-feedback');
     var syncPhone = function () { return true; };
     if (form.elements.national_phone) {
         var input = form.elements.national_phone;
-        var iti = window.intlTelInput(input, {
-            allowDropdown: false,
-            nationalMode: true,
-            initialCountry: form.elements.country.value.toLowerCase(),
-            onlyCountries: Array.from(form.elements.country.options, function (option) { return option.value.toLowerCase(); }),
-            preferredCountries: []
-        });
         syncPhone = function () {
-            var country = iti.getSelectedCountryData();
-            if (country.iso2) form.elements.country.value = country.iso2.toUpperCase();
-            form.elements.phone.value = iti.getNumber();
-            var valid = !!country.iso2 && iti.isValidNumber();
+            var number = input.value.replace(/[\s().-]+/g, '');
+            if (number.indexOf('00') === 0) number = '+' + number.slice(2);
+            if (number && number.charAt(0) !== '+') {
+                number = number.indexOf('971') === 0 ? '+' + number : '+971' + number.replace(/^0+/, '');
+            }
+            form.elements.country.value = 'AE';
+            form.elements.phone.value = number;
+            var valid = /^\+971[1-9][0-9]{7,8}$/.test(number) && intlTelInputUtils.isValidNumber(number, 'AE');
             input.setCustomValidity(input.value && !valid ? @json(translate('Invalid phone number')) : '');
             return valid;
         };
-        function readPhone() {
-            var value = input.value.trim();
-            if (/^(\+|00)/.test(value)) iti.setNumber(value.replace(/^00/, '+'));
-            syncPhone();
-        }
-        form.elements.country.addEventListener('change', function () {
-            iti.setCountry(this.value.toLowerCase());
-            syncPhone();
-        });
+        function readPhone() { return syncPhone(); }
         input.addEventListener('input', readPhone);
         input.addEventListener('change', readPhone);
         input.addEventListener('blur', function () {
-            readPhone();
-            if (iti.isValidNumber()) input.value = iti.getNumber(intlTelInputUtils.numberFormat.NATIONAL);
+            if (syncPhone()) input.value = intlTelInputUtils.formatNumber(form.elements.phone.value, 'AE', intlTelInputUtils.numberFormat.NATIONAL);
         });
-        input.addEventListener('countrychange', syncPhone);
         form.addEventListener('submit', function (event) {
-            readPhone();
             if (!syncPhone()) { event.preventDefault(); input.reportValidity(); }
         });
-        readPhone();
+        if (readPhone()) input.value = intlTelInputUtils.formatNumber(form.elements.phone.value, 'AE', intlTelInputUtils.numberFormat.NATIONAL);
     }
     var method = document.getElementById('phone-login-method');
     if (method) method.addEventListener('change', function () {

@@ -356,7 +356,7 @@ class SellerPhoneRegistrationTest extends TestCase
         foreach (['login','reset_password'] as $mode) {
             $request = Request::create('https://seller.pddglobalmerchanthub.com/users/phone?mode='.$mode);
             $html = app(\App\Http\Controllers\PhoneAccessController::class)->show($request)->render();
-            $this->assertStringContainsString('value="AE" data-dial-code="+971"  selected', $html);
+            $this->assertStringContainsString('type="hidden" name="country" value="AE"', $html);
             $this->assertStringContainsString('name="national_phone" value=""', $html);
             $this->assertStringContainsString('type="hidden" name="phone"', $html);
             $this->assertStringContainsString('assets/js/intlTelutils.js', $html);
@@ -556,7 +556,9 @@ class SellerPhoneRegistrationTest extends TestCase
             $this->assertSame(0, $xpath->query('//input[@name="email"]')->length, $view);
             $this->assertSame(1, $xpath->query('//input[@name="phone" and @type="hidden"]')->length, $view);
             $this->assertSame(1, $xpath->query('//input[@name="national_phone" and @required]')->length, $view);
-            $this->assertSame(1, $xpath->query('//option[@value="AE" and @selected]')->length, $view);
+            $this->assertSame(1, $xpath->query('//input[@name="country" and @value="AE" and @type="hidden"]')->length, $view);
+            $this->assertSame(0, $xpath->query('//select[@name="country"]')->length, $view);
+            $this->assertStringContainsString('>+971</span>', $html);
             $this->assertSame(1, $xpath->query('//input[@name="name"]')->length, $view);
             $this->assertStringNotContainsString('grecaptcha', $html);
             $this->assertStringContainsString('if (button) button.addEventListener', $html);

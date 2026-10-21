@@ -122,12 +122,8 @@ class HomeController extends Controller
 
     public function cart_login(Request $request)
     {
-        $request->validate(['email' => 'prohibited', 'phone' => 'required|string|max:40']);
-        $phone = $request->phone;
-        if (substr($phone, 0, 1) !== '+' && substr($phone, 0, 2) !== '00') {
-            $phone = '+'.$request->country_code.$phone;
-        }
-        $request->merge(['phone' => $phone]);
+        $request->validate(['email' => 'prohibited', 'phone' => 'required|string|max:40', 'country_code' => 'nullable|in:971']);
+        $request->merge(['phone' => app(\App\Services\PhoneNumber::class)->normalize($request->phone, $request->country), 'country' => 'AE']);
         $user = app(\App\Services\PhoneAuth::class)->login($request);
         auth()->login($user, $request->boolean('remember'));
         $request->session()->regenerate();

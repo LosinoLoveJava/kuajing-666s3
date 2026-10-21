@@ -83,41 +83,84 @@ class AccountFeaturesTest extends TestCase
         }
     }
 
-    public function testPhoneRegistrationDefaultsToUae()
+    public function testAllPublicPhoneModesHaveFixedUaePrefixWithoutCountrySelector()
     {
-        $html = $this->renderPhonePage('register');
-        $this->assertStringContainsString('value="AE" data-dial-code="+971"  selected', $html);
-        $this->assertStringContainsString('type="hidden" name="phone" value=""', $html);
-        $this->assertStringContainsString('name="national_phone" value=""', $html);
-        $this->assertStringContainsString('autocomplete="tel-national"', $html);
-        $this->assertStringNotContainsString('International phone number', $html);
+        foreach (['register', 'login', 'reset_password'] as $mode) {
+            $html = $this->renderPhonePage($mode);
+            $this->assertStringContainsString('type="hidden" name="country" value="AE"', $html);
+            $this->assertStringContainsString('>+971</span>', $html);
+            $this->assertStringContainsString('name="national_phone" value=""', $html);
+            $this->assertStringContainsString('autocomplete="tel-national"', $html);
+            $this->assertStringNotContainsString('<select class="form-control" name="country"', $html);
+            $this->assertStringNotContainsString('International phone number', $html);
+            $this->assertStringContainsString('assets/js/intlTelutils.js', $html);
+        }
     }
 
-    public function testPhoneRegistrationPreservesPreviouslyEnteredCountryAndPhone()
+    public function testOldCountryInputCannotChangeFixedUaeCountry()
     {
-        session()->flashInput(['country'=>'US', 'phone'=>'+12025550123', 'national_phone'=>'2025550123']);
+        session()->flashInput(['country'=>'US', 'phone'=>'+12025550123', 'national_phone'=>'+12025550123']);
         $html = $this->renderPhonePage('register');
-        $this->assertStringContainsString('value="US" data-dial-code="+1"  selected', $html);
-        $this->assertStringNotContainsString('value="AE" data-dial-code="+971"  selected', $html);
-        $this->assertStringContainsString('name="phone" value="+12025550123"', $html);
-        $this->assertStringContainsString('name="national_phone" value="2025550123"', $html);
+        $this->assertStringContainsString('name="country" value="AE"', $html);
+        $this->assertStringNotContainsString('value="US"', $html);
+        // Keep invalid old input visible for correction; never silently turn a foreign account into UAE.
+        $this->assertStringContainsString('name="national_phone" value="+12025550123"', $html);
     }
 
-    public function testPhoneRegistrationDoesNotEnableDisabledUae()
+    public function testDisabledUaeCannotBeUsedEvenWithFixedPrefix()
     {
         DB::table('countries')->where('code', 'AE')->update(['status'=>0]);
-        $html = $this->renderPhonePage('register');
-        $this->assertStringNotContainsString('value="AE"', $html);
-        $this->assertStringContainsString('name="phone" value=""', $html);
+        $this->getJson('/api/v2/auth/phone/countries')->assertOk()->assertJsonCount(0, 'data');
+        $this->postJson('/api/v2/auth/phone/send-code', ['phone'=>'+971501234567', 'purpose'=>'register'])
+            ->assertStatus(422)->assertJsonValidationErrors('phone');
+        Http::assertNothingSent();
     }
 
-    public function testPhoneLoginAndPasswordResetKeepTheirExistingDefaults()
+    /** @dataProvider uaeNumberFormats */
+    public function testUaeNumberFormatsNormalizeToOneAccount($number)
     {
-        foreach (['login', 'reset_password'] as $mode) {
-            $html = $this->renderPhonePage($mode);
-            $this->assertStringNotContainsString('data-dial-code="+971"  selected', $html);
-            $this->assertStringContainsString('name="phone" value=""', $html);
-        }
+        $this->assertSame('+971501234567', app(PhoneNumber::class)->normalize($number));
+    }
+
+    public function uaeNumberFormats(): array
+    {
+        return [['501234567'], ['0501234567'], ['+971 50 123 4567'], ['00971501234567'], ['971501234567']];
+    }
+
+    /** @dataProvider forbiddenPhoneInputs */
+    public function testFixedPrefixRejectsOtherCountriesAndInvalidNumbersBeforeSms($phone, $country)
+    {
+        $this->postJson('/api/v2/auth/phone/send-code', ['phone'=>$phone, 'country'=>$country, 'purpose'=>'register'])
+            ->assertStatus(422)->assertJsonValidationErrors('phone');
+        $this->assertDatabaseCount('phone_verifications', 0);
+        Http::assertNothingSent();
+    }
+
+    public function forbiddenPhoneInputs(): array
+    {
+        return [['+12025550123','US'], ['+12025550123',null], ['+447911123456',null],
+            ['+971501234567','US'], ['+971',null], ['abc',null], ['501234',null]];
+    }
+
+    public function testLocalUaeNumberCanRegisterAndLogInViaApi()
+    {
+        $payload = ['phone'=>'0501234567','name'=>'UAE Customer','code'=>'89001',
+            'password'=>'password123','password_confirmation'=>'password123'];
+        $this->postJson('/api/v2/auth/phone/register', $payload)->assertOk();
+        $this->assertDatabaseHas('users', ['phone'=>'+971501234567', 'phone_normalized'=>'+971501234567']);
+        $this->postJson('/api/v2/auth/phone/login', ['phone'=>'501234567','password'=>'password123'])->assertOk();
+        Http::assertNothingSent();
+    }
+
+    public function testLegacyLoginAndCartDefaultToFixedUaeWithoutCountryCode()
+    {
+        $user = $this->user(); $user->phone_verified_at = now(); $user->save();
+        $this->post('/login', ['phone'=>'0501234567','password'=>'password123'])->assertRedirect(route('dashboard'));
+        $this->assertAuthenticatedAs($user); auth()->logout();
+        $this->post(route('cart.login.submit'), ['phone'=>'501234567','password'=>'password123'])->assertRedirect();
+        $this->assertAuthenticatedAs($user); auth()->logout();
+        $this->postJson('/login', ['phone'=>'501234567','country_code'=>'1','password'=>'password123'])
+            ->assertStatus(422)->assertJsonValidationErrors('country_code');
     }
 
     private function user($role = 'customer', $phone = '+971501234567')
@@ -282,7 +325,7 @@ class AccountFeaturesTest extends TestCase
             try { app(PhoneNumber::class)->normalize($phone); $this->fail(); }
             catch(ValidationException $e) { $this->assertArrayHasKey('phone',$e->errors()); }
         }
-        $this->getJson('/api/v2/auth/phone/countries')->assertOk()->assertJsonCount(2,'data');
+        $this->getJson('/api/v2/auth/phone/countries')->assertOk()->assertJsonCount(1,'data')->assertJsonPath('data.0.country','AE');
     }
 
     public function testSmsSubmissionStoresHashAndEnforcesCooldown()

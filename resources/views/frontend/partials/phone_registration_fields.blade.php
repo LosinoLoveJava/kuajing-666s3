@@ -1,12 +1,7 @@
-@php $selectedCountry = old('country', 'AE'); @endphp
-<style>
-    #{{ $phoneFormId }} .iti { display: block; width: 100%; }
-    #{{ $phoneFormId }} .iti__flag-container { display: none; }
-    #{{ $phoneFormId }} #registration-phone { padding-left: 12px; padding-right: 12px; }
-</style>
-<label class="d-block">{{ translate('Country') }}<select class="form-control" name="country" required>
-    @foreach($countries as $country)<option value="{{ $country['country'] }}" data-dial-code="{{ $country['dial_code'] }}" @if($selectedCountry === $country['country']) selected @endif>{{ $country['name'] }} ({{ $country['dial_code'] }})</option>@endforeach
-</select></label>
+<input type="hidden" name="country" value="AE">
 <input type="hidden" name="phone" value="{{ old('phone', $phoneValue ?? '') }}">
 <label class="d-block" for="registration-phone">{{ translate('Phone') }}</label>
-<input class="form-control mb-3" id="registration-phone" type="tel" name="national_phone" value="{{ old('national_phone', old('phone', $phoneValue ?? '')) }}" autocomplete="tel-national" maxlength="40" required>
+<div class="input-group mb-3" dir="ltr">
+    <div class="input-group-prepend"><span class="input-group-text" aria-label="{{ translate('Country') }}: +971">+971</span></div>
+    <input class="form-control" id="registration-phone" type="tel" name="national_phone" value="{{ old('national_phone', old('phone', $phoneValue ?? '')) }}" autocomplete="tel-national" inputmode="tel" maxlength="40" required>
+</div>
