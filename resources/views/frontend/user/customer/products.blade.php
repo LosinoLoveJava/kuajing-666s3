@@ -11,18 +11,6 @@
 
     <div class="row gutters-10">
         <div class="col-md-4 mx-auto mb-3" >
-            <div class="bg-grad-1 text-white rounded-lg overflow-hidden">
-              <span class="size-30px rounded-circle mx-auto bg-soft-primary d-flex align-items-center justify-content-center mt-3">
-                  <i class="las la-upload la-2x text-white"></i>
-              </span>
-              <div class="px-3 pt-3 pb-3">
-                  <div class="h4 fw-700 text-center">{{ max(0, Auth::user()->remaining_uploads) }}</div>
-                  <div class="opacity-50 text-center">{{  translate('Remaining Uploads') }}</div>
-              </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mx-auto mb-3" >
             <a href="{{ route('customer_products.create')}}">
               <div class="p-3 rounded mb-3 c-pointer text-center bg-white shadow-sm hov-shadow-lg has-transition">
                   <span class="size-60px rounded-circle mx-auto bg-secondary d-flex align-items-center justify-content-center mb-3">
@@ -33,21 +21,6 @@
             </a>
         </div>
 
-        @php
-            $customer_package = \App\Models\CustomerPackage::find(Auth::user()->customer_package_id);
-        @endphp
-        <div class="col-md-4">
-            <a href="{{ route('customer_packages_list_show') }}" class="text-center bg-white shadow-sm hov-shadow-lg text-center d-block p-3 rounded">
-                @if($customer_package != null)
-                    <img src="{{ uploaded_asset($customer_package->logo) }}" height="44" class="mw-100 mx-auto">
-                    <span class="d-block sub-title mb-2">{{ translate('Current Package')}}: {{ $customer_package->getTranslation('name') }}</span>
-                @else
-                    <i class="la la-frown-o mb-1 la-3x"></i>
-                    <div class="d-block sub-title mb-2">{{ translate('No Package Found')}}</div>
-                @endif
-                <div class="btn btn-outline-primary py-1">{{ translate('Upgrade Package')}}</div>
-            </a>
-        </div>
 
     </div>
 

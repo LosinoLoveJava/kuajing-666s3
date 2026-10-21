@@ -42,7 +42,7 @@ class SellerPhoneRegistrationTest extends TestCase
             $t->decimal('bzj_money',20,2); $t->string('usdt_address'); $t->integer('views_up_time'); $t->timestamps();
         });
         Schema::create('seller_packages', function (Blueprint $t) {
-            $t->increments('id'); $t->integer('is_default'); $t->integer('duration'); $t->integer('product_upload_limit'); $t->timestamps();
+            $t->increments('id'); $t->integer('amount')->default(0); $t->integer('is_default'); $t->integer('duration'); $t->integer('product_upload_limit'); $t->timestamps();
         });
         DB::table('seller_packages')->insert(['id'=>1,'is_default'=>1,'duration'=>30,'product_upload_limit'=>100]);
         Schema::create('seller_package_payments', function (Blueprint $t) {
@@ -104,7 +104,7 @@ class SellerPhoneRegistrationTest extends TestCase
         $this->assertTrue($user->hasVerifiedEmail());
         $this->assertTrue(Hash::check('password123', $user->password));
         $this->assertDatabaseHas('shops', ['user_id'=>$user->id,'name'=>'Test Shop','phone'=>$user->phone,
-            'verification_status'=>0,'seller_package_id'=>1,'product_upload_limit'=>100,'package_invalid_at'=>now()->addDays(30)->toDateString()]);
+            'verification_status'=>0,'seller_package_id'=>1,'product_upload_limit'=>100,'package_invalid_at'=>'9999-12-31']);
         $this->assertDatabaseHas('seller_package_payments', ['user_id'=>$user->id,'payment_method'=>'free','approval'=>1]);
         $this->assertDatabaseHas('uploads', ['id'=>1,'user_id'=>$user->id]);
         $this->assertDatabaseHas('uploads', ['id'=>2,'user_id'=>$user->id]);
@@ -125,6 +125,24 @@ class SellerPhoneRegistrationTest extends TestCase
         // must leave it untouched and must not consume or rewrite it.
         $this->assertTrue(Hash::check('123456', DB::table('phone_verifications')->value('code_hash')));
         Http::assertNothingSent();
+    }
+
+    public function testPublicApplicationReceivesHighestPackageRatherThanTheOldDefault()
+    {
+        DB::table('seller_packages')->insert(['id'=>2,'amount'=>999,'is_default'=>0,'duration'=>1,'product_upload_limit'=>2000]);
+        $this->post('/shops',$this->payload())->assertRedirect(route('shops.index'));
+        $this->assertDatabaseHas('shops',['seller_package_id'=>2,'product_upload_limit'=>2000,'package_invalid_at'=>'9999-12-31']);
+        $this->assertDatabaseHas('seller_package_payments',['seller_package_id'=>2,'payment_method'=>'free']);
+    }
+
+    public function testManagedApplicationReceivesHighestPackageWithoutChargingAWallet()
+    {
+        DB::table('seller_packages')->insert(['id'=>2,'amount'=>999,'is_default'=>0,'duration'=>1,'product_upload_limit'=>2000]);
+        $operator=$this->operator();
+        $this->actingAs($operator)->post('/shops',$this->payload())->assertRedirect();
+        $this->assertDatabaseHas('shops',['seller_package_id'=>2,'product_upload_limit'=>2000,'package_invalid_at'=>'9999-12-31']);
+        $this->assertDatabaseHas('seller_package_payments',['seller_package_id'=>2,'payment_method'=>'free']);
+        $this->assertSame(0,(int)$operator->fresh()->balance);
     }
 
     /** @dataProvider optionalDocumentCases */

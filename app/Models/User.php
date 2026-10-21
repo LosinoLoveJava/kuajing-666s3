@@ -15,6 +15,11 @@ class User extends Authenticatable implements MustVerifyEmail
 
     protected $attributes = ['reputation_score' => 100];
 
+    protected static function booted()
+    {
+        static::saving(function ($user) { app(\App\Services\AccountMembership::class)->applyCustomer($user); });
+    }
+
     public function sendEmailVerificationNotification()
     {
         $this->notify(new EmailVerificationNotification());

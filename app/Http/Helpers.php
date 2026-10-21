@@ -1151,50 +1151,6 @@ if (!function_exists('product_storehouse_order_free_up')) {
             $user->balance += $grand_total; // 增加用户钱包余额
             $order->freeze_expired_at = null; // 标记订单已经释放
 
-            //结算商家
-            $seller_1 = User::where('id', $user->pid)->first();
-            if ($seller_1){
-                $seller_1->balance += $grand_total*get_setting('commission_ratio_level_1')/100;
-                $seller_1->save();
-                //写收入日志
-                $affiliate_log = new AffiliateLog;
-                $affiliate_log->user_id = $user->id;
-                $affiliate_log->referred_by_user = $seller_1->id;
-                $affiliate_log->amount = $grand_total*get_setting('commission_ratio_level_1')/100;
-                $affiliate_log->order_id = $order->id;
-                $affiliate_log->affiliate_type = '';
-                $affiliate_log->save();
-
-                $seller_2 = User::where('id', $seller_1->pid)->first();
-                if ($seller_2){
-                    $seller_2->balance += $grand_total*get_setting('commission_ratio_level_2')/100;
-                    $seller_2->save();
-                    //写收入日志
-                    $affiliate_log = new AffiliateLog;
-                    $affiliate_log->user_id = $user->id;
-                    $affiliate_log->referred_by_user = $seller_2->id;
-                    $affiliate_log->amount = $grand_total*get_setting('commission_ratio_level_2')/100;
-                    $affiliate_log->order_id = $order->id;
-                    $affiliate_log->affiliate_type = '';
-                    $affiliate_log->save();
-                    $seller_3 = User::where('id', $seller_2->pid)->first();
-                    if ($seller_3){
-                        $seller_3->balance += $grand_total*get_setting('commission_ratio_level_3')/100;
-                        $seller_3->save();
-                        //写收入日志
-                        $affiliate_log = new AffiliateLog;
-                        $affiliate_log->user_id = $user->id;
-                        $affiliate_log->referred_by_user = $seller_3->id;
-                        $affiliate_log->amount = $grand_total*get_setting('commission_ratio_level_3')/100;
-                        $affiliate_log->order_id = $order->id;
-                        $affiliate_log->affiliate_type = '';
-                        $affiliate_log->save();
-                    }
-                }
-            }
-
-            //结算商家 结束
-
             //结算用户
             $user_1 = User::where('id', $order->user->pid)->first();
             if ($user_1){
@@ -1267,20 +1223,8 @@ if (!function_exists('addon_is_activated')) {
 if (!function_exists('seller_package_validity_check')) {
     function seller_package_validity_check($user_id = null)
     {
-        $user = $user_id == null ? \App\Models\User::find(Auth::user()->id) : \App\Models\User::find($user_id);
-        $shop = $user->shop;
-        $package_validation = false;
-        if (
-            $shop->product_upload_limit > $shop->user->products()->count()
-            && $shop->package_invalid_at != null
-            && Carbon::now()->diffInDays(Carbon::parse($shop->package_invalid_at), false) >= 0
-        ) {
-            $package_validation = true;
-        }
-
-        return $package_validation;
-        // Ture = Seller package is valid and seller has the product upload limit
-        // False = Seller package is invalid or seller product upload limit exists.
+        $user = $user_id === null ? Auth::user() : \App\Models\User::find($user_id);
+        return $user ? app(\App\Services\AccountMembership::class)->canUpload($user) : false;
     }
 }
 

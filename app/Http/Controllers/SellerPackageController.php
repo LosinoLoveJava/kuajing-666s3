@@ -302,16 +302,8 @@ class SellerPackageController extends Controller
 
     public function unpublish_products(Request $request)
     {
-        foreach (Shop::all() as $shop) {
-            if ($shop->package_invalid_at != null && Carbon::now()->diffInDays(Carbon::parse($shop->package_invalid_at), false) <= 0) {
-                foreach ($shop->user->products as $product) {
-                    $product->published = 0;
-                    $product->save();
-                }
-                $shop->seller_package_id = null;
-                $shop->save();
-            }
-        }
+        // Highest-tier benefits are permanent; legacy expiry jobs must not unpublish products.
+        return;
     }
 
     public function purchase_package_offline(Request $request)

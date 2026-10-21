@@ -66,7 +66,7 @@ class ManagedPhoneAccounts
             'identity_card_front' => 'required|integer', 'identity_card_back' => 'nullable|integer',
         ]);
         return DB::transaction(function () use ($request, $operator, $virtual, $data) {
-            $package = SellerPackage::where('is_default', 1)->first();
+            $package = app(AccountMembership::class)->sellerPackage();
             if (!$package) {
                 throw ValidationException::withMessages(['name' => translate('Sorry! Something went wrong.')]);
             }
@@ -92,7 +92,7 @@ class ManagedPhoneAccounts
             $shop->slug = preg_replace('/\s+/', '-', $data['name']).'-'.$user->id;
             $shop->seller_package_id = $package->id;
             $shop->product_upload_limit = $package->product_upload_limit;
-            $shop->package_invalid_at = now()->addDays((int) $package->duration)->toDateString();
+            $shop->package_invalid_at = AccountMembership::PERMANENT_UNTIL;
             $shop->verification_status = 0;
             $shop->seller_spread_package_id = 0;
             $shop->product_spread_limit = 0;

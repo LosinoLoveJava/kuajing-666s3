@@ -59,7 +59,6 @@
                         <th>{{translate('Name')}}</th>
                         <th data-breakpoints="lg">{{translate('Email Address')}}</th>
                         <th data-breakpoints="lg">{{translate('Phone')}}</th>
-                        <th data-breakpoints="lg">{{translate('Package')}}</th>
                         <th data-breakpoints="lg">{{translate('Wallet Balance')}}</th>
                         <th>{{translate('Options')}}</th>
                     </tr>
@@ -82,11 +81,6 @@
                                 <td>@if($user->banned == 1) <i class="fa fa-ban text-danger" aria-hidden="true"></i> @endif {{$user->name}} @if($user->is_virtual_user == 1) (<font color="red">{{translate('Virtual')}}</font>) @endif</td>
                                 <td>{{$user->email}}</td>
                                 <td>{{$user->phone}}</td>
-                                <td>
-                                    @if ($user->customer_package != null)
-                                    {{$user->customer_package->getTranslation('name')}}
-                                    @endif
-                                </td>
                                 <td>{{single_price($user->balance)}}</td>
                                 <td class="text-right">
                                     

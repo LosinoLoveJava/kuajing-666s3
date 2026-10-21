@@ -45,16 +45,10 @@ class CustomerProductController extends Controller
             ->with('childrenCategories')
             ->get();
 
-        if(Auth::user()->user_type == "customer" && Auth::user()->remaining_uploads > 0){
-            return view('frontend.user.customer.product_upload', compact('categories'));
+        if (!app(\App\Services\AccountMembership::class)->canUploadClassified(Auth::user())) {
+            abort(422, translate('Product upload limit reached.'));
         }
-        elseif (Auth::user()->user_type == "seller" && Auth::user()->remaining_uploads > 0) {
-            return view('frontend.user.customer.product_upload', compact('categories'));
-        }
-        else{
-            flash(translate('Your classified product upload limit has been reached. Please buy a package.'))->error();
-            return redirect()->route('customer_packages_list_show');
-        }
+        return view('frontend.user.customer.product_upload', compact('categories'));
     }
 
     /**
@@ -65,6 +59,7 @@ class CustomerProductController extends Controller
      */
     public function store(Request $request)
     {
+        abort_unless(app(\App\Services\AccountMembership::class)->canUploadClassified(Auth::user()), 422, translate('Product upload limit reached.'));
         $customer_product                       = new CustomerProduct;
         $customer_product->name                 = $request->name;
         $customer_product->added_by             = $request->added_by;
@@ -96,7 +91,7 @@ class CustomerProductController extends Controller
         $customer_product->slug                 = strtolower(preg_replace('/[^A-Za-z0-9\-]/', '', str_replace(' ', '-', $request->name)).'-'.Str::random(5));
         if($customer_product->save()){
             $user = Auth::user();
-            $user->remaining_uploads -= 1;
+            $user->remaining_uploads = max(0, $user->remaining_uploads - 1);
             $user->save();
 
             $customer_product_translation               = CustomerProductTranslation::firstOrNew(['lang' => env('DEFAULT_LANGUAGE'), 'customer_product_id' => $customer_product->id]);

@@ -25,12 +25,9 @@ class ProductsImport implements ToCollection, WithHeadingRow, WithValidation, To
         $canImport = true;
         $user = Auth::user();
         if ($user->user_type == 'seller' && addon_is_activated('seller_subscription')) {
-            if ((count($rows) + $user->products()->count()) > $user->shop->product_upload_limit
-                || $user->shop->package_invalid_at == null
-                || Carbon::now()->diffInDays(Carbon::parse($user->shop->package_invalid_at), false) < 0
-            ) {
+            if (!app(\App\Services\AccountMembership::class)->canUpload($user, count($rows))) {
                 $canImport = false;
-                flash(translate('Please upgrade your package.'))->warning();
+                flash(translate('Product upload limit reached.'))->warning();
             }
         }
 

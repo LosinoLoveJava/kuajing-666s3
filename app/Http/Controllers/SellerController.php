@@ -75,28 +75,7 @@ class SellerController extends Controller
     
     public function setpackage(Request $request)
     {
-             $shop_id = $request->shop_id;
-             $package_id = $request->packageid;
-       
-            $shop = Shop::findOrFail($shop_id );
-            $shop->seller_package_id = $package_id;
-            $seller_package = SellerPackage::findOrFail( $package_id );
-            $shop->product_upload_limit = $seller_package->product_upload_limit;
-            $shop->package_invalid_at = date('Y-m-d', strtotime($seller->package_invalid_at . ' +' . $seller_package->duration . 'days'));
-            $res = $shop->save();
-             
-    
-            $seller_package = new SellerPackagePayment;
-            $seller_package->user_id = $shop->user_id;
-            $seller_package->seller_package_id =  $package_id;
-            $seller_package->payment_method = 'free';
-            $seller_package->payment_details = '';
-            $seller_package->approval = 1;
-            $seller_package->offline_payment = 0;
-            $seller_package->save();
-            
-             echo json_encode(['msg'=>translate("Success")]);
-            
+        abort(404);
     }
     public function setviews(Request $request)
     {

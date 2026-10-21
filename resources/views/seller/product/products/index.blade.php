@@ -18,7 +18,7 @@
                       <i class="las la-upload la-2x text-white"></i>
                   </span>
                   <div class="px-3 pt-3 pb-3">
-                      <div class="h4 fw-700 text-center">{{ max(0, auth()->user()->shop->product_upload_limit - auth()->user()->products()->count()) }}</div>
+                      <div class="h4 fw-700 text-center">{{ max(0, (optional(app(\App\Services\AccountMembership::class)->sellerPackage())->product_upload_limit ?? 0) - auth()->user()->products()->count()) }}</div>
                       <div class="opacity-50 text-center">{{  translate('Remaining Uploads') }}</div>
                   </div>
                 </div>
@@ -36,23 +36,6 @@
             </a>
         </div>
 
-        @if (addon_is_activated('seller_subscription'))
-        @php
-            $seller_package = \App\Models\SellerPackage::find(Auth::user()->shop->seller_package_id);
-        @endphp
-        <div class="col-md-4">
-            <a href="{{ route('seller.seller_packages_list') }}" class="text-center bg-white shadow-sm hov-shadow-lg text-center d-block p-3 rounded">
-                @if($seller_package != null)
-                    <img src="{{ uploaded_asset($seller_package->logo) }}" height="44" class="mw-100 mx-auto">
-                    <span class="d-block sub-title mb-2">{{ translate('Current Package')}}: {{ $seller_package->getTranslation('name') }}</span>
-                @else
-                    <i class="la la-frown-o mb-2 la-3x"></i>
-                    <div class="d-block sub-title mb-2">{{ translate('No Package Found')}}</div>
-                @endif
-                <div class="btn btn-outline-primary py-1">{{ translate('Upgrade Package')}}</div>
-            </a>
-        </div>
-        @endif
 
     </div>
 
@@ -86,7 +69,6 @@
                         @endif
                         <th data-breakpoints="md">{{ translate('Published')}}</th>
                         <th data-breakpoints="md">{{ translate('Featured')}}</th>
-                        <th data-breakpoints="md">直通车推广</th>
                         <th data-breakpoints="md" class="text-right">{{ translate('Options')}}</th>
                     </tr>
                 </thead>
@@ -146,26 +128,6 @@
                                     <span class="slider round"></span>
                                 </label>
                             </td>
-                            <td>
-                                <label class="aiz-switch aiz-switch-success mb-0">
-                                    @if ( count($seller_spread_packages_payments)==0)
-                                        @if($product->seller_spread_package_payment->expire_at > time())
-                                            <input type="checkbox" checked readonly disabled >
-                                        @else
-                                            <input onchange="toJump()" type="checkbox" >
-                                        @endif
-                                    @else
-                                        @if($product->seller_spread_package_payment->expire_at > time())
-                                            <input type="checkbox" checked readonly disabled >
-                                        @else
-                                            <input onchange="select_spread_package({{ $product->id }})" type="checkbox">
-                                        @endif
-                                    @endif
-
-
-                                    <span class="slider round"></span>
-                                </label>
-                            </td>
                             <td class="text-right">
 		                      <a class="btn btn-soft-info btn-icon btn-circle btn-sm" href="{{route('seller.products.edit', ['id'=>$product->id, 'lang'=>env('DEFAULT_LANGUAGE')])}}" title="{{ translate('Edit') }}">
 		                          <i class="las la-edit"></i>
@@ -191,45 +153,6 @@
 
 @section('modal')
     @include('modals.delete_modal')
-    <!-- 选择直通车 -->
-    <div class="modal fade" id="select_payment_type_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <form class="" id="package_payment_form" action="{{ route('seller.products.spread') }}" method="post">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">{{ translate('Select Spread Package') }}</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="product_id" name="product_id" value="">
-                        <div class="row">
-                            <div class="col-md-2">
-                                <label>{{ translate('Spread Package')}}</label>
-                            </div>
-                            <div class="col-md-10">
-                                <div class="mb-3">
-                                    <select class="form-control aiz-selectpicker" name="seller_spread_package_payment_id"
-                                        data-minimum-results-for-search="Infinity" required>
-                                        <option value="">{{ translate('Select One')}}</option>
-                                        @foreach ($seller_spread_packages_payments as $key => $seller_spread_packages_payment)
-                                            <option value="{{$seller_spread_packages_payment['id']}}">{{ $seller_spread_packages_payment['seller_spread_package']['name'] }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group text-right">
-                            <button type="button" class="btn btn-sm btn-primary transition-3d-hover mr-1" id="select_type_cancel" data-dismiss="modal">{{translate('Cancel')}}</button>
-                            <button type="submit" class="btn btn-sm btn-primary transition-3d-hover mr-1">{{translate('Confirm')}}</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
-
-
-
 @endsection
 
 @section('script')
@@ -264,7 +187,7 @@
                     AIZ.plugins.notify('success', '{{ translate('Published products updated successfully') }}');
                 }
                 else if(data == 2){
-                    AIZ.plugins.notify('danger', '{{ translate('Please upgrade your package.') }}');
+                    AIZ.plugins.notify('danger', '{{ translate('Product upload limit reached.') }}');
                     location.reload();
                 }
                 else{
@@ -274,14 +197,5 @@
             });
         }
 
-        function toJump(){
-            AIZ.plugins.notify('danger', '请开通直通车');
-            window.location.href = "{{route('seller.seller_spread_packages_list')}}"
-        }
-
-        function select_spread_package(product_id){
-            $('input[name=product_id]').val(product_id);
-            $('#select_payment_type_modal').modal('show');
-        }
     </script>
 @endsection

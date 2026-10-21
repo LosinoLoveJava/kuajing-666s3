@@ -64,14 +64,7 @@ class ProductController extends Controller
 
 
 
-        $seller_spread_packages_payments = collect(SellerSpreadPackagePayment::with(['products', 'seller_spread_package'])->where('user_id', Auth::user()->id)->where('expire_at', '>', time())->get())->toArray();
-        foreach ( $seller_spread_packages_payments as $key=>$seller_spread_packages_payment )
-        {
-            if (count($seller_spread_packages_payment->products) >= $seller_spread_packages_payment['product_spread_limit']) {
-                unset($seller_spread_packages_payments[$key]);
-            }
-        }
-        return view('seller.product.products.index', compact('products', 'search', 'seller_spread_packages_payments'));
+        return view('seller.product.products.index', compact('products', 'search'));
     }
 
     public function create(Request $request)
@@ -84,7 +77,7 @@ class ProductController extends Controller
                     ->get();
                 return view('seller.product.products.create', compact('categories'));
             } else {
-                flash(translate('Please upgrade your package.'))->warning();
+                flash(translate('Product upload limit reached.'))->warning();
                 return back();
             }
         }
@@ -99,7 +92,7 @@ class ProductController extends Controller
     {
         if (addon_is_activated('seller_subscription')) {
             if (!seller_package_validity_check()) {
-                flash(translate('Please upgrade your package.'))->warning();
+                flash(translate('Product upload limit reached.'))->warning();
                 return redirect()->route('seller.products');
             }
         }
@@ -269,11 +262,7 @@ class ProductController extends Controller
         $product->published = $request->status;
         if (addon_is_activated('seller_subscription') && $request->status == 1) {
             $shop = $product->user->shop;
-            if (
-                $shop->package_invalid_at == null
-                || Carbon::now()->diffInDays(Carbon::parse($shop->package_invalid_at), false) < 0
-                || $shop->product_upload_limit <= $shop->user->products()->where('published', 1)->count()
-            ) {
+            if (!app(\App\Services\AccountMembership::class)->canUpload($product->user, $product->getOriginal('published') ? 0 : 1, true)) {
                 return 2;
             }
         }
@@ -295,32 +284,7 @@ class ProductController extends Controller
 
     public function updateSellerSpreadPackage(Request $request)
     {
-        $seller_spread_packages_payment = SellerSpreadPackagePayment::find($request->seller_spread_package_payment_id);
-        if (!$seller_spread_packages_payment) {
-            flash('推广包不存在')->success();
-            return redirect()->route('seller.products');
-        }elseif ($seller_spread_packages_payment->approval!=1){
-            flash('推广包不存在')->success();
-            return redirect()->route('seller.products');
-        }
-        elseif ($seller_spread_packages_payment->expire_at < time()) {
-            flash('推广包已过期')->success();
-            return redirect()->route('seller.products');
-        }
-        elseif ($seller_spread_packages_payment->product_spread_limit <= count($seller_spread_packages_payment->products) ) {
-            flash('推广包已使用完')->success();
-            return redirect()->route('seller.products');
-        }
-        $product = Product::findOrFail($request->product_id);
-        $product->seller_spread_package_payment_id = $seller_spread_packages_payment->id;
-        if ($product->save()) {
-            Artisan::call('view:clear');
-            Artisan::call('cache:clear');
-            flash(translate('Product has been spreaded successfully'))->success();
-            return redirect()->route('seller.products');
-        }
-        flash(translate('Error'))->error();
-        return redirect()->route('seller.products');
+        abort(404);
     }
 
     public function duplicate($id)
@@ -334,7 +298,7 @@ class ProductController extends Controller
 //        dd(seller_package_validity_check());
 //        if (addon_is_activated('seller_subscription')) {
             if (!seller_package_validity_check()) {
-                flash(translate('Please upgrade your package.'))->warning();
+                flash(translate('Product upload limit reached.'))->warning();
                 return back();
             }
 //        }

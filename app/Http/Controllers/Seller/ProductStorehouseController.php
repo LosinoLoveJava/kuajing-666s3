@@ -111,22 +111,13 @@ class ProductStorehouseController extends Controller
         }, ARRAY_FILTER_USE_BOTH);
         $shop = Auth::user()->shop;
         if ($shop->verification_status==0) return response()->json(['success' => 0, 'message' => translate('Shop under review.')]);
-        if (
-            $shop->product_upload_limit > ($shop->user->products()->count() + count($productIds))
-            && $shop->package_invalid_at != null
-            && Carbon::now()->diffInDays(Carbon::parse($shop->package_invalid_at), false) >= 0
-        ) {
-
-        }else{
-            return response()->json(['success' => 0, 'message' => translate('Please upgrade your package.')]);
+        $membership = app(\App\Services\AccountMembership::class);
+        if (!$membership->canUpload(Auth::user(), count($productIds))) {
+            return response()->json(['success' => 0, 'message' => translate('Product upload limit reached.')]);
         }
+        $sellerPackage = $membership->sellerPackage();
         try {
             DB::beginTransaction();
-            // 获取最大利润
-            $sellerPackage = Auth::user()->shop->seller_package;
-            if (!$sellerPackage) {
-                return response()->json(['success' => 0, 'message' => translate('Please upgrade your package.')]);
-            }
             $maxProfit = $sellerPackage->max_profit / 100;
 
             // 循环复制产品

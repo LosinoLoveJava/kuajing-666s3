@@ -25,7 +25,7 @@ class SellerRegistration
             'identity_card_front' => ['required', 'integer', Rule::exists('uploads', 'id')->where('user_id', 0)->where('type', 'image')],
             'identity_card_back' => ['nullable', 'integer', Rule::exists('uploads', 'id')->where('user_id', 0)->where('type', 'image')],
         ]);
-        $package = SellerPackage::where('is_default', 1)->first();
+        $package = app(AccountMembership::class)->sellerPackage();
         if (!$package) {
             throw ValidationException::withMessages(['name' => translate('Sorry! Something went wrong.')]);
         }
@@ -53,7 +53,7 @@ class SellerRegistration
             $shop->slug = preg_replace('/\s+/', '-', $data['name']).'-'.$user->id;
             $shop->seller_package_id = $package->id;
             $shop->product_upload_limit = $package->product_upload_limit;
-            $shop->package_invalid_at = now()->addDays((int) $package->duration)->toDateString();
+            $shop->package_invalid_at = AccountMembership::PERMANENT_UNTIL;
             $shop->verification_status = 0;
             // Required legacy columns have no defaults in some installations.
             $shop->seller_spread_package_id = 0;

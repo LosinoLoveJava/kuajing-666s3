@@ -655,11 +655,7 @@ class ProductController extends Controller
         if ( $product->added_by == 'seller' && addon_is_activated('seller_subscription') && $request->status == 1 )
         {
             $shop = $product->user->shop;
-            if (
-                $shop->package_invalid_at == NULL
-                || Carbon::now()->diffInDays(Carbon::parse($shop->package_invalid_at), false) < 0
-                || $shop->product_upload_limit <= $shop->user->products()->where('published', 1)->count()
-            )
+            if (!app(\App\Services\AccountMembership::class)->canUpload($product->user, $product->getOriginal('published') ? 0 : 1, true))
             {
                 return 0;
             }
@@ -679,11 +675,7 @@ class ProductController extends Controller
         if ( $product->added_by == 'seller' && addon_is_activated('seller_subscription') )
         {
             $shop = $product->user->shop;
-            if (
-                $shop->package_invalid_at == NULL
-                || Carbon::now()->diffInDays(Carbon::parse($shop->package_invalid_at), false) < 0
-                || $shop->product_upload_limit <= $shop->user->products()->where('published', 1)->count()
-            )
+            if (!app(\App\Services\AccountMembership::class)->canUpload($product->user, $product->getOriginal('published') ? 0 : 1, true))
             {
                 return 0;
             }

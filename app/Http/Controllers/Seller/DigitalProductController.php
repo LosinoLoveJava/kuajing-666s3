@@ -36,7 +36,7 @@ class DigitalProductController  extends Controller
                 return view('seller.product.digitalproducts.create', compact('categories'));
             }
             else {
-                flash(translate('Please upgrade your package.'))->warning();
+                flash(translate('Product upload limit reached.'))->warning();
                 return back();
             }
         }
@@ -54,7 +54,7 @@ class DigitalProductController  extends Controller
     {
         if(addon_is_activated('seller_subscription')){
             if(!seller_package_validity_check()){
-                flash(translate('Please upgrade your package.'))->warning();
+                flash(translate('Product upload limit reached.'))->warning();
                 return redirect()->route('seller.digitalproducts');
             }
         }

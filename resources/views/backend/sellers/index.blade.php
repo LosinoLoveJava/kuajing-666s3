@@ -265,11 +265,6 @@
                                      <span onclick="show_view({{$shop->id}},{{$shop->view_inc_num}},{{$shop->view_base_num}})" class="dropdown-item" style="cursor:pointer;">
                                         {{translate('Views')}}
                                     </span>
-
-
-                                    <span onclick="show_package({{$shop->id}},{{$shop->seller_package_id}})" class="dropdown-item" style="cursor:pointer;">
-                                        {{translate('Set Package')}}
-                                    </span>
                                        <span onclick="set_pid({{$shop->id}},{{$shop->user->pid}})" class="dropdown-item" style="cursor:pointer;">
                                         {{translate('Set Salesman')}}
                                     </span>
@@ -507,59 +502,7 @@
           });
      }
 
-     function show_package(shop_id,seller_package_id)
-     {
-         @php
-         $seller_packages = \App\Models\SellerPackage::all();
-         @endphp
-         var html = '';
-          @foreach ($seller_packages as $key => $seller_package)
-            html +="<option ";
-            if( seller_package_id == @php echo $seller_package['id'];@endphp )
-            {
-                html += ' selected ';
-            }
 
-            html += " value='@php echo $seller_package['id'];@endphp'> @php echo $seller_package['name'];@endphp</option>";
-          @endforeach
-
-          var html2 = "<select class='form-control' name='packageid' id='packageid'> ";
-        html = html2+html+"</select>";
-          layer.open({
-
-        type: 1,
-        title:'设置套餐',
-        skin:'layui-layer-rim',
-        area:['450px', 'auto'],
-
-        content: ' <div class="row" style="width: 420px;  margin-left:7px; margin-top:10px;">'
-            +'<div class="col-sm-12">'
-            +'<div class="input-group">'
-           + html
-            +'</div>'
-            +'</div>'
-
-              +'</div>'
-        ,
-        btn:['保存','取消'],
-        btn1: function (index,layero) {
-            var packageid = $("#packageid").val();
-              $.post('{{ route('sellers.setpackage') }}',{_token:'{{ @csrf_token() }}', shop_id:shop_id,packageid:packageid}, function(data){
-                layer.msg(data.msg,function(){
-                    location.reload();
-                });
-
-            },'json');
-        },
-        btn2:function (index,layero) {
-             layer.close(index);
-        }
-
-    });
-
-
-
-     }
      function show_view(shop_id,view_inc_num,view_base_num) {
 
 

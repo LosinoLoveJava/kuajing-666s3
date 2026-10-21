@@ -79,61 +79,6 @@
                     </a>
                 </li>
 
-                 <!--店铺等级-->
-                @if (addon_is_activated('seller_subscription'))
-                    <li class="aiz-side-nav-item">
-                        <a href="#" class="aiz-side-nav-link">
-                            <i class="las la-shopping-cart aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Package') }}</span>
-                            <span class="aiz-side-nav-arrow"></span>
-                        </a>
-                        <ul class="aiz-side-nav-list level-2">
-                            <li class="aiz-side-nav-item">
-                                <a href="{{ route('seller.seller_packages_list') }}" class="aiz-side-nav-link">
-                                    <span class="aiz-side-nav-text">{{ translate('Packages') }}</span>
-                                </a>
-                            </li>
-
-                            <li class="aiz-side-nav-item">
-                                <a href="{{ route('seller.packages_payment_list') }}" class="aiz-side-nav-link">
-                                    <span class="aiz-side-nav-text">{{ translate('Purchase Packages') }}</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                @endif
-
-                 <!--店铺直通车-->
-                <li class="aiz-side-nav-item">
-                    <a href="#" class="aiz-side-nav-link">
-                        <i class="las la-shopping-cart aiz-side-nav-icon"></i>
-                        <span class="aiz-side-nav-text">{{ translate('Spread Packages') }}</span>
-                        <span class="aiz-side-nav-arrow"></span>
-                    </a>
-                    <ul class="aiz-side-nav-list level-2">
-                        <li class="aiz-side-nav-item">
-                            <a href="{{ route('seller.seller_spread_packages_list') }}" class="aiz-side-nav-link">
-                                <span class="aiz-side-nav-text">{{ translate('Spread Packages') }}</span>
-                            </a>
-                        </li>
-
-                        <li class="aiz-side-nav-item">
-                            <a href="{{ route('seller.spread_packages_payment_list') }}" class="aiz-side-nav-link">
-                                <span class="aiz-side-nav-text">{{ translate('Purchase Spread Packages') }}</span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-
-
-
-                 <!--三级分销-->
-                <li class="aiz-side-nav-item">
-                    <a href="{{ route('seller.affiliate.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['seller.support_ticket.index']) }}">
-                        <i class="las la-user-tie aiz-side-nav-icon"></i>
-                        <span class="aiz-side-nav-text">{{ translate('Affiliate System') }}</span>
-                    </a>
-                </li>
                   <!--财务中心-->
                 <li class="aiz-side-nav-item">
                     <a href="{{ route('seller.money_withdraw_requests.index') }}"

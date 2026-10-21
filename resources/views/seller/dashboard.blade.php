@@ -397,44 +397,8 @@
             </div>
         </div>
         <div class="col-sm-6 col-md-6 col-lg-3 mb-4">
-            @if (addon_is_activated('seller_subscription'))
-                <div class="card">
-                    <div class="card-body">
-                        <div class="card-title">
-                            <h6 class="mb-0">{{ translate('Purchased Package') }}</h6>
-                        </div>
-                        @if (Auth::user()->shop->seller_package)
-                            <div class="d-flex">
-                                <div>
-                                    <img src="{{ uploaded_asset(Auth::user()->shop->seller_package->logo) }}"
-                                        class="img-fluid mb-4 w-64px">
-                                </div>
-                                <div class="ml-3">
-                                    <a class="fw-600 mb-3 text-primary">{{ translate('Current Package') }}:</a>
-                                    <h6 class="text-primary">
-                                        {{ Auth::user()->shop->seller_package->name }}
-                                        </h3>
-                                        <p class="mb-1 text-muted">{{ translate('Product Upload Limit') }}:
-                                            {{ Auth::user()->shop->product_upload_limit }} {{ translate('Times') }}
-                                        </p>
-                                        <p class="text-muted mb-4">{{ translate('Package Expires at') }}:
-                                            {{ Auth::user()->shop->package_invalid_at }}
-                                        </p>
-                                        <div class="">
-                                            <a href="{{ route('seller.seller_packages_list') }}"
-                                                class="btn btn-soft-primary">{{ translate('Upgrade Package') }}</a>
-                                        </div>
-                                </div>
-                            </div>
-                        @else
-                            <h6 class="fw-600 mb-3 text-primary">{{ translate('Package Not Found') }}</h6>
-                        @endif
-
-                    </div>
-                </div>
-            @endif
             <div
-                class="card mb-0 @if (addon_is_activated('seller_subscription')) px-4 py-5 @else p-5 h-100 @endif d-flex align-items-center justify-content-center">
+                class="card mb-0 p-5 h-100 d-flex align-items-center justify-content-center">
                 @if (Auth::user()->shop->verification_status == 0)
                     <div class="my-n4 py-1 text-center">
                         <img src="{{ static_asset('assets/img/non_verified.png') }}" alt=""

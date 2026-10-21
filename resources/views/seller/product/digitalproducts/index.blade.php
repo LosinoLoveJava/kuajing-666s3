@@ -17,7 +17,7 @@
                       <i class="las la-upload la-2x text-white"></i>
                   </span>
                   <div class="px-3 pt-3 pb-3">
-                      <div class="h4 fw-700 text-center">{{ max(0, auth()->user()->shop->product_upload_limit - auth()->user()->products()->count()) }}</div>
+                      <div class="h4 fw-700 text-center">{{ max(0, (optional(app(\App\Services\AccountMembership::class)->sellerPackage())->product_upload_limit ?? 0) - auth()->user()->products()->count()) }}</div>
                       <div class="opacity-50 text-center">{{  translate('Remaining Uploads') }}</div>
                   </div>
                 </div>
@@ -36,23 +36,7 @@
             </a>
         </div>
 
-        @if (addon_is_activated('seller_subscription'))
-        @php
-            $seller_package = \App\Models\SellerPackage::find(Auth::user()->shop->seller_package_id);
-        @endphp
-            <div class="col-md-4">
-                <a href="{{ route('seller.seller_packages_list') }}" class="text-center bg-white shadow-sm hov-shadow-lg text-center d-block p-3 rounded">
-                    @if($seller_package != null)
-                        <img src="{{ uploaded_asset($seller_package->logo) }}" height="44" class="mw-100 mx-auto">
-                        <span class="d-block sub-title mb-2">{{ translate('Current Package')}}: {{ $seller_package->getTranslation('name') }}</span>
-                    @else
-                        <i class="la la-frown-o mb-2 la-3x"></i>
-                        <div class="d-block sub-title mb-2">{{ translate('No Package Found')}}</div>
-                    @endif
-                    <div class="btn btn-outline-primary py-1">{{ translate('Upgrade Package')}}</div>
-                </a>
-            </div>
-        @endif
+
     </div>
 
     <div class="card">
@@ -153,7 +137,7 @@
                     AIZ.plugins.notify('success', '{{ translate('Published products updated successfully') }}');
                 }
                 else if(data == 2){
-                    AIZ.plugins.notify('danger', '{{ translate('Please upgrade your package.') }}');
+                    AIZ.plugins.notify('danger', '{{ translate('Product upload limit reached.') }}');
                     location.reload();
                 }
                 else{
