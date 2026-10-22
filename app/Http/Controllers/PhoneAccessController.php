@@ -41,6 +41,7 @@ class PhoneAccessController extends Controller
 
     public function sendCode(Request $request)
     {
+        $request->validate(['purpose' => 'required|in:register,reset_password']);
         app(PhoneAuth::class)->send($request);
         return response()->json(['result' => true, 'message' => 'SMS submitted. Code expires in 5 minutes.']);
     }
@@ -49,6 +50,9 @@ class PhoneAccessController extends Controller
     {
         $isSellerPortal = $request->routeIs('seller.phone.*');
         $request->validate(['mode' => $isSellerPortal ? 'required|in:login,reset_password' : 'required|in:login,register,reset_password']);
+        if ($request->mode === 'login') {
+            $request->validate(['password' => 'required|string|max:100', 'code' => 'prohibited']);
+        }
         if ($request->mode === 'reset_password') {
             app(PhoneAuth::class)->resetPassword($request);
             return redirect()->route($isSellerPortal ? 'login' : 'phone.access')->with('status', 'Password updated. Please log in.');

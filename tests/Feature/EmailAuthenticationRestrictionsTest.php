@@ -107,6 +107,27 @@ class EmailAuthenticationRestrictionsTest extends TestCase
         $this->assertDatabaseCount('users', 1);
     }
 
+    public function testPasswordOnlyWebLoginRejectsVerificationCodes()
+    {
+        foreach (['/users/phone', '/seller/phone', '/login'] as $path) {
+            $payload = ['mode' => 'login', 'phone' => '+971501234567', 'code' => '89001'];
+            $this->postJson($path, $payload)->assertStatus(422)
+                ->assertJsonValidationErrors(['password', 'code']);
+            $this->postJson($path, $payload + ['password' => 'password123'])->assertStatus(422)
+                ->assertJsonValidationErrors('code');
+            $this->assertGuest();
+        }
+    }
+
+    public function testPasswordOnlyWebLoginCannotRequestLoginCodes()
+    {
+        foreach (['/users/phone/send-code', '/seller/phone/send-code'] as $path) {
+            $this->postJson($path, ['phone' => '+971501234567', 'purpose' => 'login'])
+                ->assertStatus(422)->assertJsonValidationErrors('purpose');
+        }
+        Http::assertNothingSent();
+    }
+
     public static function managementRoles()
     {
         return [['admin'], ['staff'], ['salesman'], ['delivery_boy']];
