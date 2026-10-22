@@ -19,7 +19,7 @@ class ChuanxSms
             'appkey' => config('chuanx.appkey'), 'appcode' => config('chuanx.appcode'),
             'appsecret' => config('chuanx.appsecret'), 'phone' => $digits,
             'uid' => bin2hex(random_bytes(16)),
-            'msg' => '['.config('chuanx.brand').'] Your verification code is '.$code.'. Valid for 5 minutes.',
+            'msg' => '[PDD] Your verification code is '.$code.'.',
         ]);
         $body = $response->json();
         if (!$response->successful() || !is_array($body) || ($body['code'] ?? null) !== '00000') {

@@ -5,5 +5,4 @@ return [
     'appkey' => env('CHUANX_SMS_APPKEY'),
     'appcode' => env('CHUANX_SMS_APPCODE'),
     'appsecret' => env('CHUANX_SMS_APPSECRET'),
-    'brand' => env('CHUANX_SMS_BRAND', 'PDD Global'),
 ];
