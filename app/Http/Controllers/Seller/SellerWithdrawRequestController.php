@@ -24,7 +24,7 @@ class SellerWithdrawRequestController extends Controller
         $balance = $user->balance;
         $userId = $user->id;
         $seller_withdraw_requests = SellerWithdrawRequest::where('user_id', $userId)->latest()->paginate(9)
-            ->appends(['opage' => \request()->opage, 'rpage' => \request()->rpage]);
+            ->withQueryString();
 
         $freezeOrders = Order::query()->where('seller_id', $userId)
             ->where(function ($query) {
@@ -35,15 +35,15 @@ class SellerWithdrawRequestController extends Controller
             })
             ->latest()
             ->paginate(9, ['*'], 'opage')
-            ->appends(['page' => \request()->page, 'rpage' => \request()->rpage]);
+            ->withQueryString();
 
         $rechargeList = Wallet::query()->where('user_id', $userId)->latest()->paginate(9, ['*'], 'rpage')
-            ->appends(['page' => \request()->page, 'opage' => \request()->opage]);
+            ->withQueryString();
         $shop = $user->shop;
         
         
         
-        $paymentList = Payment::orderBy('created_at', 'desc')->where('t_type',1)->where('seller_id',Auth::user()->id)->paginate(15);
+        $paymentList = Payment::orderBy('created_at', 'desc')->where('t_type',1)->where('seller_id',Auth::user()->id)->paginate(15, ['*'], 'ppage')->withQueryString();
         
         return view('seller.money_withdraw_requests.index', compact('paymentList','seller_withdraw_requests', 'freezeOrders', 'rechargeList', 'balance', 'shop'));
     }

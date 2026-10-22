@@ -51,16 +51,7 @@ class WalletController extends Controller
 
     public function offline_recharge(Request $request)
     {
-        $request->validate(['type' => 'nullable|integer|in:1']);
-        $wallet = new Wallet;
-        $wallet->user_id = auth()->user()->id;
-        $wallet->amount = $request->amount;
-        $wallet->payment_method = $request->payment_option;
-        $wallet->payment_details = $request->trx_id;
-        $wallet->approval = 0;
-        $wallet->offline_payment = 1;
-        $wallet->reciept = $request->photo;
-        $wallet->save();
+        app(\App\Services\WalletService::class)->submit($request, $request->user());
        // flash(translate('Offline Recharge has been done. Please wait for response.'))->success();
         //return redirect()->route('wallet.index');
         return response()->json([

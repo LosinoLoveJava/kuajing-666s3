@@ -53,7 +53,7 @@ class StripeController extends Controller
             'line_items' => [
                 [
                     'price_data' => [
-                        'currency' => \App\Models\Currency::findOrFail(get_setting('system_default_currency'))->code,
+                        'currency' => Session::get('payment_type') === 'wallet_payment' ? 'usd' : \App\Models\Currency::findOrFail(get_setting('system_default_currency'))->code,
                         'product_data' => [
                             'name' => "Payment"
                         ],
@@ -67,6 +67,7 @@ class StripeController extends Controller
             'cancel_url' => route('stripe.cancel'),
         ]);
 
+        if (Session::get('payment_type') === 'wallet_payment') Session::put('wallet_stripe_session', $session->id);
         return response()->json(['id' => $session->id, 'status' => 200]);
     }
 
@@ -80,7 +81,9 @@ class StripeController extends Controller
                 return (new CheckoutController)->checkout_done(session()->get('combined_order_id'), json_encode($payment));
             }
             if ($payment_type == 'wallet_payment') {
-                return (new WalletController)->wallet_payment_done(session()->get('payment_data'), json_encode($payment));
+                \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+                $checkout = \Stripe\Checkout\Session::retrieve(Session::get('wallet_stripe_session'));
+                return (new WalletController)->wallet_payment_done(session()->get('payment_data'), $checkout);
             }
             if ($payment_type == 'customer_package_payment') {
                 return (new CustomerPackageController)->purchase_payment_done(session()->get('payment_data'), json_encode($payment));

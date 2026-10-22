@@ -1050,16 +1050,9 @@ if (!function_exists('checkout_done')) {
 if (!function_exists('wallet_payment_done')) {
     function wallet_payment_done($user_id, $amount, $payment_method, $payment_details)
     {
-        $user = \App\Models\User::find($user_id);
-        $user->balance = $user->balance + $amount;
-        $user->save();
-
-        $wallet = new Wallet;
-        $wallet->user_id = $user->id;
-        $wallet->amount = $amount;
-        $wallet->payment_method = $payment_method;
-        $wallet->payment_details = $payment_details;
-        $wallet->save();
+        // Legacy app callbacks supply client-controlled amounts and no bound payment proof.
+        // Verified web callbacks use WalletService::completeOnline instead.
+        abort(422, 'Please recharge from My Wallet.');
     }
 }
 

@@ -47,6 +47,10 @@ class AccountFeaturesTest extends TestCase
         });
         require_once database_path('migrations/2026_10_20_160000_add_account_features.php');
         (new \AddAccountFeatures)->up();
+        Schema::table('seller_withdraw_requests', function (Blueprint $t) {
+            $t->string('request_key', 64)->nullable()->unique();
+            $t->integer('operator_id')->nullable(); $t->timestamp('reviewed_at')->nullable();
+        });
         Schema::create('countries', function (Blueprint $t) { $t->increments('id'); $t->string('name'); $t->string('code'); $t->integer('status'); });
         DB::table('countries')->insert([
             ['name'=>'United Arab Emirates','code'=>'AE','status'=>1], ['name'=>'United Kingdom','code'=>'GB','status'=>0],
@@ -284,9 +288,10 @@ class AccountFeaturesTest extends TestCase
         $this->assertEquals(50,DB::table('shops')->value('bzj_money'));
         $this->assertEquals(100,$seller->fresh()->balance);
         $this->assertDatabaseCount('seller_withdraw_requests',0);
+        // Other methods require a complete recipient account; no empty snapshot may be paid.
         foreach([1,2,3] as $method) {
-            $result=app(WithdrawalService::class)->apply(Request::create('/withdraw','POST',['w_type'=>$method,'amount'=>'1']),$seller,true);
-            $this->assertNull($result->iban_details);
+            try { app(WithdrawalService::class)->apply(Request::create('/withdraw','POST',['w_type'=>$method,'amount'=>'1']),$seller,true); $this->fail(); }
+            catch (ValidationException $e) { $this->assertNotEmpty($e->errors()); }
         }
     }
 
@@ -467,6 +472,8 @@ class AccountFeaturesTest extends TestCase
         $withdrawal = app(WithdrawalService::class)->apply($this->ibanRequest(), $user, true);
         $controller = app(\App\Http\Controllers\SellerWithdrawRequestController::class);
         $request = Request::create('/modal', 'POST', ['id'=>$user->id, 'seller_withdraw_request_id'=>$withdrawal->id]);
+        $admin = $this->user('admin', '+971501234568');
+        $request->setUserResolver(function () use ($admin) { return $admin; });
         $this->assertSame('backend.sellers.seller_withdraw_requests.iban_payment_modal', $controller->payment_modal($request)->name());
         $this->assertSame('backend.sellers.seller_withdraw_requests.iban_refuse_modal', $controller->refuse_modal($request)->name());
     }

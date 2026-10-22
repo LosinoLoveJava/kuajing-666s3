@@ -230,6 +230,7 @@ class ManualPaymentMethodController extends Controller
     }
 
     public function offline_recharge_modal( Request $request ) {
+        abort_unless(Auth::user() && in_array(Auth::user()->user_type, ['seller', 'customer'], true), 403);
         $request->validate(['type' => 'nullable|integer|in:1']);
         $type = $request->type ?? 1;
         if (Auth::user()->user_type === 'seller') {
@@ -239,6 +240,7 @@ class ManualPaymentMethodController extends Controller
     }
 
     public function admin_recharge_modal( Request $request ) {
+        abort_unless(Auth::user() && in_array(Auth::user()->user_type, ['admin', 'staff'], true), 403);
         $request->validate(['type' => 'nullable|integer|in:1']);
         $type = $request->type ?? 1;
         $user_id = $request->user_id;

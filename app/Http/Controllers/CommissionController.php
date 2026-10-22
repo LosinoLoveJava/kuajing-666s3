@@ -15,306 +15,48 @@ use Session;
 class CommissionController extends Controller
 {
     
-       public function refuse(Request $request){
-        $ibanWithdrawal = SellerWithdrawRequest::findOrFail($request->withdraw_request_id);
-        if ((int) $ibanWithdrawal->w_type === 4) {
-            app(\App\Services\WithdrawalService::class)->reviewIban($request, $ibanWithdrawal->id, false);
-            return back();
-        }
-        $withdrawRequest = SellerWithdrawRequest::find($request->withdraw_request_id);
-        
-        if (!$withdrawRequest) {
-            flash(translate('Something went wrong'))->error();
-            return back();
-        }
-        $user = User::find($withdrawRequest->user_id);
-        if (!$user) {
-            flash(translate('Something went wrong'))->error();
-            return back();
-        }
-        if( $withdrawRequest->type ==1 )
-        {
-            //更新为拒绝
-            $withdrawRequest->status = '2';
-            $withdrawRequest->viewed = '1';
-            $withdrawRequest->remarks = $request->remarks;
-            $withdrawRequest->save();
-            
-            //退款回支付账户
-            $user->balance = $user->balance+$withdrawRequest->amount;
-            $user->save();
-            return redirect()->route('sellers.index');
-        }
-        else
-        {
-            
-           
-                $withdrawRequest->status = '2';
-            $withdrawRequest->viewed = '1';
-              $withdrawRequest->remarks = $request->remarks;
-            $withdrawRequest->save();
-            
-            
-            $shop = Shop::findOrFail( $user->shop->id );
-           
-            $shop->bzj_money = $shop->bzj_money +$withdrawRequest->amount;
-            $shop->save();
-            
-            
-            
-            return redirect()->route('sellers.index');
-        }
+       public function refuse(Request $request)
+    {
+        app(\App\Services\WithdrawalService::class)->review($request, $request->withdraw_request_id, false);
+        flash(translate('Request has been updated successfully'))->success();
+        return back();
     }
     
-    public function refuse234(Request $request){
-        $withdrawRequest = SellerWithdrawRequest::find($request->withdraw_request_id);
-        
-        if (!$withdrawRequest) {
-            flash(translate('Something went wrong'))->error();
-            return back();
-        }
-        $user = User::find($withdrawRequest->user_id);
-        if (!$user) {
-            flash(translate('Something went wrong'))->error();
-            return back();
-        }
-        //更新为拒绝
-        $withdrawRequest->status = '2';
-        $withdrawRequest->viewed = '1';
-        $withdrawRequest->save();
-        
-        //退款回支付账户
-        $user->balance = $user->balance+$withdrawRequest->amount;
-        $user->save();
-        return redirect()->route('sellers.index');
+    public function refuse234(Request $request)
+    {
+        app(\App\Services\WithdrawalService::class)->review($request, $request->withdraw_request_id, false);
+        flash(translate('Request has been updated successfully'))->success();
+        return back();
     }
     
     
     //redirect to payment controllers according to selected payment gateway for seller payment
     public function pay_to_seller(Request $request)
     {
-        
-/*shop_id: 1
-amount: 10
-txn_code: 
-id: 1
-*/
-
-
-      $shopid = $request->id;
-      
-      $shop = Shop::findOrFail( $shopid);
-      $amount = floatval($request->amount);
-    
-      if( $amount == 0 )
-      {
-            flash(translate('Something went wrong'))->error();
-            return back();
-      }
-    
-      $user = User::find($shop->user_id);
-      
-        if (!$user) {
-            flash(translate('Something went wrong'))->error();
-            return back();
-        }
-        
-     $user->balance = $user->balance + $amount;
-     $user->save();
-     
-     
-     
-     
-     
-            $payment = new Payment;
-            $payment->seller_id = $user->id;
-            $payment->amount = $amount;
-            $payment->payment_method = 'Pay From admin';
-            $payment->txn_code = date("YmdHis");
-            $payment->payment_details = null;
-            $payment->save();
-            
-            
-            
-            flash(translate('Payment completed'))->success();
-            return redirect()->route('sellers.index');
-        echo "<PRE>";
-        #print_r( $request->);
-        exit;
-        
-        
-        
-        
-        
-        $withdrawRequest = SellerWithdrawRequest::find($request->withdraw_request_id);
-        if (!$withdrawRequest) {
-            flash(translate('Something went wrong'))->error();
-            return back();
-        }
-        $user = User::find($withdrawRequest->user_id);
-        if (!$user) {
-            flash(translate('Something went wrong'))->error();
-            return back();
-        }
-
-        $data['shop_id'] = $request->shop_id;
-        $data['amount'] = $request->amount;
-        $data['payment_method'] = $request->payment_option;
-        $data['payment_withdraw'] = $request->payment_withdraw;
-        $data['withdraw_request_id'] = $request->withdraw_request_id;
-
-        if ($request->txn_code != null) {
-            $data['txn_code'] = $request->txn_code;
-        } else {
-            $data['txn_code'] = null;
-        }
-
-        $request->session()->put('payment_type', 'seller_payment');
-        $request->session()->put('payment_data', $data);
-
-        if ($request->payment_option == 'cash') {
-            return $this->seller_payment_done($request->session()->get('payment_data'), null, $withdrawRequest, $user);
-        } elseif ($request->payment_option == 'bank_payment') {
-            return $this->seller_payment_done($request->session()->get('payment_data'), null, $withdrawRequest, $user);
-        } else {
-            $payment_data = $request->session()->get('payment_data');
-
-//            $shop = Shop::findOrFail($payment_data['shop_id']);
-//            $shop->admin_to_pay = $shop->admin_to_pay - $payment_data['amount'];
-//            $shop->save();
-            $user->balance = $user->balance + $payment_data['amount'];
-            $user->save();
-
-            $payment = new Payment;
-            $payment->seller_id = $user->id;
-            $payment->amount = $payment_data['amount'];
-            $payment->payment_method = 'Seller paid to admin';
-            $payment->txn_code = $payment_data['txn_code'];
-            $payment->payment_details = null;
-            $payment->save();
-
-            flash(translate('Payment completed'))->success();
-            return redirect()->route('sellers.index');
-        }
+        abort_unless($request->user() && in_array($request->user()->user_type, ['admin', 'staff'], true), 403);
+        $shop = Shop::findOrFail($request->id);
+        $request->merge(['user_id' => $shop->user_id]);
+        app(\App\Services\WalletService::class)->directCredit($request);
+        flash(translate('Recharge has been done'))->success();
+        return back();
     }
     
     
     public function pay_to_seller2(Request $request)
     {
-        $ibanWithdrawal = SellerWithdrawRequest::findOrFail($request->seller_withdraw_request_id);
-        if ((int) $ibanWithdrawal->w_type === 4) {
-            app(\App\Services\WithdrawalService::class)->reviewIban($request, $ibanWithdrawal->id, true);
-            return back();
-        }
-        
-/*shop_id: 1
-amount: 10
-txn_code: 
-id: 1
-*/ 
- 
-      
-        $withdrawRequest = SellerWithdrawRequest::find($request->seller_withdraw_request_id);
-       $withdrawRequest->remarks = $request->remarks;
-        if (!$withdrawRequest) {
-            flash(translate('Something went wrong'))->error();
-            return back();
-        }
-        $user = User::find($withdrawRequest->user_id);
-        if (!$user) {
-            flash(translate('Something went wrong'))->error();
-            return back();
-        }
-
-        $data['shop_id'] = $request->shop_id;
-        $data['amount'] = $request->amount;
-        $data['payment_method'] = $request->payment_option;
-        $data['payment_withdraw'] = $request->payment_withdraw;
-        $data['withdraw_request_id'] = $request->withdraw_request_id;
-       
-        if ($request->txn_code != null) {
-            $data['txn_code'] = $request->txn_code;
-        } else {
-            $data['txn_code'] = null;
-        }
-        
-        $request->session()->put('payment_type', 'seller_payment');
-        $request->session()->put('payment_data', $data);
-
-        if ($request->payment_option == 'cash') {
-            return $this->seller_payment_done($request->session()->get('payment_data'), null, $withdrawRequest, $user);
-        } else if ($request->payment_option == 'bank_payment') {
-            return $this->seller_payment_done($request->session()->get('payment_data'), null, $withdrawRequest, $user);
-        } else if(in_array($request->payment_option, ['usdt_payment', 'iban_payment'], true)) {
-                  return $this->seller_payment_done($request->session()->get('payment_data'), null, $withdrawRequest, $user);
-        } else {
-            $payment_data = $request->session()->get('payment_data');
-
-//            $shop = Shop::findOrFail($payment_data['shop_id']);
-//            $shop->admin_to_pay = $shop->admin_to_pay - $payment_data['amount'];
-//            $shop->save();
-            $user->balance = $user->balance + $payment_data['amount'];
-            $user->save();
-
-            $payment = new Payment;
-            $payment->seller_id = $user->id;
-            $payment->amount = $payment_data['amount'];
-            $payment->payment_method = 'Seller paid to admin';
-            $payment->txn_code = $payment_data['txn_code'];
-            $payment->payment_details = null;
-            $payment->t_type = $withdrawRequest->t_type;
-            $payment->save();
-
-            flash(translate('Payment completed'))->success();
-            return redirect()->route('sellers.withdraw_requests_all.index');
-        }
+        app(\App\Services\WithdrawalService::class)->review($request, $request->seller_withdraw_request_id, true);
+        flash(translate('Payment completed'))->success();
+        return back();
     }
     
 
     //redirects to this method after successfull seller payment
-    public function seller_payment_done($payment_data, $payment_details, $withdrawRequest, $user)
+    public function seller_payment_done($payment_data, $payment_details, $withdrawRequest = null, $user = null)
     {
-        $withdrawRequest = $withdrawRequest ?: SellerWithdrawRequest::find($payment_data['withdraw_request_id']);
-        $user = $user ?: User::find($withdrawRequest->user_id);
-
-        if (!$withdrawRequest || !$user) {
-            flash(translate('Something went wrong'))->error();
-            return back();
-        }
-//        $shop = Shop::findOrFail($payment_data['shop_id']);
-//        $shop->admin_to_pay = $shop->admin_to_pay - $payment_data['amount'];
-//        $shop->save();
-
-        // $user->balance = $user->balance + $payment_data['amount'];
-        // $user->save();
-
-        $payment = new Payment;
-        $payment->seller_id = $user->id;
-        $payment->amount = $payment_data['amount'];
-        $payment->payment_method = $payment_data['payment_method'];
-        $payment->txn_code = $payment_data['txn_code'];
-        $payment->payment_details = $payment_details;
-        $payment->t_type = $withdrawRequest->t_type;
-        $payment->save();
-
-        if ($payment_data['payment_withdraw'] == 'withdraw_request') {
-            $seller_withdraw_request = SellerWithdrawRequest::findOrFail($payment_data['withdraw_request_id']);
-            $seller_withdraw_request->status = '1';
-            $seller_withdraw_request->viewed = '1';
-            $seller_withdraw_request->remarks = $withdrawRequest->remarks;
-            $seller_withdraw_request->save();
-        }
-
+        app(\App\Services\WithdrawalService::class)->review(request(), $withdrawRequest ? $withdrawRequest->id : ($payment_data['withdraw_request_id'] ?? null), true);
         Session::forget('payment_data');
         Session::forget('payment_type');
-
-        if ($payment_data['payment_withdraw'] == 'withdraw_request') {
-            flash(translate('Payment completed'))->success();
-            return redirect()->route('withdraw_requests_all');
-        } else {
-            flash(translate('Payment completed'))->success();
-            return redirect()->route('sellers.index');
-        }
+        return back();
     }
 
     //calculate seller commission after payment

@@ -21,7 +21,7 @@ Route::group(['prefix' => 'v2/auth', 'middleware' => ['app_language']], function
     Route::post('confirm_code', 'App\Http\Controllers\Api\V2\AuthController@confirmCode');
 });
 
-Route::group(['prefix' => 'v2', 'middleware' => ['app_language']], function() {
+Route::group(['prefix' => 'v2', 'middleware' => ['app_language', \App\Http\Middleware\RequireVerifiedWalletRecharge::class]], function() {
     Route::get('exchange-rate', 'App\Http\Controllers\Api\V2\AccountMetricsController@exchangeRate');
     Route::get('user/completed-orders/count', 'App\Http\Controllers\Api\V2\AccountMetricsController@completedOrders')->middleware('auth:sanctum');
     Route::get('user/reputation', 'App\Http\Controllers\Api\V2\AccountMetricsController@reputation')->middleware('auth:sanctum');

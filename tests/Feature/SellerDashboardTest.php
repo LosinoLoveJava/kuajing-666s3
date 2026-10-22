@@ -145,6 +145,8 @@ class SellerDashboardTest extends TestCase
             $t->increments('id'); $t->integer('seller_id'); $t->decimal('amount',20,2);
             $t->string('payment_method'); $t->text('payment_details')->nullable(); $t->integer('t_type'); $t->timestamps();
         });
+        require_once database_path('migrations/2026_10_23_090000_complete_wallet_workflows.php');
+        (new \CompleteWalletWorkflows)->up();
         require_once database_path('migrations/2026_10_22_100000_create_seller_reward_claims.php');
         (new \CreateSellerRewardClaims)->up();
     }
@@ -349,9 +351,11 @@ class SellerDashboardTest extends TestCase
     {
         $seller=$this->account(); $this->orders($seller,7);
         $receipt=app(\App\Services\SellerRewards::class)->claim($seller,'orders_7');
+        $admin=$this->account('admin');
+        $request=Request::create('/review','POST',['id'=>$receipt['wallet_id'],'status'=>1]);
+        $request->setUserResolver(function () use ($admin) { return $admin; });
         try {
-            app(\App\Http\Controllers\WalletController::class)->updateApproved(Request::create('/review','POST',[
-                'id'=>$receipt['wallet_id'],'status'=>1])); $this->fail();
+            app(\App\Http\Controllers\WalletController::class)->updateApproved($request); $this->fail();
         } catch (HttpException $e) { $this->assertEquals(409,$e->getStatusCode()); }
         $this->assertEquals(112.34,$seller->fresh()->balance);
     }
@@ -378,7 +382,11 @@ class SellerDashboardTest extends TestCase
             [\App\Http\Controllers\ManualPaymentMethodController::class,'admin_recharge_modal'],
         ];
         foreach ($calls as [$class,$method]) {
-            try { app($class)->$method(Request::create('/recharge','POST',['type'=>2,'amount'=>10])); $this->fail(); }
+            $principal = $method === 'admin_recharge_modal' ? $this->account('admin') : $seller;
+            $this->actingAs($principal);
+            $request=Request::create('/recharge','POST',['type'=>2,'amount'=>10]);
+            $request->setUserResolver(function () use ($principal) { return $principal; });
+            try { app($class)->$method($request); $this->fail(); }
             catch (ValidationException $e) { $this->assertArrayHasKey('type',$e->errors()); }
         }
         $this->assertDatabaseCount('wallets',0);

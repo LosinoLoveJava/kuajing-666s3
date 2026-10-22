@@ -1,15 +1,17 @@
 @php
     $rechargeLocales = ['cn' => 'zh-CN', 'hk' => 'zh-HK', 'sa' => 'ar-SA', 'bd' => 'bn-BD', 'jp' => 'ja-JP', 'kr' => 'ko-KR', 'in' => 'hi-IN', 'be' => 'be-BY'];
     $rechargeLocale = $rechargeLocales[app()->getLocale()] ?? str_replace('_', '-', app()->getLocale());
+    $bankMethods = \App\Services\WalletService::methods();
 @endphp
-<form id="seller-recharge-form" lang="{{ $rechargeLocale }}" action="{{ route('wallet_recharge.make_payment') }}" method="post" enctype="multipart/form-data">
+<form id="seller-recharge-form" lang="{{ $rechargeLocale }}" action="{{ route('wallet_recharge.make_payment', ['portal' => 'seller']) }}" method="post" enctype="multipart/form-data">
     @csrf
+    <input type="hidden" name="wallet_form" value="recharge">
     <input type="hidden" name="type" value="{{ $type }}">
     <div class="modal-body p-4">
+        @include('partials.wallet_bank_instructions')
         <div class="form-group">
             <label for="recharge-method">{{ translate('Payment method') }} <span class="text-danger">*</span></label>
-            <input type="hidden" name="recharge_method" value="IBAN">
-            <input class="form-control" id="recharge-method" value="BANK" readonly>
+            <select name="recharge_method" id="recharge-method" class="form-control"><option value="Bank">{{ translate('Bank') }}</option><option value="IBAN">IBAN</option></select>
         </div>
         <div class="form-group">
             <label for="recharge-holder">{{ translate('Account holder') }} <span class="text-danger">*</span></label>
@@ -59,7 +61,7 @@
             </div>
             <div class="file-preview box sm"></div>
         </div>
-        <div style="text-align: end"><button type="submit" class="btn btn-primary">{{ translate('Confirm') }}</button></div>
+        <div style="text-align: end"><button type="submit" class="btn btn-primary" @if($bankMethods->isEmpty()) disabled @endif>{{ translate('Confirm') }}</button></div>
     </div>
 </form>
 <script>
@@ -81,6 +83,17 @@
     }
     form.elements.amount_aed.addEventListener('input', updateAmount);
     form.addEventListener('submit', updateAmount);
+    var previous = @json(old('wallet_form') === 'recharge' ? old() : []);
+    Object.keys(previous).forEach(function (name) { if (form.elements[name] && name !== '_token') form.elements[name].value = previous[name]; });
+    function toggleMethod() {
+        var iban = form.elements.recharge_method.value === 'IBAN';
+        form.querySelector('#recharge-iban-fields').hidden = !iban;
+        ['iban_country', 'iban_number'].forEach(function (name) { form.elements[name].disabled = !iban; form.elements[name].required = iban; });
+        form.elements.iban_bic.disabled = !iban;
+        form.elements.bank_account.required = !iban;
+    }
+    form.elements.recharge_method.addEventListener('change', toggleMethod);
+    toggleMethod();
     updateAmount();
 })();
 </script>

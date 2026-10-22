@@ -5,6 +5,7 @@
 !/tests/Feature/SellerDashboardPerformanceTest.php
 !/tests/Feature/PortalSessionIsolationTest.php
 !/tests/Feature/AdminSellerListingTest.php
+!/tests/Feature/WalletWorkflowTest.php
 !/tests/Concerns/
 !/tests/Concerns/InteractsWithPortalSessions.php
 /.phpunit.result.cache

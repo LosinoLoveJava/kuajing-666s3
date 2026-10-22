@@ -72,7 +72,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::post('reputation/{id}', [\App\Http\Controllers\ReputationController::class, 'update'])->middleware(\App\Http\Middleware\VerifyCsrfToken::class)->name('reputation.update');
 
     Route::post('/admin-wallet-recharge-modal', [ManualPaymentMethodController::class, 'admin_recharge_modal'])->name('admin.admin_wallet_recharge_modal');//管理员充值
-    Route::post('/admin-offline-wallet-recharge', [WalletController::class, 'offline_recharge'])->name('admin_wallet_recharge.make_payment');
+    Route::post('/admin-offline-wallet-recharge', [WalletController::class, 'offline_recharge'])->name('admin_wallet_recharge.make_payment')->middleware(\App\Http\Middleware\VerifyCsrfToken::class);
 
     // category
     Route::resource('categories', CategoryController::class);
@@ -408,7 +408,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
         Route::post('/orders/delivery-boy-assign', 'assign_delivery_boy')->name('orders.delivery-boy-assign');
     });
 
-    Route::post('/pay_to_seller', [CommissionController::class, 'pay_to_seller'])->name('commissions.pay_to_seller');
+    Route::post('/pay_to_seller', [CommissionController::class, 'pay_to_seller'])->name('commissions.pay_to_seller')->middleware(\App\Http\Middleware\VerifyCsrfToken::class);
         Route::post('/pay_to_seller2', [CommissionController::class, 'pay_to_seller2'])->name('commissions.pay_to_seller2')->middleware(\App\Http\Middleware\VerifyCsrfToken::class);
 
     Route::post('/refuse', [CommissionController::class, 'refuse'])->name('commissions.refuse')->middleware(\App\Http\Middleware\VerifyCsrfToken::class);

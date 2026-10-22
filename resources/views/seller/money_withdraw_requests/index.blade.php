@@ -1,6 +1,7 @@
 @extends('seller.layouts.app')
 
 @section('panel_content')
+@include('partials.wallet_errors')
 
     <style>
         .seller-wallet-page .wallet-card {
@@ -231,11 +232,8 @@ BANK
                         <td>{{ $list->payment_method === 'IBAN' ? 'BANK' : $list->payment_method }}</td>
                         <td>{{ $list->payment_details }}</td>
                         <td>
-                            @if ($list->approval == 1)
-                                <span class="badge badge-inline badge-success">{{translate('yes')}}</span>
-                            @else
-                                <span class="badge badge-inline badge-danger">{{translate('No')}}</span>
-                            @endif
+                            @include('partials.wallet_status', ['approval' => $list->approval])
+                            <div class="small text-muted">{{ $list->remarks }}</div>
                         </td>
                         <td>
                             @if ($list->offline_payment == 1)
@@ -256,7 +254,7 @@ BANK
                         </td>
                         
                         
-                        <td>{{ $list->reciept }}</td>
+                        <td>@if($list->reciept)<a href="{{ uploaded_asset($list->reciept) }}" target="_blank" rel="noopener">{{ translate('Receipt') }}</a>@endif</td>
                         <td>{{ date('d-m-Y', strtotime($list->created_at)) }}</td>
                     </tr>
                 @endforeach
@@ -347,9 +345,11 @@ BANK
                     <h5 class="modal-title" id="exampleModalLabel">{{ translate('Send A Withdraw Request') }}</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}"></button>
                 </div>
-                @if ($balance > 5)
+                @if ($balance >= 0.01)
                     <form class="" action="{{ route('seller.money_withdraw_request.store') }}" method="post">
                         @csrf
+                        <input type="hidden" name="wallet_form" value="withdraw">
+                        <input type="hidden" name="request_token" value="{{ old('request_token', (string) \Illuminate\Support\Str::uuid()) }}">
                         <div class="modal-body p-4">
                             <div class="row">
                                 <div class="col">
@@ -361,52 +361,20 @@ BANK
                                 </div>
                             </div>
                             <input type="hidden" name="type" value="1">
-                            <div class="form-group">
-                                <label for="p">{{ translate('Withdraw Type')}} <span class="text-danger">*</span></label>
-                                <input type="hidden" name="w_type" value="4">
-                                <div class="form-control" id="p">BANK</div>
+                            <div class="form-group"><label for="p">{{ translate('Withdraw Type') }}</label>
+                                <select name="w_type" class="form-control" id="p" required><option value="2">{{ translate('Bank') }}</option><option value="4">IBAN</option></select>
                             </div>
-                            <div class="form-group">
-                                <label for="withdraw-holder">{{ translate('Account holder') }} <span class="text-danger">*</span></label>
-                                <input id="withdraw-holder" name="iban_holder" class="form-control" maxlength="200" placeholder="{{ translate('Please enter the name') }}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="withdraw-bank">{{ translate('Bank Name') }} <span class="text-danger">*</span></label>
-                                <input id="withdraw-bank" name="iban_bank" class="form-control" maxlength="200" placeholder="{{ translate('Please enter the bank name') }}" required>
-                            </div>
-                            <div id="withdraw-bank-fields">
-                                <div class="form-group">
-                                    <label for="withdraw-account">{{ translate('Bank Account Number') }} <span class="text-danger">*</span></label>
-                                    <input id="withdraw-account" name="bank_account" class="form-control" dir="ltr" maxlength="100" placeholder="{{ translate('Please enter the bank account') }}" required>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="withdraw-iban">IBAN <span class="text-danger">*</span></label>
-                                <input id="withdraw-iban" name="iban_number" class="form-control" dir="ltr" maxlength="64" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="withdraw-country">{{ translate('Account country') }} <span class="text-danger">*</span></label>
-                                <select id="withdraw-country" name="iban_country" class="form-control" required>
-                                    @foreach(config('iban.lengths') as $code => $length)
-                                        <option value="{{ $code }}" @if($code === 'AE') selected @endif>{{ $code }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="withdraw-bic">SWIFT / BIC ({{ translate('Optional') }})</label>
-                                <input id="withdraw-bic" name="iban_bic" class="form-control" dir="ltr" maxlength="11" autocomplete="off">
-                            </div>
-
+                            @include('partials.iban_form')
                             <div class="form-group">
                                 <label for="withdraw-amount">{{ translate('Amount')}} (USD) <span class="text-danger">*</span></label>
-                                <input id="withdraw-amount" type="number" lang="en" dir="ltr" class="form-control" name="amount" min="0.01" step="0.01" placeholder="{{ translate('Amount') }}" required>
+                                <input id="withdraw-amount" type="number" lang="en" dir="ltr" class="form-control" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01" placeholder="{{ translate('Amount') }}" required>
                                 <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr">1 USD = 3.67 AED</bdi></div>
                                 <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="withdraw-aed">0.00</span> AED</bdi></div>
                             </div>
 
                             <div class="form-group">
                                 <label for="withdraw-message">{{ translate('Message')}}</label>
-                                <textarea id="withdraw-message" name="message" rows="5" class="form-control"></textarea>
+                                <textarea id="withdraw-message" name="message" rows="5" class="form-control">{{ old('message') }}</textarea>
                             </div>
                             <div style="text-align: end">
                                 <button type="submit" class="btn btn-sm btn-primary">{{translate('Send')}}</button>
@@ -426,6 +394,7 @@ BANK
 @endsection
 
 @section('script')
+@include('partials.wallet_script')
     <script type="text/javascript">
         function show_request_modal() {
             $('#request_modal').modal('show');
@@ -441,10 +410,10 @@ BANK
             });
         }
         function show_make_wallet_recharge_modal(type){
-            $.post('{{ route('offline_wallet_recharge_modal') }}', {type:type,_token:'{{ csrf_token() }}'}, function(data){
+            $.post('{{ route('offline_wallet_recharge_modal', ['portal' => 'seller']) }}', {type:type,_token:'{{ csrf_token() }}'}, function(data){
                 $('#offline_wallet_recharge_modal_body').html(data);
                 $('#offline_wallet_recharge_modal').modal('show');
-            });
+            }).fail(function () { AIZ.plugins.notify('danger', @json(translate('Unable to load the recharge form. Please try again.'))); });
         }
 
         (function () {

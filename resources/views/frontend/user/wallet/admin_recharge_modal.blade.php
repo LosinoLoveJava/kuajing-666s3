@@ -1,5 +1,6 @@
 <form class="" action="{{ route('admin_wallet_recharge.make_payment') }}" method="post" enctype="multipart/form-data">
     @csrf
+    <input type="hidden" name="request_token" value="{{ \Illuminate\Support\Str::uuid() }}">
     <div class="modal-body gry-bg px-3 pt-3 mx-auto">
         <div id="manual_payment_data">
             <div class="card mb-3 p-3">
@@ -11,7 +12,7 @@
                         <label>{{ translate('Amount')}} <span class="text-danger">*</span></label>
                     </div>
                     <div class="col-md-9">
-                        <input type="number" lang="en" class="form-control mb-3" min="0" step="0.01" name="amount" placeholder="{{ translate('Amount') }}" required>
+                        <input type="number" lang="en" class="form-control mb-3" min="0.01" step="0.01" name="amount" placeholder="{{ translate('Amount') }}" required>
                     </div>
                 </div>
             </div>

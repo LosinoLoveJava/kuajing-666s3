@@ -26,7 +26,7 @@ Route::group(['prefix' =>'admin', 'middleware' => ['auth', 'admin']], function()
     Route::get('/manual_payment_methods/destroy/{id}', [ManualPaymentMethodController::class, 'destroy'])->name('manual_payment_methods.destroy');
     Route::get('/offline-wallet-recharge-requests', [WalletController::class, 'offline_recharge_request'])->name('offline_wallet_recharge_request.index');
     Route::get('/offline-wallet-recharge-requests-by-seller', [WalletController::class, 'offline_recharge_request_by_seller'])->name('offline_wallet_recharge_request_by_seller.index');
-    Route::post('/offline-wallet-recharge/approved', [WalletController::class, 'updateApproved'])->name('offline_recharge_request.approved');
+    Route::post('/offline-wallet-recharge/approved', [WalletController::class, 'updateApproved'])->name('offline_recharge_request.approved')->middleware(\App\Http\Middleware\VerifyCsrfToken::class);
 
     // Seller Package purchase request
     Route::get('/offline-seller-package-payment-requests', [SellerPackagePaymentController::class, 'offline_payment_request'])->name('offline_seller_package_payment_request.index');
@@ -47,7 +47,7 @@ Route::group(['prefix' =>'salesman', 'middleware' => ['auth', 'salesman']], func
     Route::resource('salesman.manual_payment_methods', ManualPaymentMethodController::class);
     Route::get('/manual_payment_methods/destroy/{id}', [ManualPaymentMethodController::class, 'destroy'])->name('salesman.manual_payment_methods.destroy');
     Route::get('/offline-wallet-recharge-requests', [WalletController::class, 'offline_recharge_request'])->name('salesman.offline_wallet_recharge_request.index');
-    Route::post('/offline-wallet-recharge/approved', [WalletController::class, 'updateApproved'])->name('salesman.offline_recharge_request.approved');
+    Route::post('/offline-wallet-recharge/approved', [WalletController::class, 'updateApproved'])->name('salesman.offline_recharge_request.approved')->middleware(\App\Http\Middleware\VerifyCsrfToken::class);
 
     // Seller Package purchase request
     Route::get('/offline-seller-package-payment-requests', [SellerPackagePaymentController::class, 'offline_payment_request'])->name('salesman.offline_seller_package_payment_request.index');
@@ -61,9 +61,9 @@ Route::group(['prefix' =>'salesman', 'middleware' => ['auth', 'salesman']], func
 //FrontEnd
 Route::post('/purchase_history/make_payment', [ManualPaymentMethodController::class, 'show_payment_modal'])->name('checkout.make_payment');
 Route::post('/purchase_history/make_payment/submit', [ManualPaymentMethodController::class, 'submit_offline_payment'])->name('purchase_history.make_payment');
-Route::post('/offline-wallet-recharge-modal', [ManualPaymentMethodController::class, 'offline_recharge_modal'])->name('offline_wallet_recharge_modal');
+Route::post('/offline-wallet-recharge-modal', [ManualPaymentMethodController::class, 'offline_recharge_modal'])->name('offline_wallet_recharge_modal')->middleware(['auth', 'user', 'verified', 'unbanned', \App\Http\Middleware\VerifyCsrfToken::class]);
 
-Route::group(['middleware' => ['user', 'verified']], function(){
+Route::group(['middleware' => ['auth', 'user', 'verified', 'unbanned', \App\Http\Middleware\VerifyCsrfToken::class]], function(){
 	Route::post('/offline-wallet-recharge', [WalletController::class, 'offline_recharge'])->name('wallet_recharge.make_payment');
 
 });

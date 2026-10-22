@@ -34,10 +34,8 @@
 
                             </td>
                             <td>
-                                <label class="aiz-switch aiz-switch-success mb-0">
-                                    <input disabled readonly type="checkbox" @if($wallet->approval == 1) checked @endif >
-                                    <span class="slider round"></span>
-                                </label>
+                                @include('partials.wallet_status', ['approval' => $wallet->approval])
+                                <div class="small text-muted">{{ $wallet->remarks }}</div>
                             </td>
                             <td>{{ $wallet->created_at }}</td>
                         </tr>
@@ -45,12 +43,10 @@
                 @endforeach
             </tbody>
         </table>
+        {{ $wallets->withQueryString()->links() }}
     </div>
 </div>
 
 @endsection
 @section('script')
-    <script type="text/javascript">
-
-    </script>
 @endsection

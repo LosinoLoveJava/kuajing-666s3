@@ -319,7 +319,7 @@ Route::group(['middleware' => ['customer', 'verified', 'unbanned']], function() 
     // Wallet
     Route::controller(WalletController::class)->group(function () {
         Route::get('/wallet', 'index')->name('wallet.index');
-        Route::post('/recharge', 'recharge')->name('wallet.recharge');
+        Route::post('/recharge', 'recharge')->name('wallet.recharge')->middleware(\App\Http\Middleware\VerifyCsrfToken::class);
         Route::post('/do_money_withdraw_request', 'do_money_withdraw_request')->middleware(\App\Http\Middleware\VerifyCsrfToken::class)->name('wallet.do_money_withdraw_request');
     });
 

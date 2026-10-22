@@ -1,5 +1,6 @@
 <form action="{{ route('commissions.pay_to_seller') }}" method="POST">
     @csrf
+    <input type="hidden" name="request_token" value="{{ \Illuminate\Support\Str::uuid() }}">
     <input type="hidden" name="shop_id" value="{{ $shop->id }}">
     <div class="modal-header">
     	<h5 class="modal-title h6">{{translate('Pay to seller')}}</h5>

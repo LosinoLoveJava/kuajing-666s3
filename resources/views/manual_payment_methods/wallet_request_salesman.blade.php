@@ -35,10 +35,8 @@
                                 @endif
                             </td>
                             <td>
-                                <label class="aiz-switch aiz-switch-success mb-0">
-                                    <input onchange="update_approved(this)" value="{{ $wallet->id }}" type="checkbox" @if($wallet->approval == 1) checked @endif >
-                                    <span class="slider round"></span>
-                                </label>
+                                @include('partials.wallet_status', ['approval' => $wallet->approval])
+                                <div class="small text-muted">{{ $wallet->remarks }}</div>
                             </td>
                             <td>{{ $wallet->created_at }}</td>
                         </tr>
@@ -54,22 +52,4 @@
 
 @endsection
 @section('script')
-    <script type="text/javascript">
-        function update_approved(el){
-            if(el.checked){
-                var status = 1;
-            }
-            else{
-                var status = 0;
-            }
-            $.post('{{ route('salesman.offline_recharge_request.approved') }}', {_token:'{{ csrf_token() }}', id:el.value, status:status}, function(data){
-                if(data == 1){
-                    AIZ.plugins.notify('success', '{{ translate('Money has been added successfully') }}');
-                }
-                else{
-                    AIZ.plugins.notify('danger', '{{ translate('Something went wrong') }}');
-                }
-            });
-        }
-    </script>
 @endsection

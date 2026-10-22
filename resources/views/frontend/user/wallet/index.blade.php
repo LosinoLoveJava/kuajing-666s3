@@ -1,6 +1,7 @@
 @extends('frontend.layouts.user_panel')
 
 @section('panel_content')
+@include('partials.wallet_errors')
     <div class="aiz-titlebar mt-2 mb-4">
     <div class="row align-items-center">
       <div class="col-md-6">
@@ -20,6 +21,7 @@
             </div>
           </div>
       </div>
+      @if(count(\App\Services\WalletService::onlineMethods()))
       <div class="col-md-3 mx-auto mb-3" >
         <div class="p-3 rounded mb-3 c-pointer text-center bg-white shadow-sm hov-shadow-lg has-transition" onclick="show_wallet_modal()">
             <span class="size-60px rounded-circle mx-auto bg-secondary d-flex align-items-center justify-content-center mb-3">
@@ -28,6 +30,7 @@
             <div class="fs-18 text-primary">{{ translate('Recharge Wallet') }}</div>
         </div>
       </div>
+      @endif
       @if (addon_is_activated('offline_payment'))
           <div class="col-md-3 mx-auto mb-3" >
               <div class="p-3 rounded mb-3 c-pointer text-center bg-white shadow-sm hov-shadow-lg has-transition" onclick="show_make_wallet_recharge_modal()">
@@ -77,15 +80,8 @@
                           <td>{{ single_price($wallet->amount) }}</td>
                           <td>{{ ucfirst(str_replace('_', ' ', $wallet ->payment_method)) }}</td>
                           <td class="text-right">
-                              @if ($wallet->offline_payment)
-                                  @if ($wallet->approval)
-                                      <span class="badge badge-inline badge-success">{{translate('Approved')}}</span>
-                                  @else
-                                      <span class="badge badge-inline badge-info">{{translate('Pending')}}</span>
-                                  @endif
-                              @else
-                                  N/A
-                              @endif
+                              @include('partials.wallet_status', ['approval' => $wallet->approval])
+                              <div class="small text-muted">{{ $wallet->remarks }}</div>
                           </td>
                       </tr>
                   @endforeach
@@ -199,7 +195,7 @@ IBAN
                               <label>{{ translate('Amount')}} <span class="text-danger">*</span></label>
                           </div>
                           <div class="col-md-8">
-                              <input type="number" lang="en" class="form-control mb-3" name="amount" placeholder="{{ translate('Amount')}}" required>
+                              <input type="number" lang="en" class="form-control mb-3" name="amount" min="0.01" step="0.01" placeholder="{{ translate('Amount')}}" required>
                           </div>
                       </div>
                       <div class="row">
@@ -209,68 +205,9 @@ IBAN
                           <div class="col-md-8">
                               <div class="mb-3">
                                   <select class="form-control selectpicker" data-minimum-results-for-search="Infinity" name="payment_option" data-live-search="true">
-                                    @if (get_setting('paypal_payment') == 1)
-                                        <option value="paypal">{{ translate('Paypal')}}</option>
-                                    @endif
-                                    @if (get_setting('stripe_payment') == 1)
-                                        <option value="stripe">{{ translate('Stripe')}}</option>
-                                    @endif
-                                    @if (get_setting('mercadopago_payment') == 1)
-                                        <option value="mercadopago">{{ translate('Mercadopago')}}</option>
-                                    @endif
-                                    @if(get_setting('toyyibpay_payment') == 1)
-                                        <option value="toyyibpay">{{ translate('ToyyibPay')}}</option>
-                                    @endif
-                                    @if (get_setting('sslcommerz_payment') == 1)
-                                        <option value="sslcommerz">{{ translate('SSLCommerz')}}</option>
-                                    @endif
-                                    @if (get_setting('instamojo_payment') == 1)
-                                        <option value="instamojo">{{ translate('Instamojo')}}</option>
-                                    @endif
-                                    @if (get_setting('paystack') == 1)
-                                        <option value="paystack">{{ translate('Paystack')}}</option>
-                                    @endif
-                                    @if (get_setting('voguepay') == 1)
-                                        <option value="voguepay">{{ translate('VoguePay')}}</option>
-                                    @endif
-                                    @if (get_setting('payhere') == 1)
-                                        <option value="payhere">{{ translate('Payhere')}}</option>
-                                    @endif
-                                    @if (get_setting('ngenius') == 1)
-                                        <option value="ngenius">{{ translate('Ngenius')}}</option>
-                                    @endif
-                                    @if (get_setting('razorpay') == 1)
-                                        <option value="razorpay">{{ translate('Razorpay')}}</option>
-                                    @endif
-                                    @if (get_setting('iyzico') == 1)
-                                        <option value="iyzico">{{ translate('Iyzico')}}</option>
-                                    @endif
-                                    @if (get_setting('bkash') == 1)
-                                        <option value="bkash">{{ translate('Bkash')}}</option>
-                                    @endif
-                                    @if (get_setting('nagad') == 1)
-                                        <option value="nagad">{{ translate('Nagad')}}</option>
-                                    @endif
-                                    @if (get_setting('payku') == 1)
-                                        <option value="payku">{{ translate('Payku')}}</option>
-                                    @endif
-                                    @if(addon_is_activated('african_pg'))
-                                        @if (get_setting('mpesa') == 1)
-                                            <option value="mpesa">{{ translate('Mpesa')}}</option>
-                                        @endif
-                                        @if (get_setting('flutterwave') == 1)
-                                            <option value="flutterwave">{{ translate('Flutterwave')}}</option>
-                                        @endif
-                                        @if (get_setting('payfast') == 1)
-                                            <option value="payfast">{{ translate('PayFast')}}</option>
-                                        @endif
-                                    @endif
-                                    @if (addon_is_activated('paytm') && get_setting('paytm_payment'))
-                                        <option value="paytm">{{ translate('Paytm')}}</option>
-                                    @endif
-                                    @if(get_setting('authorizenet') == 1)
-                                        <option value="authorizenet">{{ translate('Authorize Net')}}</option>
-                                    @endif
+                                    @foreach(\App\Services\WalletService::onlineMethods() as $method)
+                                        <option value="{{ $method }}">{{ ucfirst($method) }}</option>
+                                    @endforeach
                                   </select>
                               </div>
                           </div>
@@ -309,9 +246,11 @@ IBAN
                     <h5 class="modal-title" id="exampleModalLabel">{{ translate('Send A Withdraw Request') }}</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
                 </div>
-                @if ($balance > 5)
+                @if ($balance >= 0.01)
                     <form class="" action="{{ route('wallet.do_money_withdraw_request') }}" method="post">
                         @csrf
+                        <input type="hidden" name="wallet_form" value="withdraw">
+                        <input type="hidden" name="request_token" value="{{ old('request_token', (string) \Illuminate\Support\Str::uuid()) }}">
                         <div class="modal-body gry-bg px-3 pt-3">
                             <div class="row">
                                 <div class="col">
@@ -329,7 +268,7 @@ IBAN
                                     <label>{{ translate('Amount')}} <span class="text-danger">*</span></label>
                                 </div>
                                 <div class="col-md-9">
-                                    <input type="number" lang="en" class="form-control mb-3" name="amount" min="0.01" step="0.01"
+                                    <input type="number" lang="en" class="form-control mb-3" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01"
                                          
                                            placeholder="{{ translate('Amount') }}" required>
                                 </div>
@@ -370,7 +309,7 @@ IBAN
                                     <label>{{ translate('Message')}}</label>
                                 </div>
                                 <div class="col-md-9">
-                                    <textarea name="message" rows="8" class="form-control mb-3"></textarea>
+                                    <textarea name="message" rows="8" class="form-control mb-3">{{ old('message') }}</textarea>
                                 </div>
                             </div>
                             <div class="form-group text-right">
@@ -392,6 +331,7 @@ IBAN
 @endsection
 
 @section('script')
+@include('partials.wallet_script')
     <script type="text/javascript">
     
         function show_request_modal() {
@@ -405,36 +345,11 @@ IBAN
         }
 
         function show_make_wallet_recharge_modal(){
-            $.post('{{ route('offline_wallet_recharge_modal') }}', {_token:'{{ csrf_token() }}'}, function(data){
+            $.post('{{ route('offline_wallet_recharge_modal', ['portal' => 'customer']) }}', {_token:'{{ csrf_token() }}'}, function(data){
                 $('#offline_wallet_recharge_modal_body').html(data);
                 $('#offline_wallet_recharge_modal').modal('show');
-            });
+            }).fail(function () { AIZ.plugins.notify('danger', @json(translate('Unable to load the recharge form. Please try again.'))); });
         }
         
-        $(function(){
-            @php 
-            $user = \App\Models\User::find(Auth::user()->id);
-            @endphp
-         $("#p").change(function(){
-            var usdt_status = {{$user->usdt_payment_status}};
-            var bank_payment_status = {{$user->bank_payment_status}};
-            var cash_on_delivery_status = {{$user->cash_on_delivery_status}};
-            var type = $(this).val();
-            if (type == 3 && usdt_status == 0) {
-                window.location.href = "/profile"
-                $(".btn").attr("disabled")
-            }
-            if (type == 2 && bank_payment_status == 0) {
-                window.location.href = "/profile#bank"
-                 $(".btn").attr("disabled")
-            }
-            if (type == 1 && cash_on_delivery_status == 0) {
-                window.location.href = "/profile#cash"
-                 $(".btn").attr("disabled")
-            }
-        })
-        
-        
-        })
     </script>
 @endsection

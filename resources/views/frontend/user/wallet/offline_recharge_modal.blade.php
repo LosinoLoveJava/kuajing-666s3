@@ -1,14 +1,16 @@
-<form class="" action="{{ route('wallet_recharge.make_payment') }}" method="post" enctype="multipart/form-data">
+@php($methods = \App\Services\WalletService::methods())
+<form class="" action="{{ route('wallet_recharge.make_payment', ['portal' => 'customer']) }}" method="post" enctype="multipart/form-data">
     @csrf
+    <input type="hidden" name="wallet_form" value="recharge">
     <div class="modal-body gry-bg px-3 pt-3 mx-auto">
         <div class="align-items-center gutters-5 row">
-            @foreach(\App\Models\ManualPaymentMethod::all() as $method)
+            @foreach($methods as $method)
               @if (stripos((string) $method->heading, 'usdt') !== false || stripos((string) $method->heading, 'tether') !== false)
                 @continue
               @endif
               <div class="col-6 col-md-4">
                 <label class="aiz-megabox d-block mb-3">
-                    <input value="{{ $method->heading }}" type="radio" name="payment_option" onchange="toggleManualPaymentData({{ $method->id }})" data-id="{{ $method->id }}" checked>
+                    <input value="{{ $method->heading }}" type="radio" name="payment_option" onchange="toggleManualPaymentData({{ $method->id }})" data-id="{{ $method->id }}" @if($loop->first) checked @endif required>
                     <span class="d-block p-3 aiz-megabox-elem">
                         <img src="{{ uploaded_asset($method->photo) }}" class="img-fluid mb-2">
                         <span class="d-block text-center">
@@ -20,6 +22,7 @@
             @endforeach
         </div>
 
+        @if($methods->isEmpty())<div class="alert alert-warning">{{ translate('No bank transfer instructions are configured. Please contact support.') }}</div>@endif
         <div id="manual_payment_data">
 
             <div class="card mb-3 p-3 d-none">
@@ -37,7 +40,7 @@
                         <label>{{ translate('Amount')}} <span class="text-danger">*</span></label>
                     </div>
                     <div class="col-md-9">
-                        <input type="number" lang="en" class="form-control mb-3" min="0" step="0.01" name="amount" placeholder="{{ translate('Amount') }}" required>
+                        <input type="number" lang="en" class="form-control mb-3" min="0.01" step="0.01" name="amount" placeholder="{{ translate('Amount') }}" required>
                     </div>
                 </div>
 
@@ -65,18 +68,18 @@
                 </div>
             </div>
             <div class="form-group text-right">
-                <button type="submit" class="btn btn-sm btn-primary transition-3d-hover mr-1">{{translate('Confirm')}}</button>
+                <button @if($methods->isEmpty()) disabled @endif type="submit" class="btn btn-sm btn-primary transition-3d-hover mr-1">{{translate('Confirm')}}</button>
             </div>
         </div>
     </div>
 </form>
 
-@foreach(\App\Models\ManualPaymentMethod::all() as $method)
+@foreach($methods as $method)
   @if (stripos((string) $method->heading, 'usdt') !== false || stripos((string) $method->heading, 'tether') !== false)
     @continue
   @endif
   <div id="manual_payment_info_{{ $method->id }}" class="d-none">
-      <div>@php echo $method->description @endphp</div>
+      <div>{!! $method->description !!}</div>
       @if ($method->bank_info != null)
           <ul>
               @foreach (json_decode($method->bank_info) as $key => $info)
@@ -89,6 +92,9 @@
 
 <script type="text/javascript">
     $(document).ready(function(){
+        var form = document.querySelector('#offline_wallet_recharge_modal_body form');
+        var previous = @json(old('wallet_form') === 'recharge' ? old() : []);
+        Object.keys(previous).forEach(function (name) { if (form.elements[name] && name !== '_token') form.elements[name].value = previous[name]; });
         toggleManualPaymentData($('input[name=payment_option]:checked').data('id'));
     });
 

@@ -68,7 +68,7 @@ class PaypalController extends Controller
                                  "reference_id" => rand(000000,999999),
                                  "amount" => [
                                      "value" => number_format($amount, 2, '.', ''),
-                                     "currency_code" => \App\Models\Currency::findOrFail(get_setting('system_default_currency'))->code
+                                     "currency_code" => Session::get('payment_type') === 'wallet_payment' ? 'USD' : \App\Models\Currency::findOrFail(get_setting('system_default_currency'))->code
                                  ]
                              ]],
                              "application_context" => [
@@ -80,6 +80,9 @@ class PaypalController extends Controller
         try {
             // Call API with your client and get a response for your call
             $response = $client->execute($request);
+            if (Session::get('payment_type') === 'wallet_payment') {
+                Session::put('wallet_paypal_order', $response->result->id);
+            }
             // If call returns body in response, you can get the deserialized version from the result attribute of the response
             return Redirect::to($response->result->links[1]->href);
         }catch (\Exception $ex) {
@@ -115,6 +118,9 @@ class PaypalController extends Controller
 
         // $response->result->id gives the orderId of the order created above
 
+        if (Session::get('payment_type') === 'wallet_payment') {
+            abort_unless($request->token && hash_equals((string) Session::get('wallet_paypal_order'), (string) $request->token), 422);
+        }
         $ordersCaptureRequest = new OrdersCaptureRequest($request->token);
         $ordersCaptureRequest->prefer('return=representation');
         try {
@@ -127,7 +133,7 @@ class PaypalController extends Controller
                     return (new CheckoutController)->checkout_done($request->session()->get('combined_order_id'), json_encode($response));
                 }
                 elseif ($request->session()->get('payment_type') == 'wallet_payment') {
-                    return (new WalletController)->wallet_payment_done($request->session()->get('payment_data'), json_encode($response));
+                    return (new WalletController)->wallet_payment_done($request->session()->get('payment_data'), $response);
                 }
                 elseif ($request->session()->get('payment_type') == 'customer_package_payment') {
                     return (new CustomerPackageController)->purchase_payment_done($request->session()->get('payment_data'), json_encode($response));

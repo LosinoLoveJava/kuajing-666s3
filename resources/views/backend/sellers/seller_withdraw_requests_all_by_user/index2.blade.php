@@ -22,7 +22,7 @@
                 </thead>
                 <tbody>
                     @foreach($seller_withdraw_requests as $key => $seller_withdraw_request)
-                        @php $user = \App\Models\User::find($seller_withdraw_request->user_id); @endphp
+                        @php $user = $seller_withdraw_request->user; @endphp
                         @if ($user  )
                             <tr>
                                 <td>{{ ($key+1) + ($seller_withdraw_requests->currentPage() - 1)*$seller_withdraw_requests->perPage() }}</td>
@@ -41,8 +41,8 @@
                                      {{translate('USDT')}}
                                     @elseif($seller_withdraw_request->w_type == 4)
 IBAN
-@include('partials.iban_details')
 @endif
+@include('partials.iban_details')
                                 </td>
                                 <td>
                                     {{ $seller_withdraw_request->message }}
@@ -57,9 +57,9 @@ IBAN
                                     @endif
                                 </td>
                                 <td class="text-right">
-                                    @if ($seller_withdraw_request->status == 0)
+                                    @if ($seller_withdraw_request->status == 0 && in_array(Auth::user()->user_type, ['admin', 'staff'], true))
                                     <a onclick="show_seller_payment_modal('{{$seller_withdraw_request->user_id}}','{{ $seller_withdraw_request->id }}');" class="btn btn-soft-warning btn-icon btn-circle btn-sm" href="javascript:void(0);" title="{{ translate('Pay Now') }}">
-                                        <i class="las la-money-bill"></i>
+                                        <i class="las la-money-bill"></i></a>
                                     <a onclick="show_refuse_modal('{{$seller_withdraw_request->user_id}}','{{ $seller_withdraw_request->id }}');" class="btn btn-soft-warning btn-icon btn-circle btn-sm" href="javascript:void(0);" title="{{ translate('Refuse') }}">
                                     <i class="las la-money-bill"></i>
                                     </a>
@@ -123,21 +123,23 @@ IBAN
           $.post('{{ route('withdraw_request.payment_modal') }}',{_token:'{{ @csrf_token() }}', id:id, seller_withdraw_request_id:seller_withdraw_request_id}, function(data){
               $('#payment-modal-content').html(data);
               $('#payment_modal').modal('show', {backdrop: 'static'});
-              $('.demo-select2-placeholder').select2();
-          });
+          }).fail(wallet_modal_failed);
       }
       function show_refuse_modal(id, seller_withdraw_request_id){
           $.post('{{ route('withdraw_request.refuse_modal') }}',{_token:'{{ @csrf_token() }}', id:id, seller_withdraw_request_id:seller_withdraw_request_id}, function(data){
               $('#refuse_modal-content').html(data);
               $('#refuse_modal').modal('show', {backdrop: 'static'});
-          });
+          }).fail(wallet_modal_failed);
       }
 
       function show_message_modal(id){
           $.post('{{ route('withdraw_request.message_modal') }}',{_token:'{{ @csrf_token() }}', id:id}, function(data){
               $('#message-modal-content').html(data);
               $('#message_modal').modal('show', {backdrop: 'static'});
-          });
+          }).fail(wallet_modal_failed);
+      }
+      function wallet_modal_failed(xhr) {
+          AIZ.plugins.notify('danger', (xhr.responseJSON || {}).message || @json(translate('Unable to load this request. Refresh the page and try again.')));
       }
   </script>
 

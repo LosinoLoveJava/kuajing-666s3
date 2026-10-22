@@ -49,7 +49,7 @@
                         <tr>
                             <td>{{ ($key+1) }}</td>
                             <td>{{ $wallet->user->name }}</td>
-                            <td>{{ $wallet->operator->user_type=='admin'?'admin':$wallet->operator->name }}</td>
+                            <td>{{ optional($wallet->operator)->name ?? '—' }}</td>
                             <td>{{ $wallet->amount }}</td>
                             <td>{{ $wallet->payment_method }}</td>
                             <td>{{ $wallet->payment_details }}</td>
@@ -59,10 +59,14 @@
                                 @endif
                             </td>
                             <td>
-                                <label class="aiz-switch aiz-switch-success mb-0">
-                                    <input onchange="update_approved(this)" value="{{ $wallet->id }}" type="checkbox" @if($wallet->approval == 1) checked @endif >
-                                    <span class="slider round"></span>
-                                </label>
+                                @include('partials.wallet_status', ['approval' => $wallet->approval])
+                                <div class="small text-muted">{{ $wallet->remarks }}</div>
+                                @if((int) $wallet->approval === 0 && in_array(Auth::user()->user_type, ['admin', 'staff'], true))
+                                    <div class="mt-2 d-flex">
+                                        <button type="button" class="btn btn-sm btn-success wallet-review-button mr-1" data-id="{{ $wallet->id }}" data-status="1" data-account="{{ $wallet->user->name }} · {{ single_price($wallet->amount) }}">{{ translate('Approve') }}</button>
+                                        <button type="button" class="btn btn-sm btn-danger wallet-review-button" data-id="{{ $wallet->id }}" data-status="2" data-account="{{ $wallet->user->name }} · {{ single_price($wallet->amount) }}">{{ translate('Reject') }}</button>
+                                    </div>
+                                @endif
                             </td>
                             <td>
                                 @if( $wallet->type == 1 )
@@ -85,22 +89,5 @@
 
 @endsection
 @section('script')
-    <script type="text/javascript">
-        function update_approved(el){
-            if(el.checked){
-                var status = 1;
-            }
-            else{
-                var status = 0;
-            }
-            $.post('{{ route('offline_recharge_request.approved') }}', {_token:'{{ csrf_token() }}', id:el.value, status:status}, function(data){
-                if(data == 1){
-                    AIZ.plugins.notify('success', '{{ translate('successfully') }}');
-                }
-                else{
-                    AIZ.plugins.notify('danger', '{{ translate('Something went wrong') }}');
-                }
-            });
-        }
-    </script>
+@include('partials.wallet_review_modal')
 @endsection
