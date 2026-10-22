@@ -4,7 +4,7 @@
 
     <section class="gry-bg py-4 profile">
         <div class="container-fluid">
-            <form class="" action="" method="POST" enctype="multipart/form-data">
+            <form class="" action="" method="POST" enctype="multipart/form-data" onsubmit="return false">
                 @csrf
                 <div class="row gutters-10">
                     <div class="col-md">
@@ -39,10 +39,10 @@
                             <div class="d-flex flex-wrap justify-content-center" id="product-list">
 
                             </div>
-                            <div id="load-more" class="text-center">
-                                <div class="fs-14 d-inline-block fw-600 btn btn-soft-primary c-pointer"
-                                     onclick="loadMoreProduct()">{{ translate('Loading..') }}</div>
-                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center justify-content-between mt-3" style="gap:12px">
+                            <div id="product-page-summary" role="status" aria-live="polite"></div>
+                            <nav aria-label="{{ translate('Pagination') }}"><div id="product-pagination" class="d-flex flex-wrap" style="gap:4px"></div></nav>
                         </div>
                     </div>
                     <div class="col-md-auto w-md-350px w-lg-400px w-xl-500px">
@@ -60,7 +60,7 @@
                         <div class="pos-footer mar-btm">
                             <div class="d-flex flex-column flex-md-row justify-content-between">
                                 <div class="d-flex">
-                                    <button id="add-all-btn" type="button" class="btn btn-outline-info btn-block"
+                                    <button id="add-all-btn" type="button" class="btn btn-outline-info btn-block" disabled
                                             onclick="addPost(1)">
                                         <span class="spinner-border spinner-border-sm d-none" role="status"
                                               aria-hidden="true"></span>
@@ -89,6 +89,8 @@
     <script type="text/javascript">
 
         var products = null;
+        var productPage = 1, productTotal = 0;
+        var productLoadId = 0, productRequest = null, productsLoading = false, productsPosting = false;
 
         $(document).ready(function () {
             // $('body').addClass('side-menu-closed');
@@ -97,6 +99,9 @@
                 var product_name = $(this).data('product-name');
                 var product_price = $(this).data('product-price');
                 updateSelection(product_id, product_name, product_price);
+            });
+            $('#product-pagination').on('click', 'button[data-page]', function () {
+                if (!productsLoading && !productsPosting) loadProductPage(Number($(this).attr('data-page')));
             });
             filterProducts();
         });
@@ -147,28 +152,69 @@
         }
 
         function filterProducts() {
-            var keyword = $('input[name=keyword]').val();
-            var category = $('select[name=poscategory]').val();
-            var brand = $('select[name=brand]').val();
-            $.get('{{ route('seller.product_storehouse.search') }}', {
-                keyword: keyword,
-                category: category,
-                brand: brand
-            }, function (data) {
-                products = data;
-                $('#product-list').html(null);
-                setProductList(data);
-            });
+            if (productsPosting) return;
+            loadProductPage(1);
         }
 
-        function loadMoreProduct() {
-            if (products != null && products.links.next != null) {
-                $('#load-more').find('.btn').html('{{ translate('Loading..') }}');
-                $.get(products.links.next, {}, function (data) {
-                    products = data;
-                    setProductList(data);
-                });
+        async function loadProductPage(page) {
+            var loadId = ++productLoadId;
+            if (productRequest) productRequest.abort();
+            productsLoading = true;
+            products = null;
+            $('#add-all-btn').prop('disabled', true);
+            $('#product-pagination').empty();
+            $('#product-list').empty().attr('aria-busy', 'true');
+            $('#product-page-summary').text('{{ translate('Loading..') }}');
+            var filters = {
+                keyword: $('input[name=keyword]').val(),
+                category: $('select[name=poscategory]').val(),
+                brand: $('select[name=brand]').val()
+            };
+            try {
+                productRequest = $.get('{{ route('seller.product_storehouse.search') }}', Object.assign({}, filters, {page: page}));
+                var result = await productRequest;
+                if (loadId !== productLoadId) return;
+                productTotal = Number(result.meta.total);
+                var lastPage = Math.max(1, Number(result.meta.last_page));
+                if (page > lastPage) { loadProductPage(lastPage); return; }
+                products = result;
+                productPage = Number(result.meta.current_page);
+                setProductList(products);
+                if (!products.data.length) $('#product-list').text('{{ translate('Nothing more found.') }}');
+                $('#product-page-summary').text('{{ translate('Total') }}: ' + productTotal + ' · ' + productPage + ' / ' + lastPage);
+                renderProductPagination(lastPage);
+            } catch (error) {
+                if (loadId === productLoadId) {
+                    products = null;
+                    $('#product-page-summary').text('{{ translate('Something went wrong') }}');
+                    $('<button>', {type: 'button', class: 'btn btn-soft-primary', text: '{{ translate('Retry') }}'})
+                        .on('click', function () { loadProductPage(page); }).appendTo('#product-pagination');
+                }
+            } finally {
+                if (loadId === productLoadId) {
+                    productsLoading = false;
+                    $('#product-list').attr('aria-busy', 'false');
+                    $('#add-all-btn').prop('disabled', productsPosting || !products || !products.data.length);
+                }
             }
+        }
+
+        function renderProductPagination(lastPage) {
+            var container = $('#product-pagination').empty();
+            function button(page, label, disabled) {
+                $('<button>', {type: 'button', class: 'btn btn-sm ' + (page === productPage ? 'btn-primary' : 'btn-soft-primary'), text: label})
+                    .attr('data-page', page).attr('aria-current', page === productPage ? 'page' : null)
+                    .prop('disabled', disabled || page === productPage).appendTo(container);
+            }
+            button(productPage - 1, '{{ translate('Previous') }}', productPage <= 1);
+            var pages = [1, lastPage];
+            for (var page = Math.max(1, productPage - 2); page <= Math.min(lastPage, productPage + 2); page++) pages.push(page);
+            pages = Array.from(new Set(pages)).sort(function (a, b) { return a - b; });
+            pages.forEach(function (page, index) {
+                if (index && page - pages[index - 1] > 1) $('<span>', {class: 'align-self-center px-1', text: '…'}).appendTo(container);
+                button(page, page, false);
+            });
+            button(productPage + 1, '{{ translate('Next') }}', productPage >= lastPage);
         }
 
         function setProductList(data) {
@@ -206,38 +252,38 @@
                     </div>`
                 );
             }
-            if (data.links.next != null) {
-                $('#load-more').find('.btn').html('{{ translate('Load More.') }}');
-            } else {
-                $('#load-more').find('.btn').html('{{ translate('Nothing more found.') }}');
-            }
         }
 
         function addPost(all) {
+            if (productsPosting || (all && productsLoading)) return;
             let addAllBtn = $('#add-all-btn')
             let addSelectionBtn = $('#add-selection-btn')
             if (all == 0) {
                 let selected_ids = getSelectedIds()
                 if (selected_ids.length) {
+                    productsPosting = true;
                     addAllBtn.prop('disabled', true);
                     addSelectionBtn.prop('disabled', true);
                     addSelectionBtn.find('span.spinner-border').removeClass('d-none');
-                    doPost(0, selected_ids)
+                    doPost(selected_ids)
                 }
             } else {
+                var pageIds = Array.from(new Set((products ? products.data : []).map(function (product) { return product.id; })));
+                if (!pageIds.length) return;
+                productsPosting = true;
                 addAllBtn.prop('disabled', true);
                 addSelectionBtn.prop('disabled', true);
                 addAllBtn.find('span.spinner-border').removeClass('d-none');
-                doPost(1, [])
+                doPost(pageIds)
             }
         }
 
-        function doPost(all, productIds) {
+        function doPost(productIds) {
             let addAllBtn = $('#add-all-btn')
             let addSelectionBtn = $('#add-selection-btn')
             $.post('{{ route('seller.product_storehouse.add') }}', {
                 _token: AIZ.data.csrf,
-                all: all,
+                all: 0,
                 product_ids: productIds
             }, function (data) {
                 if (data.success == 1) {
@@ -249,7 +295,8 @@
             }).fail(function () {
                 AIZ.plugins.notify('danger', '{{ translate('Something went wrong') }}');
             }).always(function () {
-                addAllBtn.prop('disabled', false);
+                productsPosting = false;
+                addAllBtn.prop('disabled', productsLoading || !products || !products.data.length);
                 addSelectionBtn.prop('disabled', false);
                 addAllBtn.find('span.spinner-border').addClass('d-none');
                 addSelectionBtn.find('span.spinner-border').addClass('d-none');
