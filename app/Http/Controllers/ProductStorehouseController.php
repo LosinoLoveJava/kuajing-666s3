@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use CoreComponentRepository;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ProductStorehouseController extends Controller
 {
@@ -17,25 +18,30 @@ class ProductStorehouseController extends Controller
         $query = null;
         $sort_search = null;
 
-        $products = Product::where('in_storehouse', 1)->where('added_by', 'admin')->where('auction_product', 0)->where('wholesale_product', 0);
+        $request->validate([
+            'type' => ['nullable', Rule::in(['rating,desc', 'rating,asc', 'num_of_sale,desc', 'num_of_sale,asc', 'unit_price,desc', 'unit_price,asc'])],
+            'search' => 'nullable|string',
+        ]);
+
+        $products = Product::with('stocks')->where('in_storehouse', 1)->where('added_by', 'admin')->where('auction_product', 0)->where('wholesale_product', 0);
 
         if ($request->type != null) {
             $var = explode(",", $request->type);
             $col_name = $var[0];
             $query = $var[1];
             $products = $products->orderBy($col_name, $query);
-            $sort_type = $request->type;
         }
         if ($request->search != null) {
             $sort_search = $request->search;
-            $products = $products
-                ->where('name', 'like', '%' . $sort_search . '%')
-                ->orWhereHas('stocks', function ($q) use ($sort_search) {
-                    $q->where('sku', 'like', '%' . $sort_search . '%');
-                });
+            $products->where(function ($products) use ($sort_search) {
+                $products->where('name', 'like', '%' . $sort_search . '%')
+                    ->orWhereHas('stocks', function ($stocks) use ($sort_search) {
+                        $stocks->where('sku', 'like', '%' . $sort_search . '%');
+                    });
+            });
         }
 
-        $products = $products->where('digital', 0)->orderBy('created_at', 'desc')->paginate(15);
+        $products = $products->where('digital', 0)->orderBy('created_at', 'desc')->orderBy('id', 'desc')->paginate(15)->withQueryString();
         return view('backend.product_storehouse.index', compact('products', 'type', 'col_name', 'query', 'sort_search'));
     }
 

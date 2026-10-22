@@ -69,11 +69,63 @@
         @endif
     </div>
 
+    <div class="card wallet-history-card" id="wallet-history">
+        <div class="card-header">
+            <h5 class="mb-0 h6">{{ __('seller_wallet.history') }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="aiz-table-scroll" tabindex="0">
+                <table class="table aiz-table mb-0">
+                    <thead><tr>
+                        <th>#</th>
+                        <th>{{ translate('Date') }}</th>
+                        <th>{{ translate('Type') }}</th>
+                        <th>{{ translate('Amount') }}</th>
+                        <th>{{ translate('Status') }}</th>
+                        <th>{{ translate('Payment method') }}</th>
+                    </tr></thead>
+                    <tbody>
+                    @forelse ($walletHistory as $key => $entry)
+                        <tr data-history-source="{{ $entry->source }}" data-history-id="{{ $entry->id }}">
+                            <td>{{ $walletHistory->firstItem() + $key }}</td>
+                            <td>{{ date('d-m-Y H:i', strtotime($entry->created_at)) }}</td>
+                            <td>{{ __('seller_wallet.'.$entry->source) }}</td>
+                            <td>{{ single_price($entry->amount) }}</td>
+                            <td>
+                                @if ($entry->source === 'recharge')
+                                    @include('partials.wallet_status', ['approval' => $entry->status])
+                                @elseif ((int) $entry->status === 1)
+                                    <span class="badge badge-inline badge-success">{{ translate('Paid') }}</span>
+                                @elseif ((int) $entry->status === 2)
+                                    <span class="badge badge-inline badge-danger">{{ translate('Refuse') }}</span>
+                                @else
+                                    <span class="badge badge-inline badge-info">{{ translate('Pending') }}</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if ($entry->source === 'withdrawal')
+                                    {{ [1 => translate('Cash'), 2 => translate('Bank'), 3 => 'USDT', 4 => 'BANK'][(int) $entry->payment_method] ?? '' }}
+                                @else
+                                    {{ $entry->payment_method === 'IBAN' ? 'BANK' : translate($entry->payment_method ?? '') }}
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="6" class="text-center text-muted">{{ translate('Nothing found') }}</td></tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="aiz-pagination">{{ $walletHistory->links() }}</div>
+        </div>
+    </div>
+
     <div class="card wallet-history-card">
         <div class="card-header">
             <h5 class="mb-0 h6">{{ translate('Withdraw Request history')}}</h5>
         </div>
         <div class="card-body">
+            <div class="aiz-table-scroll" tabindex="0">
             <table class="table aiz-table mb-0">
                 <thead>
                 <tr>
@@ -91,9 +143,9 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach ($seller_withdraw_requests as $key => $seller_withdraw_request)
+                @forelse ($seller_withdraw_requests as $key => $seller_withdraw_request)
                     <tr>
-                        <td>{{ $key+1 }}</td>
+                        <td>{{ $seller_withdraw_requests->firstItem() + $key }}</td>
                         <td>{{ date('d-m-Y', strtotime($seller_withdraw_request->created_at)) }}</td>
                         <td>{{ single_price($seller_withdraw_request->amount) }}</td>
                         <td>
@@ -137,9 +189,12 @@ BANK
                         </td>
                    
                     </tr>
-                @endforeach
+                @empty
+                    <tr><td colspan="8" class="text-center text-muted">{{ translate('Nothing found') }}</td></tr>
+                @endforelse
                 </tbody>
             </table>
+            </div>
             <div class="aiz-pagination">
                 {{ $seller_withdraw_requests->links() }}
             </div>
@@ -152,6 +207,7 @@ BANK
             <h5 class="mb-0 h6">{{ translate('Froze Order')}}</h5>
         </div>
         <div class="card-body">
+            <div class="aiz-table-scroll" tabindex="0">
             <table class="table aiz-table mb-0">
                 <thead>
                 <tr>
@@ -166,9 +222,9 @@ BANK
                 </tr>
                 </thead>
                 <tbody>
-                @foreach ($freezeOrders as $key => $order)
+                @forelse ($freezeOrders as $key => $order)
                     <tr>
-                        <td>{{ $key+1 }}</td>
+                        <td>{{ $freezeOrders->firstItem() + $key }}</td>
                         <td>{{ $order->code }}</td>
                         <td>{{ single_price($order->grand_total) }}</td>
                         <td>{{ single_price($order->grand_total - $order->product_storehouse_total) }}</td>
@@ -195,9 +251,12 @@ BANK
                             @endif
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr><td colspan="8" class="text-center text-muted">{{ translate('Nothing found') }}</td></tr>
+                @endforelse
                 </tbody>
             </table>
+            </div>
             <div class="aiz-pagination">
                 {{ $freezeOrders->links() }}
             </div>
@@ -207,9 +266,10 @@ BANK
     <!-- 充值记录 -->
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0 h6">{{ translate('Wallet Recharge History')}}</h5>
+            <h5 class="mb-0 h6">{{ __('seller_wallet.recharge_history') }}</h5>
         </div>
         <div class="card-body">
+            <div class="aiz-table-scroll" tabindex="0">
             <table class="table aiz-table mb-0">
                 <thead>
                 <tr>
@@ -225,9 +285,9 @@ BANK
                 </tr>
                 </thead>
                 <tbody>
-                @foreach ($rechargeList as $key => $list)
+                @forelse ($rechargeList as $key => $list)
                     <tr>
-                        <td>{{ $key+1 }}</td>
+                        <td>{{ $rechargeList->firstItem() + $key }}</td>
                         <td>{{ single_price($list->amount) }}</td>
                         <td>{{ $list->payment_method === 'IBAN' ? 'BANK' : $list->payment_method }}</td>
                         <td>{{ $list->payment_details }}</td>
@@ -257,9 +317,12 @@ BANK
                         <td>@if($list->reciept)<a href="{{ uploaded_asset($list->reciept) }}" target="_blank" rel="noopener">{{ translate('Receipt') }}</a>@endif</td>
                         <td>{{ date('d-m-Y', strtotime($list->created_at)) }}</td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr><td colspan="9" class="text-center text-muted">{{ translate('Nothing found') }}</td></tr>
+                @endforelse
                 </tbody>
             </table>
+            </div>
             <div class="aiz-pagination">
                 {{ $rechargeList->links() }}
             </div>
@@ -275,6 +338,7 @@ BANK
             <h5 class="mb-0 h6">{{ translate('Payment History')}}</h5>
         </div>
         <div class="card-body">
+            <div class="aiz-table-scroll" tabindex="0">
             <table class="table aiz-table mb-0">
                 <thead>
                 <tr>
@@ -290,9 +354,9 @@ BANK
                 </tr>
                 </thead>
                 <tbody>
-                @foreach ($paymentList as $key => $list)
+                @forelse ($paymentList as $key => $list)
                     <tr>
-                        <td>{{ $key+1 }}</td>
+                        <td>{{ $paymentList->firstItem() + $key }}</td>
                         <td>{{ single_price($list->amount) }}</td>
                     
                         <td>{{ $list->payment_details }}</td>
@@ -307,9 +371,12 @@ BANK
                       
                         <td>{{ date('d-m-Y', strtotime($list->created_at)) }}</td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr><td colspan="5" class="text-center text-muted">{{ translate('Nothing found') }}</td></tr>
+                @endforelse
                 </tbody>
             </table>
+            </div>
             <div class="aiz-pagination">
                 {{ $paymentList->links() }}
             </div>
@@ -317,6 +384,7 @@ BANK
     </div>
     
     
+    </div>
 @endsection
 
 @section('modal')
@@ -333,7 +401,6 @@ BANK
                 <div id="offline_wallet_recharge_modal_body"></div>
             </div>
         </div>
-    </div>
     </div>
 
 

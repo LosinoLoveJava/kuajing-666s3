@@ -10,6 +10,7 @@ use App\Models\Seller;
 use App\Models\User;
 use App\Models\Search;
 use App\Models\Shop;
+use App\Support\ReportDateRange;
 use Auth;
 
 class ReportController extends Controller
@@ -74,26 +75,24 @@ class ReportController extends Controller
         
         if(Auth::user()->user_type == 'seller') {
             $seller_id = Auth::user()->id;
-        } if($request->seller_id) {
+        } elseif($request->seller_id) {
             $seller_id = $request->seller_id;
         }
         
-        $commission_history = CommissionHistory::orderBy('created_at', 'desc');
+        $commission_history = CommissionHistory::with('order')->orderBy('created_at', 'desc')->orderBy('id', 'desc');
         
         if ($request->date_range) {
             $date_range = $request->date_range;
-            $date_range1 = explode(" / ", $request->date_range);
-            $commission_history = $commission_history->where('created_at', '>=', $date_range1[0]);
-            $commission_history = $commission_history->where('created_at', '<=', $date_range1[1]);
         }
+        ReportDateRange::apply($commission_history, $request->input('date_range'));
         if ($seller_id){
             
             $commission_history = $commission_history->where('seller_id', '=', $seller_id);
         }
         
-        $commission_history = $commission_history->paginate(10);
+        $commission_history = $commission_history->paginate(10)->withQueryString();
         if(Auth::user()->user_type == 'seller') {
-            return view('seller.reports.commission_history_report', compact('commission_history', 'seller_id', 'date_range'));
+            return view('seller.commission_history.index', compact('commission_history', 'seller_id', 'date_range'));
         }
         return view('backend.reports.commission_history_report', compact('commission_history', 'seller_id', 'date_range'));
     }
@@ -110,19 +109,17 @@ class ReportController extends Controller
             $query->select('user_id')->from(with(new Wallet)->getTable());
         })->get();
 
-        $wallet_history = Wallet::orderBy('created_at', 'desc');
+        $wallet_history = Wallet::with('user')->orderBy('created_at', 'desc')->orderBy('id', 'desc');
         
         if ($request->date_range) {
             $date_range = $request->date_range;
-            $date_range1 = explode(" / ", $request->date_range);
-            $wallet_history = $wallet_history->where('created_at', '>=', $date_range1[0]);
-            $wallet_history = $wallet_history->where('created_at', '<=', $date_range1[1]);
         }
+        ReportDateRange::apply($wallet_history, $request->input('date_range'));
         if ($user_id){
             $wallet_history = $wallet_history->where('user_id', '=', $user_id);
         }
         
-        $wallets = $wallet_history->paginate(10);
+        $wallets = $wallet_history->paginate(10)->withQueryString();
 
         return view('backend.reports.wallet_history_report', compact('wallets', 'users_with_wallet', 'user_id', 'date_range'));
     }

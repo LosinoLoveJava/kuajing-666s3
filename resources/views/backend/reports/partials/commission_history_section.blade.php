@@ -24,11 +24,13 @@
             <button class="btn btn-md btn-primary" type="submit">
                 {{ translate('Filter') }}
             </button>
+            <a class="btn btn-link" href="{{ route('commission-log.index') }}">{{ translate('Clear') }}</a>
         </div>
     </div>
 </form>
 <div class="card-body">
 
+    <div class="aiz-table-scroll" tabindex="0">
     <table class="table aiz-table mb-0">
         <thead>
             <tr>
@@ -40,9 +42,9 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($commission_history as $key => $history)
+            @forelse ($commission_history as $key => $history)
             <tr>
-                <td>{{ ($key+1) }}</td>
+                <td>{{ $commission_history->firstItem() + $key }}</td>
                 <td>
                     @if(isset($history->order))
                         {{ $history->order->code }}
@@ -56,9 +58,12 @@
                 <td>{{ $history->seller_earning }}</td>
                 <td>{{ $history->created_at }}</td>
             </tr>
-            @endforeach
+            @empty
+                <tr><td colspan="5" class="text-center text-muted">{{ translate('Nothing found') }}</td></tr>
+            @endforelse
         </tbody>
     </table>
+    </div>
     <div class="aiz-pagination mt-4">
         {{ $commission_history->links() }}
     </div>

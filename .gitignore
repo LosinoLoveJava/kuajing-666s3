@@ -5,9 +5,17 @@
 !/tests/Feature/SellerDashboardPerformanceTest.php
 !/tests/Feature/PortalSessionIsolationTest.php
 !/tests/Feature/AdminSellerListingTest.php
+!/tests/Feature/AdminDisplayTest.php
+!/tests/Feature/SellerProductDeletionTest.php
+!/tests/Feature/SellerWalletDisplayTest.php
 !/tests/Feature/WalletWorkflowTest.php
 !/tests/Concerns/
 !/tests/Concerns/InteractsWithPortalSessions.php
+!/tests/Fixtures/
+/tests/Fixtures/*
+!/tests/Fixtures/views/
+/tests/Fixtures/views/*
+!/tests/Fixtures/views/seller/
 /.phpunit.result.cache
 /.phpunit.cache/
 /coverage/

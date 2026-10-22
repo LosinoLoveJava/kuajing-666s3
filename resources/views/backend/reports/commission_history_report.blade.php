@@ -1,6 +1,7 @@
 @extends('backend.layouts.app')
 
 @section('content')
+@include('partials.list_filter_errors')
 
 <div class="aiz-titlebar text-left mt-2 mb-3">
 	<div class=" align-items-center">

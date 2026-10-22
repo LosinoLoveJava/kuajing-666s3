@@ -25,7 +25,7 @@
     @if(\App\Models\Language::where('code', Session::get('locale', Config::get('app.locale')))->first()->rtl == 1)
     <link rel="stylesheet" href="{{ static_asset('assets/css/bootstrap-rtl.min.css') }}">
     @endif
-	<link rel="stylesheet" href="{{ static_asset('assets/css/aiz-core.css') }}">
+	<link rel="stylesheet" href="{{ static_asset('assets/css/aiz-core.css?rev=20261023') }}">
     <link rel="stylesheet" href="{{ static_asset('assets/css/responsive-tables.css') }}">
 
     <style>

@@ -1,6 +1,7 @@
 @extends('backend.layouts.app')
 
 @section('content')
+@include('partials.list_filter_errors')
 
 @php
     CoreComponentRepository::instantiateShopRepository();
@@ -77,9 +78,14 @@
                     <input type="text" class="form-control form-control-sm" id="search" name="search"@isset($sort_search) value="{{ $sort_search }}" @endisset placeholder="{{ translate('Type & Enter') }}">
                 </div>
             </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary btn-sm">{{ translate('Filter') }}</button>
+                <a class="btn btn-link" href="{{ route('product_storehouse.index') }}">{{ translate('Clear') }}</a>
+            </div>
         </div>
 
         <div class="card-body">
+            <div class="aiz-table-scroll" tabindex="0">
             <table class="table aiz-table mb-0">
                 <thead>
                     <tr>
@@ -110,7 +116,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($products as $key => $product)
+                    @forelse($products as $key => $product)
                     <tr>
                         <td>
                             <div class="form-group d-inline-block">
@@ -207,9 +213,12 @@
                             </a>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                        <tr><td colspan="8" class="text-center text-muted">{{ translate('Nothing found') }}</td></tr>
+                    @endforelse
                 </tbody>
             </table>
+            </div>
             <div class="aiz-pagination">
                 {{ $products->appends(request()->input())->links() }}
             </div>

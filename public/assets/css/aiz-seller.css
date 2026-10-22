@@ -5561,8 +5561,8 @@ input[type="number"] {
 
 /*footable*/
 .aiz-table {
-    opacity: 0;
-    height: 0;
+    opacity: 1;
+    height: auto;
 }
 div.footable-loader {
     height: 220px;

@@ -324,11 +324,16 @@ class ProductController extends Controller
 
     public function destroy($id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::find($id);
+
+        if (!$product) {
+            flash(translate('Nothing found'))->warning();
+            return redirect()->route('seller.products');
+        }
 
         if (Auth::user()->id != $product->user_id) {
             flash(translate('This product is not yours.'))->warning();
-            return back();
+            return redirect()->route('seller.products');
         }
 
         $product->product_translations()->delete();
@@ -344,10 +349,10 @@ class ProductController extends Controller
             Artisan::call('view:clear');
             Artisan::call('cache:clear');
 
-            return back();
+            return redirect()->route('seller.products');
         } else {
             flash(translate('Something went wrong'))->error();
-            return back();
+            return redirect()->route('seller.products');
         }
     }
 }

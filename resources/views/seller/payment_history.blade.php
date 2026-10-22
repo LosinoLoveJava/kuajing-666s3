@@ -5,8 +5,8 @@
         <div class="card-header">
             <h5 class="mb-0 h6">{{ translate('Payment History') }}</h5>
         </div>
-        @if (count($payments) > 0)
             <div class="card-body">
+                <div class="aiz-table-scroll" tabindex="0">
                 <table class="table aiz-table mb-0">
                     <thead>
                         <tr>
@@ -17,10 +17,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($payments as $key => $payment)
+                        @forelse ($payments as $key => $payment)
                             <tr>
                                 <td>
-                                    {{ $key+1 }}
+                                    {{ $payments->firstItem() + $key }}
                                 </td>
                                 <td>{{ date('d-m-Y', strtotime($payment->created_at)) }}</td>
                                 <td>
@@ -30,14 +30,16 @@
                                     {{ ucfirst(str_replace('_', ' ', $payment->payment_method)) }} @if ($payment->txn_code != null) ({{  translate('TRX ID') }} : {{ $payment->txn_code }}) @endif
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr><td colspan="4" class="text-center text-muted">{{ translate('Nothing found') }}</td></tr>
+                        @endforelse
                     </tbody>
                 </table>
+                </div>
                 <div class="aiz-pagination">
                 	{{ $payments->links() }}
               	</div>
             </div>
-        @endif
     </div>
 
 @endsection

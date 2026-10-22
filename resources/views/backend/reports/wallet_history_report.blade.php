@@ -1,6 +1,7 @@
 @extends('backend.layouts.app')
 
 @section('content')
+@include('partials.list_filter_errors')
 
 <div class="aiz-titlebar text-left mt-2 mb-3">
     <div class=" align-items-center">
@@ -37,11 +38,13 @@
                         <button class="btn btn-md btn-primary" type="submit">
                             {{ translate('Filter') }}
                         </button>
+                        <a class="btn btn-link" href="{{ route('wallet-history.index') }}">{{ translate('Clear') }}</a>
                     </div>
                 </div>
             </form>
             <div class="card-body">
 
+                <div class="aiz-table-scroll" tabindex="0">
                 <table class="table aiz-table mb-0">
                     <thead>
                         <tr>
@@ -54,9 +57,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($wallets as $key => $wallet)
+                        @forelse ($wallets as $key => $wallet)
                             <tr>
-                                <td>{{ $key+1 }}</td>
+                                <td>{{ $wallets->firstItem() + $key }}</td>
                                 @if ($wallet->user != null)
                                     <td>{{ $wallet->user->name }}</td>
                                 @else
@@ -67,8 +70,10 @@
                                 <td>{{ ucfirst(str_replace('_', ' ', $wallet ->payment_method)) }}</td>
                                 <td class="text-right">
                                     @if ($wallet->offline_payment)
-                                        @if ($wallet->approval)
+                                        @if ((int) $wallet->approval === 1)
                                             <span class="badge badge-inline badge-success">{{translate('Approved')}}</span>
+                                        @elseif ((int) $wallet->approval === 2)
+                                            <span class="badge badge-inline badge-danger">{{translate('Refuse')}}</span>
                                         @else
                                             <span class="badge badge-inline badge-info">{{translate('Pending')}}</span>
                                         @endif
@@ -77,9 +82,12 @@
                                     @endif
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr><td colspan="6" class="text-center text-muted">{{ translate('Nothing found') }}</td></tr>
+                        @endforelse
                     </tbody>
                 </table>
+                </div>
                 <div class="aiz-pagination mt-4">
                     {{ $wallets->links() }}
                 </div>

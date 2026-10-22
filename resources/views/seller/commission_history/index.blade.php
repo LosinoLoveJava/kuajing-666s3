@@ -1,6 +1,7 @@
 @extends('seller.layouts.app')
 
 @section('panel_content')
+    @include('partials.list_filter_errors')
     <div class="card">
         <form class="" action="" id="sort_commission_history" method="GET">
             <div class="card-header row gutters-5">
