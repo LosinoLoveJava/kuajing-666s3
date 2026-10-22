@@ -39,6 +39,22 @@ class Handler extends ExceptionHandler
         });
     }
 
+    public function render($request, Throwable $e)
+    {
+        if ($e instanceof \Illuminate\Session\TokenMismatchException
+            && $request->isMethod('POST') && $request->is('users/phone')
+            && $request->input('mode') === 'login' && !$request->expectsJson()) {
+            $path = parse_url((string) $request->headers->get('referer'), PHP_URL_PATH);
+            $entry = in_array($path, ['/login', '/users/login', '/users/phone'], true)
+                ? $path : '/users/login';
+            return redirect($entry)
+                ->withInput($request->only('phone', 'national_phone', 'country'))
+                ->withErrors(['session' => 'Your login page has expired. Please enter your password or verification code again.']);
+        }
+
+        return parent::render($request, $e);
+    }
+
     // public function render($request, Throwable $e)
     // {
     //     if($this->isHttpException($e))

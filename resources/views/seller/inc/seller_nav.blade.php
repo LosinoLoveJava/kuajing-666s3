@@ -159,7 +159,7 @@
                         <a href="{{ route('seller.profile.index') }}" class="dropdown-item">
                             <i class="las la-user-circle"></i> <span>{{translate('Profile')}}</span> </a>
 
-                        <a href="{{ route('logout')}}" class="dropdown-item"> <i class="las la-sign-out-alt"></i>
+                        <a href="{{ route('logout', ['portal' => 'seller']) }}" class="dropdown-item"> <i class="las la-sign-out-alt"></i>
                             <span>{{translate('Logout')}}</span> </a>
                     </div>
                 </div>

@@ -34,7 +34,7 @@ class PortalEntry
 
         if (!$request->user()) {
             $request->session()->put('link', url($path));
-            return redirect($role === 'admin' ? '/login' : '/users/login');
+            return redirect(in_array($role, ['admin', 'seller'], true) ? '/login' : '/users/login');
         }
 
         $allowed = $role === 'admin' ? ['admin', 'staff', 'salesman'] : [$role];

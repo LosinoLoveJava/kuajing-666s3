@@ -91,9 +91,12 @@ class HomeController extends Controller
     public function login()
     {
         if (Auth::check()) {
-            return redirect()->route('home');
+            $role = Auth::user()->user_type;
+            $route = in_array($role, ['admin', 'staff'], true) ? 'admin.dashboard'
+                : ($role === 'seller' ? 'seller.dashboard' : 'dashboard');
+            return redirect()->route($route);
         }
-        return app(\App\Http\Controllers\Auth\LoginController::class)->showLoginForm();
+        return view('frontend.phone_access', ['mode' => 'login', 'isSellerPortal' => false]);
     }
 
     public function registration(Request $request)

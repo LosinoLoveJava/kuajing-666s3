@@ -59,7 +59,10 @@ class LoginController extends Controller
                 return view('auth.login');
             }
         }
-        return redirect()->route('phone.access');
+        return view('frontend.phone_access', [
+            'mode' => 'login',
+            'isSellerPortal' => true,
+        ]);
     }
 
     public function login(Request $request)
@@ -274,10 +277,21 @@ class LoginController extends Controller
      */
     public function logout(Request $request)
     {
+        $portal = $request->query('portal');
+        $host = strtolower($request->getHost());
+        $sellerHost = strtolower('seller.'.config('portals.domain'));
+        $refererPath = parse_url((string) $request->headers->get('referer'), PHP_URL_PATH) ?: '';
+        $isSellerPortal = $portal === 'seller' || $host === $sellerHost || strpos($refererPath, '/seller/') === 0;
+
         if (auth()->user() != null && (auth()->user()->user_type == 'admin' || auth()->user()->user_type == 'staff')) {
             $redirect_route = 'login';
+            $redirect_url = null;
+        } elseif ($isSellerPortal) {
+            $redirect_route = null;
+            $redirect_url = '/login';
         } else {
-            $redirect_route = 'home';
+            $redirect_route = null;
+            $redirect_url = '/users/login';
         }
 
         //User's Cart Delete
@@ -291,7 +305,7 @@ class LoginController extends Controller
 
         Session::flush();
 
-        return $this->loggedOut($request) ?: redirect()->route($redirect_route);
+        return $this->loggedOut($request) ?: ($redirect_url !== null ? redirect($redirect_url) : redirect()->route($redirect_route));
     }
 
     /**

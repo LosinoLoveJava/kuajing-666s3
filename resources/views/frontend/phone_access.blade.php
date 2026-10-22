@@ -1,7 +1,20 @@
-@extends('frontend.layouts.app')
+@extends(($isSellerPortal ?? false) ? 'backend.layouts.layout' : 'frontend.layouts.app')
 @section('content')
-<section class="py-5"><div class="container"><div class="card mx-auto" style="max-width:480px"><div class="card-body p-4">
-    <h1 class="h4">{{ translate($mode === 'register' ? 'Register by phone' : ($mode === 'reset_password' ? 'Reset password by phone' : 'Log in by phone')) }}</h1>
+<section class="py-5 {{ ($isSellerPortal ?? false) ? 'bg-cover bg-center d-flex align-items-center' : '' }}"
+    @if($isSellerPortal ?? false) style="min-height:100vh; background-image:url({{ uploaded_asset(get_setting('admin_login_background')) }}); background-size:auto; background-position:center top;" @endif>
+    <div class="container">
+        <div class="row">
+            <div class="{{ ($isSellerPortal ?? false) ? 'col-lg-6 col-xl-4 mx-auto' : 'col-12 mx-auto' }}" @if(!($isSellerPortal ?? false)) style="max-width:510px" @endif>
+                <div class="card text-left mb-0"><div class="card-body p-4">
+    @if($isSellerPortal ?? false)
+        <div class="mb-5 text-center">
+            <img src="{{ get_setting('system_logo_black') != null ? uploaded_asset(get_setting('system_logo_black')) : static_asset('assets/img/logo.png') }}" class="mw-100 mb-4" height="40" alt="{{ config('app.name') }}">
+            <h1 class="h3 text-primary mb-0">{{ translate('Welcome to') }} {{ config('app.name') }}</h1>
+            <p>{{ translate('Login to your account.') }}</p>
+        </div>
+    @else
+        <h1 class="h4">{{ translate($mode === 'register' ? 'Register by phone' : ($mode === 'reset_password' ? 'Reset password by phone' : 'Log in by phone')) }}</h1>
+    @endif
     @if(session('status'))<div class="alert alert-success">{{ session('status') }}</div>@endif
     @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
     <p id="phone-feedback" role="status" class="small"></p>
@@ -19,9 +32,13 @@
         </div>
         <button class="btn btn-primary btn-block mt-3">{{ translate($mode === 'register' ? 'Create Account' : ($mode === 'reset_password' ? 'Reset password' : 'Login')) }}</button>
     </form>
-    <div class="mt-3 d-flex flex-wrap" style="gap:12px"><a href="{{ route('phone.access') }}">{{ translate('Phone login') }}</a><a href="{{ $isSellerPortal ? route('shops.create') : route('phone.access', ['mode'=>'register']) }}">{{ translate('Register') }}</a><a href="{{ route('phone.access', ['mode'=>'reset_password']) }}">{{ translate('Forgot password?') }}</a></div>
+    <div class="mt-3 d-flex flex-wrap" style="gap:12px"><a href="{{ $isSellerPortal ? route('login') : route('user.login') }}">{{ translate('Phone login') }}</a><a href="{{ $isSellerPortal ? route('shops.create') : route('phone.access', ['mode'=>'register']) }}">{{ translate('Register') }}</a><a href="{{ route('phone.access', ['mode'=>'reset_password']) }}">{{ translate('Forgot password?') }}</a></div>
     @if($mode === 'register')<p class="small text-muted mt-3">{{ translate('Merchant accounts must complete the existing shop application and approval process.') }}</p>@endif
-</div></div></div></section>
+                </div></div>
+            </div>
+        </div>
+    </div>
+</section>
 @endsection
 @section('script')
 @include('frontend.partials.phone_auth_script', ['phoneFormId' => 'phone-auth-form'])
