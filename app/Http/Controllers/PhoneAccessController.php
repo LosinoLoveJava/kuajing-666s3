@@ -11,7 +11,7 @@ class PhoneAccessController extends Controller
 {
     public function show(Request $request)
     {
-        $mode = $request->query('mode', 'login');
+        $mode = $request->route('mode') ?? $request->query('mode', 'login');
         abort_unless(in_array($mode, ['login', 'register', 'reset_password'], true), 404);
         // The application can sit behind a reverse proxy that rewrites the
         // request host. Check both the request and the URL Laravel generates
@@ -23,7 +23,7 @@ class PhoneAccessController extends Controller
             parse_url($request->fullUrl(), PHP_URL_HOST),
             parse_url(url('/'), PHP_URL_HOST),
         ];
-        $isSellerPortal = false;
+        $isSellerPortal = $request->routeIs('seller.phone.*');
         foreach ($hostCandidates as $host) {
             if ($host && strtolower($host) === $sellerHost) {
                 $isSellerPortal = true;
@@ -31,7 +31,7 @@ class PhoneAccessController extends Controller
             }
         }
         if ($isSellerPortal && $mode === 'register') {
-            return redirect()->route('shops.create');
+            return redirect()->route('shops.create', ['source' => 'seller']);
         }
         $countries = app(PhoneNumber::class)->countries();
         $defaultCountryData = collect($countries)->firstWhere('dial_code', '+971');
@@ -47,10 +47,11 @@ class PhoneAccessController extends Controller
 
     public function submit(Request $request)
     {
-        $request->validate(['mode' => 'required|in:login,register,reset_password']);
+        $isSellerPortal = $request->routeIs('seller.phone.*');
+        $request->validate(['mode' => $isSellerPortal ? 'required|in:login,reset_password' : 'required|in:login,register,reset_password']);
         if ($request->mode === 'reset_password') {
             app(PhoneAuth::class)->resetPassword($request);
-            return redirect()->route('phone.access')->with('status', 'Password updated. Please log in.');
+            return redirect()->route($isSellerPortal ? 'login' : 'phone.access')->with('status', 'Password updated. Please log in.');
         }
         $user = $request->mode === 'register' ? app(PhoneAuth::class)->register($request) : app(PhoneAuth::class)->login($request);
         auth()->login($user, $request->boolean('remember'));

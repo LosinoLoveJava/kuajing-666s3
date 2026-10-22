@@ -1,14 +1,11 @@
-<div class="iban-fields border rounded p-3 mb-3" hidden>
-    <p class="font-weight-bold">{{ translate('IBAN account details') }}</p>
-    <label class="d-block">{{ translate('Account country') }}
-        <select name="iban_country" class="form-control" data-iban-required>
+<div class="iban-fields mb-3" hidden>
+    <div class="form-group"><label for="withdraw-iban-country">{{ translate('Account country') }} <span class="text-danger">*</span></label>
+        <select id="withdraw-iban-country" name="iban_country" class="form-control" data-iban-required>
             @foreach(config('iban.lengths') as $code => $length)<option value="{{ $code }}">{{ $code }}</option>@endforeach
         </select>
-    </label>
-    <label class="d-block">{{ translate('Account holder') }}<input class="form-control" name="iban_holder" maxlength="200" data-iban-required></label>
-    <label class="d-block">{{ translate('Bank name') }}<input class="form-control" name="iban_bank" maxlength="200" data-iban-required></label>
-    <label class="d-block">IBAN<input class="form-control" name="iban_number" maxlength="64" autocomplete="off" data-iban-required></label>
-    <label class="d-block">SWIFT / BIC ({{ translate('Optional') }})<input class="form-control" name="iban_bic" maxlength="11"></label>
+    </div>
+    <div class="form-group"><label for="withdraw-iban-number">IBAN <span class="text-danger">*</span></label><input id="withdraw-iban-number" class="form-control" name="iban_number" maxlength="64" autocomplete="off" data-iban-required></div>
+    <div class="form-group"><label for="withdraw-iban-bic">SWIFT / BIC ({{ translate('Optional') }})</label><input id="withdraw-iban-bic" class="form-control" name="iban_bic" maxlength="11"></div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {

@@ -18,7 +18,7 @@
     @if(session('status'))<div class="alert alert-success">{{ session('status') }}</div>@endif
     @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
     <p id="phone-feedback" role="status" class="small"></p>
-    <form method="POST" action="{{ route('phone.submit') }}" id="phone-auth-form">@csrf
+    <form method="POST" action="{{ route(($isSellerPortal ?? false) ? 'seller.phone.submit' : 'phone.submit') }}" id="phone-auth-form">@csrf
         <input type="hidden" name="mode" value="{{ $mode }}">
         @include('frontend.partials.phone_registration_fields', ['phoneFormId' => 'phone-auth-form'])
         @if($mode === 'register')<label class="d-block">{{ translate('Name') }}<input class="form-control" name="name" maxlength="191" value="{{ old('name') }}" required></label>@endif
@@ -32,7 +32,7 @@
         </div>
         <button class="btn btn-primary btn-block mt-3">{{ translate($mode === 'register' ? 'Create Account' : ($mode === 'reset_password' ? 'Reset password' : 'Login')) }}</button>
     </form>
-    <div class="mt-3 d-flex flex-wrap" style="gap:12px"><a href="{{ $isSellerPortal ? route('login') : route('user.login') }}">{{ translate('Phone login') }}</a><a href="{{ $isSellerPortal ? route('shops.create') : route('phone.access', ['mode'=>'register']) }}">{{ translate('Register') }}</a><a href="{{ route('phone.access', ['mode'=>'reset_password']) }}">{{ translate('Forgot password?') }}</a></div>
+    <div class="mt-3 d-flex flex-wrap" style="gap:12px"><a href="{{ $isSellerPortal ? route('login') : route('user.login') }}">{{ translate('Phone login') }}</a><a href="{{ $isSellerPortal ? route('shops.create', ['source' => 'seller']) : route('phone.access', ['mode'=>'register']) }}">{{ translate('Register') }}</a><a href="{{ $isSellerPortal ? route('seller.phone.reset') : route('phone.access', ['mode'=>'reset_password']) }}">{{ translate('Forgot password?') }}</a></div>
     @if($mode === 'register')<p class="small text-muted mt-3">{{ translate('Merchant accounts must complete the existing shop application and approval process.') }}</p>@endif
                 </div></div>
             </div>
@@ -41,5 +41,5 @@
 </section>
 @endsection
 @section('script')
-@include('frontend.partials.phone_auth_script', ['phoneFormId' => 'phone-auth-form'])
+@include('frontend.partials.phone_auth_script', ['phoneFormId' => 'phone-auth-form', 'phoneSendRoute' => ($isSellerPortal ?? false) ? 'seller.phone.send' : 'phone.send'])
 @endsection

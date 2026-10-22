@@ -41,7 +41,7 @@
         if (!syncPhone()) { form.elements.national_phone.reportValidity(); return; }
         button.disabled = true; feedback.textContent = @json(translate('Sending...'));
         try {
-            var response = await fetch(@json(route('phone.send')), {method:'POST', credentials:'same-origin', headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':form.elements._token.value}, body:JSON.stringify({phone:form.elements.phone.value,country:form.elements.country.value,purpose:form.elements.mode.value})});
+            var response = await fetch(@json(route($phoneSendRoute ?? 'phone.send')), {method:'POST', credentials:'same-origin', headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':form.elements._token.value}, body:JSON.stringify({phone:form.elements.phone.value,country:form.elements.country.value,purpose:form.elements.mode.value})});
             var data = await response.json();
             if (!response.ok || !data.result) { throw new Error(data.errors ? Object.values(data.errors).flat().join(' ') : (data.message || 'SMS submission failed.')); }
             feedback.textContent = data.message;

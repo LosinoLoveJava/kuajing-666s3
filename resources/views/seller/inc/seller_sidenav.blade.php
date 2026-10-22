@@ -87,7 +87,7 @@
                 </li>
 
                   <!--对话-->
-                @if (get_setting('conversation_system') == 1)
+                <!-- @if (get_setting('conversation_system') == 1)
                     <li class="aiz-side-nav-item">
                         <a href="{{ route('seller.conversations.index') }}"
                             style="align-items: center"
@@ -97,7 +97,7 @@
                             <span class="badge badge-danger badge-circle badge-sm badge-dot" id="conversations" style="display: none"> </span>
                         </a>
                     </li>
-                @endif
+                @endif -->
                  <!--店铺设置-->
                 <li class="aiz-side-nav-item">
                     <a href="{{ route('seller.shop.index') }}"

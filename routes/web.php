@@ -3,6 +3,9 @@
 Route::get('/users/phone', [\App\Http\Controllers\PhoneAccessController::class, 'show'])->name('phone.access');
 Route::post('/users/phone/send-code', [\App\Http\Controllers\PhoneAccessController::class, 'sendCode'])->middleware(\App\Http\Middleware\VerifyCsrfToken::class)->name('phone.send');
 Route::post('/users/phone', [\App\Http\Controllers\PhoneAccessController::class, 'submit'])->middleware([\App\Http\Middleware\VerifyCsrfToken::class, 'throttle:30,1'])->name('phone.submit');
+Route::get('/seller/password/reset', [\App\Http\Controllers\PhoneAccessController::class, 'show'])->defaults('mode', 'reset_password')->name('seller.phone.reset');
+Route::post('/seller/phone/send-code', [\App\Http\Controllers\PhoneAccessController::class, 'sendCode'])->middleware(\App\Http\Middleware\VerifyCsrfToken::class)->name('seller.phone.send');
+Route::post('/seller/phone', [\App\Http\Controllers\PhoneAccessController::class, 'submit'])->middleware([\App\Http\Middleware\VerifyCsrfToken::class, 'throttle:30,1'])->name('seller.phone.submit');
 
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\AizUploadController;

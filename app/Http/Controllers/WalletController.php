@@ -77,6 +77,45 @@ class WalletController extends Controller
 
     public function offline_recharge( Request $request ) {
         $request->validate(['type' => 'nullable|integer|in:1']);
+        $sellerDetails = null;
+        if (Auth::user()->user_type === 'seller') {
+            $data = $request->validate([
+                'recharge_method' => 'required|in:Bank,IBAN',
+                'bank_name' => 'required|string|max:200',
+                'account_holder' => 'required|string|max:200',
+                'bank_account' => 'required_if:recharge_method,Bank|nullable|string|max:100',
+                'iban_country' => 'required_if:recharge_method,IBAN|nullable|string|size:2',
+                'iban_number' => 'required_if:recharge_method,IBAN|nullable|string|max:64',
+                'iban_bic' => ['nullable', 'string', 'regex:/^[a-zA-Z]{6}[a-zA-Z0-9]{2}([a-zA-Z0-9]{3})?$/D'],
+                'amount' => ['required', 'numeric', 'regex:/^[0-9]{1,10}(\.[0-9]{1,2})?$/D', 'min:0.01'],
+                'trx_id' => 'required|string|max:200',
+                'photo' => 'nullable|integer',
+            ], ['*' => translate('Please check this field: :attribute')], [
+                'recharge_method' => translate('Payment method'),
+                'bank_name' => translate('Bank Name'),
+                'account_holder' => translate('Account holder'),
+                'bank_account' => translate('Bank Account Number'),
+                'iban_country' => translate('Account country'),
+                'iban_number' => 'IBAN', 'iban_bic' => 'SWIFT / BIC',
+                'amount' => translate('Amount'), 'trx_id' => translate('Transaction ID'),
+                'photo' => translate('Photo'),
+            ]);
+            $details = [translate('Bank Name').': '.$data['bank_name'], translate('Account holder').': '.$data['account_holder']];
+            if ($data['recharge_method'] === 'IBAN') {
+                if (!\App\Services\Iban::valid($data['iban_number'], $data['iban_country'])) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['iban_number' => translate('Invalid IBAN or account country.')]);
+                }
+                $details[] = translate('Account country').': '.strtoupper($data['iban_country']);
+                $details[] = 'IBAN: '.\App\Services\Iban::normalize($data['iban_number']);
+                $details[] = 'SWIFT / BIC: '.strtoupper($data['iban_bic'] ?? '');
+            } else {
+                $details[] = translate('Bank Account Number').': '.$data['bank_account'];
+            }
+            $details[] = translate('Transaction ID').': '.$data['trx_id'];
+            $details[] = 'USD: '.bcadd((string) $data['amount'], '0', 2);
+            $details[] = 'AED (1 USD = 3.67 AED): '.bcadd(bcmul((string) $data['amount'], '3.67', 4), '0.005', 2);
+            $sellerDetails = implode(' | ', $details);
+        }
         if (Auth::user()->user_type=='admin'){//如果是管理员充值
             $user = $user = User::where('id', $request->user_id)->first();
             if (!$user) {
@@ -103,15 +142,15 @@ class WalletController extends Controller
         $wallet = new Wallet;
         $wallet->user_id = Auth::user()->id;
         $wallet->amount = $request->amount;
-        $wallet->payment_method = $request->payment_option;
-        $wallet->payment_details = $request->trx_id;
+        $wallet->payment_method = $sellerDetails !== null ? $request->recharge_method : $request->payment_option;
+        $wallet->payment_details = $sellerDetails ?? $request->trx_id;
         $wallet->approval = 0;
         $wallet->offline_payment = 1;
         $wallet->reciept = $request->photo;
         $wallet->type = $request->type ?? 1;
         $wallet->save();
         flash(translate('Offline Recharge has been done. Please wait for response.'))->success();
-        return redirect()->route('wallet.index');
+        return redirect()->route(Auth::user()->user_type === 'seller' ? 'seller.money_withdraw_requests.index' : 'wallet.index');
     }
 
     public function offline_recharge_request( Request $request ) {

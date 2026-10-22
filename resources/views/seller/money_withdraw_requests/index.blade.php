@@ -330,7 +330,7 @@ IBAN
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">
                         {{ translate('Offline Recharge Wallet') }}</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}"></button>
                 </div>
                 <div id="offline_wallet_recharge_modal_body"></div>
             </div>
@@ -341,16 +341,16 @@ IBAN
 
     <div class="modal fade" id="request_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
          aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">{{ translate('Send A Withdraw Request') }}</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}"></button>
                 </div>
                 @if ($balance > 5)
                     <form class="" action="{{ route('seller.money_withdraw_request.store') }}" method="post">
                         @csrf
-                        <div class="modal-body gry-bg px-3 pt-3">
+                        <div class="modal-body p-4">
                             <div class="row">
                                 <div class="col">
                                     <div class="alert alert-success" role="alert">
@@ -360,43 +360,42 @@ IBAN
                                     
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <label>{{ translate('Amount')}} <span class="text-danger">*</span></label>
-                                </div>
-                                <div class="col-md-9">
-                                    <input type="number" lang="en" class="form-control mb-3" name="amount" min="0.01" step="0.01"
-                                         
-                                           placeholder="{{ translate('Amount') }}" required>
+                            <input type="hidden" name="type" value="1">
+                            <div class="form-group">
+                                <label for="p">{{ translate('Withdraw Type')}} <span class="text-danger">*</span></label>
+                                <select name="w_type" class="form-control" id="p" required>
+                                        <option value="2">{{translate('Bank')}}</option>
+                                        <option value="4">IBAN</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="withdraw-bank">{{ translate('Bank Name') }} <span class="text-danger">*</span></label>
+                                <input id="withdraw-bank" name="bank_name" class="form-control" maxlength="200" placeholder="{{ translate('Please enter the bank name') }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="withdraw-holder">{{ translate('Account holder') }} <span class="text-danger">*</span></label>
+                                <input id="withdraw-holder" name="account_holder" class="form-control" maxlength="200" placeholder="{{ translate('Please enter the name') }}">
+                            </div>
+                            <div id="withdraw-bank-fields">
+                                <div class="form-group">
+                                    <label for="withdraw-account">{{ translate('Bank Account Number') }} <span class="text-danger">*</span></label>
+                                    <input id="withdraw-account" name="bank_account" class="form-control" dir="ltr" maxlength="100" placeholder="{{ translate('Please enter the bank account') }}">
                                 </div>
                             </div>
-                             <input type="hidden" name="type" value="1">
-                            <div class="row" style="margin-bottom:5px;">
-                                
-                                 <div class="col-md-3">
-                                    <label>{{ translate('Withdraw Type')}}</label>
-                                </div>
-                                 <div class="col-md-9">
-                                     <select name="w_type" class="form-control" id="p">
-                                        <option value="1">{{translate('Cash')}}</option>
-                                        <option value="2">{{translate('Bank')}}</option>
-<option value="4">IBAN</option>
-                            
-                                     </select>
-                                </div>
-                                
-                                </div>
 @include('partials.iban_form')
 
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <label>{{ translate('Message')}}</label>
-                                </div>
-                                <div class="col-md-9">
-                                    <textarea name="message" rows="8" class="form-control mb-3"></textarea>
-                                </div>
+                            <div class="form-group">
+                                <label for="withdraw-amount">{{ translate('Amount')}} (USD) <span class="text-danger">*</span></label>
+                                <input id="withdraw-amount" type="number" lang="en" dir="ltr" class="form-control" name="amount" min="0.01" step="0.01" placeholder="{{ translate('Amount') }}" required>
+                                <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr">1 USD = 3.67 AED</bdi></div>
+                                <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="withdraw-aed">0.00</span> AED</bdi></div>
                             </div>
-                            <div class="form-group text-right">
+
+                            <div class="form-group">
+                                <label for="withdraw-message">{{ translate('Message')}}</label>
+                                <textarea id="withdraw-message" name="message" rows="5" class="form-control"></textarea>
+                            </div>
+                            <div style="text-align: end">
                                 <button type="submit" class="btn btn-sm btn-primary">{{translate('Send')}}</button>
                             </div>
                         </div>
@@ -434,18 +433,45 @@ IBAN
                 $('#offline_wallet_recharge_modal').modal('show');
             });
         }
-        $("#p").change(function(){
-            var bank_payment_status = {{$shop->bank_payment_status}}
-            var cash_on_delivery_status = {{$shop->cash_on_delivery_status}}
-            var type = $(this).val();
-            if (type == 2 && bank_payment_status == 0) {
-                window.location.href = "/seller/profile#bank"
-                 $(".btn").attr("disabled")
+
+        (function () {
+            var form = document.querySelector('#request_modal form');
+            if (!form) return;
+            var amount = form.elements.amount;
+            var output = document.getElementById('withdraw-aed');
+            var bankFields = document.getElementById('withdraw-bank-fields');
+            var bankName = document.getElementById('withdraw-bank');
+            var holder = document.getElementById('withdraw-holder');
+            var bankAccount = document.getElementById('withdraw-account');
+            var countrySelect = form.elements.iban_country;
+            if (window.Intl && Intl.DisplayNames && countrySelect) {
+                var countryNames = new Intl.DisplayNames([document.documentElement.lang || 'en'], {type: 'region'});
+                Array.from(countrySelect.options).forEach(function (option) {
+                    option.textContent = countryNames.of(option.value) + ' (' + option.value + ')';
+                });
             }
-            if (type == 1 && cash_on_delivery_status == 0) {
-                window.location.href = "/seller/profile#cash"
-                 $(".btn").attr("disabled")
+            function updateAmount() {
+                var usd = Number(amount.value);
+                output.textContent = new Intl.NumberFormat(document.documentElement.lang || 'en', {
+                    minimumFractionDigits: 2, maximumFractionDigits: 2
+                }).format(Number.isFinite(usd) && usd > 0 ? Math.round(usd * 3.67 * 100) / 100 : 0);
             }
-        })
+            function toggleBankFields() {
+                var bank = form.elements.w_type.value === '2';
+                bankFields.hidden = !bank;
+                bankName.name = bank ? 'bank_name' : 'iban_bank';
+                holder.name = bank ? 'account_holder' : 'iban_holder';
+                bankName.disabled = false;
+                holder.disabled = false;
+                bankName.required = true;
+                holder.required = true;
+                bankAccount.disabled = !bank;
+                bankAccount.required = bank;
+            }
+            amount.addEventListener('input', updateAmount);
+            form.elements.w_type.addEventListener('change', toggleBankFields);
+            updateAmount();
+            toggleBankFields();
+        })();
     </script>
 @endsection

@@ -232,6 +232,9 @@ class ManualPaymentMethodController extends Controller
     public function offline_recharge_modal( Request $request ) {
         $request->validate(['type' => 'nullable|integer|in:1']);
         $type = $request->type ?? 1;
+        if (Auth::user()->user_type === 'seller') {
+            return view('seller.money_withdraw_requests.recharge_modal', compact('type'));
+        }
         return view('frontend.user.wallet.offline_recharge_modal', compact('type'));
     }
 

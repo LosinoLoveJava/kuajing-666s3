@@ -361,11 +361,12 @@ class SellerPhoneRegistrationTest extends TestCase
     public function testSellerPhoneRegistrationLinkOpensTheFullShopApplication()
     {
         $this->get('https://seller.pddglobalmerchanthub.com/users/phone?mode=register')
-            ->assertRedirect('https://seller.pddglobalmerchanthub.com/shops/create');
+            ->assertRedirect('https://seller.pddglobalmerchanthub.com/shops/create?source=seller');
     }
 
     public function testMerchantLoginAndResetUseTheSameNationalPhoneInput()
     {
+        \Illuminate\Support\Facades\Cache::put('business_settings', collect(), 60);
         $finder = app('view')->getFinder();
         $finder->prependLocation(base_path('tests/Fixtures/views'));
         $finder->flush();
@@ -380,6 +381,69 @@ class SellerPhoneRegistrationTest extends TestCase
             $this->assertStringContainsString('assets/js/intlTelutils.js', $html);
             $this->assertStringNotContainsString('International phone number', $html);
         }
+    }
+
+    public function testSellerPagesKeepFormsAndNavigationOutsideCustomerRoutes()
+    {
+        $this->withoutMiddleware(\App\Http\Middleware\HttpsProtocol::class);
+        $finder = app('view')->getFinder();
+        $finder->prependLocation(base_path('tests/Fixtures/views'));
+        $finder->flush();
+        \Illuminate\Support\Facades\Cache::put('business_settings', collect(), 60);
+
+        foreach (['/login', '/seller/password/reset'] as $path) {
+            $response = $this->get($path)->assertOk();
+            $html = $response->getContent();
+            $this->assertStringContainsString('action="'.route('seller.phone.submit').'"', $html);
+            $this->assertStringContainsString(route('seller.phone.send'), str_replace('\\/', '/', $html));
+            $this->assertStringContainsString('href="'.route('shops.create', ['source' => 'seller']).'"', $html);
+            $this->assertStringContainsString('href="'.route('seller.phone.reset').'"', $html);
+            $this->assertStringNotContainsString('/users/', $html);
+        }
+        $html = $this->get('/shops/create')->assertOk()->getContent();
+        $this->assertStringContainsString('action="'.route('shops.store').'"', $html);
+        $this->assertStringContainsString('href="'.route('login').'"', $html);
+        $this->assertStringNotContainsString('/users/', $html);
+
+        foreach (['user' => 'phone.access', 'seller' => 'login'] as $source => $loginRoute) {
+            $registrationUrl = route('shops.create', ['source' => $source]);
+            $html = $this->get($registrationUrl)->assertOk()->getContent();
+            $this->assertStringContainsString('href="'.route($loginRoute).'"', $html);
+            $this->from($registrationUrl)->post('/shops', [])->assertRedirect($registrationUrl)->assertSessionHasErrors();
+            $html = $this->get($registrationUrl)->assertOk()->getContent();
+            $this->assertStringContainsString('href="'.route($loginRoute).'"', $html);
+        }
+
+        foreach (['register', 'reset_password'] as $mode) {
+            $html = $this->get('/users/phone?mode='.$mode)->assertOk()->getContent();
+            $this->assertStringContainsString('action="'.route('phone.submit').'"', $html);
+            $this->assertStringNotContainsString('action="'.route('seller.phone.submit').'"', $html);
+        }
+    }
+
+    /** @dataProvider passwordResetPortals */
+    public function testPasswordResetReturnsToTheMatchingLoginPage($role, $path, $loginRoute)
+    {
+        Schema::table('users', function (Blueprint $table) { $table->string('verification_code')->nullable(); });
+        $user = $this->operator($role);
+        $user->phone = '+971501234567';
+        $user->phone_normalized = $user->phone;
+        $user->save();
+        $user->createToken('old-token');
+        $this->seedCode('reset_password');
+        $this->post($path, ['mode'=>'reset_password', 'phone'=>$user->phone, 'code'=>'123456',
+            'password'=>'newpassword123', 'password_confirmation'=>'newpassword123'])
+            ->assertRedirect(route($loginRoute))->assertSessionHas('status');
+        $this->assertTrue(Hash::check('newpassword123', $user->fresh()->password));
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+        $this->assertGuest();
+        $this->postJson($path, ['mode'=>'reset_password', 'phone'=>$user->phone, 'code'=>'123456',
+            'password'=>'otherpassword123', 'password_confirmation'=>'otherpassword123'])->assertStatus(422);
+    }
+
+    public function passwordResetPortals()
+    {
+        return [['seller', '/seller/phone', 'login'], ['customer', '/users/phone', 'phone.access']];
     }
 
     private function operator($role = 'admin')
