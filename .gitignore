@@ -1,0 +1,7 @@
+# Local automated tests and fixtures are not published with application code.
+/tests/
+/.phpunit.result.cache
+/.phpunit.cache/
+/coverage/
+/phpunit.xml
+/phpunit.xml.*
