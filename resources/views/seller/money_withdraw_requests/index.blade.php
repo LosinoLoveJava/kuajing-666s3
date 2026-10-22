@@ -124,7 +124,7 @@
                             @elseif( $seller_withdraw_request->w_type == 3)
                             {{translate('USDT')}}
                             @elseif($seller_withdraw_request->w_type == 4)
-IBAN
+BANK
 @include('partials.iban_details')
 @endif
                         </td>
@@ -228,7 +228,7 @@ IBAN
                     <tr>
                         <td>{{ $key+1 }}</td>
                         <td>{{ single_price($list->amount) }}</td>
-                        <td>{{ $list->payment_method }}</td>
+                        <td>{{ $list->payment_method === 'IBAN' ? 'BANK' : $list->payment_method }}</td>
                         <td>{{ $list->payment_details }}</td>
                         <td>
                             @if ($list->approval == 1)
@@ -363,26 +363,39 @@ IBAN
                             <input type="hidden" name="type" value="1">
                             <div class="form-group">
                                 <label for="p">{{ translate('Withdraw Type')}} <span class="text-danger">*</span></label>
-                                <select name="w_type" class="form-control" id="p" required>
-                                        <option value="2">{{translate('Bank')}}</option>
-                                        <option value="4">IBAN</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="withdraw-bank">{{ translate('Bank Name') }} <span class="text-danger">*</span></label>
-                                <input id="withdraw-bank" name="bank_name" class="form-control" maxlength="200" placeholder="{{ translate('Please enter the bank name') }}">
+                                <input type="hidden" name="w_type" value="4">
+                                <div class="form-control" id="p">BANK</div>
                             </div>
                             <div class="form-group">
                                 <label for="withdraw-holder">{{ translate('Account holder') }} <span class="text-danger">*</span></label>
-                                <input id="withdraw-holder" name="account_holder" class="form-control" maxlength="200" placeholder="{{ translate('Please enter the name') }}">
+                                <input id="withdraw-holder" name="iban_holder" class="form-control" maxlength="200" placeholder="{{ translate('Please enter the name') }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="withdraw-bank">{{ translate('Bank Name') }} <span class="text-danger">*</span></label>
+                                <input id="withdraw-bank" name="iban_bank" class="form-control" maxlength="200" placeholder="{{ translate('Please enter the bank name') }}" required>
                             </div>
                             <div id="withdraw-bank-fields">
                                 <div class="form-group">
                                     <label for="withdraw-account">{{ translate('Bank Account Number') }} <span class="text-danger">*</span></label>
-                                    <input id="withdraw-account" name="bank_account" class="form-control" dir="ltr" maxlength="100" placeholder="{{ translate('Please enter the bank account') }}">
+                                    <input id="withdraw-account" name="bank_account" class="form-control" dir="ltr" maxlength="100" placeholder="{{ translate('Please enter the bank account') }}" required>
                                 </div>
                             </div>
-@include('partials.iban_form')
+                            <div class="form-group">
+                                <label for="withdraw-iban">IBAN <span class="text-danger">*</span></label>
+                                <input id="withdraw-iban" name="iban_number" class="form-control" dir="ltr" maxlength="64" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="withdraw-country">{{ translate('Account country') }} <span class="text-danger">*</span></label>
+                                <select id="withdraw-country" name="iban_country" class="form-control" required>
+                                    @foreach(config('iban.lengths') as $code => $length)
+                                        <option value="{{ $code }}" @if($code === 'AE') selected @endif>{{ $code }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="withdraw-bic">SWIFT / BIC ({{ translate('Optional') }})</label>
+                                <input id="withdraw-bic" name="iban_bic" class="form-control" dir="ltr" maxlength="11" autocomplete="off">
+                            </div>
 
                             <div class="form-group">
                                 <label for="withdraw-amount">{{ translate('Amount')}} (USD) <span class="text-danger">*</span></label>
@@ -439,39 +452,14 @@ IBAN
             if (!form) return;
             var amount = form.elements.amount;
             var output = document.getElementById('withdraw-aed');
-            var bankFields = document.getElementById('withdraw-bank-fields');
-            var bankName = document.getElementById('withdraw-bank');
-            var holder = document.getElementById('withdraw-holder');
-            var bankAccount = document.getElementById('withdraw-account');
-            var countrySelect = form.elements.iban_country;
-            if (window.Intl && Intl.DisplayNames && countrySelect) {
-                var countryNames = new Intl.DisplayNames([document.documentElement.lang || 'en'], {type: 'region'});
-                Array.from(countrySelect.options).forEach(function (option) {
-                    option.textContent = countryNames.of(option.value) + ' (' + option.value + ')';
-                });
-            }
             function updateAmount() {
                 var usd = Number(amount.value);
                 output.textContent = new Intl.NumberFormat(document.documentElement.lang || 'en', {
                     minimumFractionDigits: 2, maximumFractionDigits: 2
                 }).format(Number.isFinite(usd) && usd > 0 ? Math.round(usd * 3.67 * 100) / 100 : 0);
             }
-            function toggleBankFields() {
-                var bank = form.elements.w_type.value === '2';
-                bankFields.hidden = !bank;
-                bankName.name = bank ? 'bank_name' : 'iban_bank';
-                holder.name = bank ? 'account_holder' : 'iban_holder';
-                bankName.disabled = false;
-                holder.disabled = false;
-                bankName.required = true;
-                holder.required = true;
-                bankAccount.disabled = !bank;
-                bankAccount.required = bank;
-            }
             amount.addEventListener('input', updateAmount);
-            form.elements.w_type.addEventListener('change', toggleBankFields);
             updateAmount();
-            toggleBankFields();
         })();
     </script>
 @endsection
