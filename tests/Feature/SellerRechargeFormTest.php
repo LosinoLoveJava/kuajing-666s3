@@ -64,10 +64,10 @@ class SellerRechargeFormTest extends TestCase
         $this->assertEquals(0, DB::table('wallets')->count());
     }
 
-    public function testSellerModalUsesDropdownWithoutPaymentCards()
+    public function testSellerModalUsesFixedBankWithIbanFields()
     {
         $this->post('/offline-wallet-recharge-modal', ['type' => 1])->assertOk()
-            ->assertSee('name="recharge_method"', false)->assertSee('value="Bank"', false)
-            ->assertSee('value="IBAN"', false)->assertSee('3.67')->assertSee('Test transfer instructions')->assertSee('name="amount_aed"', false)->assertDontSee('aiz-megabox');
+            ->assertSee('name="recharge_method"', false)->assertSee('value="BANK"', false)
+            ->assertSee('value="IBAN"', false)->assertSee('3.67')->assertDontSee('Test transfer instructions')->assertSee('name="amount_aed"', false)->assertDontSee('aiz-megabox');
     }
 }

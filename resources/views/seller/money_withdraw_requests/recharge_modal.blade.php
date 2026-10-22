@@ -8,10 +8,10 @@
     <input type="hidden" name="wallet_form" value="recharge">
     <input type="hidden" name="type" value="{{ $type }}">
     <div class="modal-body p-4">
-        @include('partials.wallet_bank_instructions')
         <div class="form-group">
             <label for="recharge-method">{{ translate('Payment method') }} <span class="text-danger">*</span></label>
-            <select name="recharge_method" id="recharge-method" class="form-control"><option value="Bank">{{ translate('Bank') }}</option><option value="IBAN">IBAN</option></select>
+            <input type="hidden" name="recharge_method" value="IBAN">
+            <input id="recharge-method" class="form-control" value="BANK" readonly>
         </div>
         <div class="form-group">
             <label for="recharge-holder">{{ translate('Account holder') }} <span class="text-danger">*</span></label>
@@ -85,15 +85,7 @@
     form.addEventListener('submit', updateAmount);
     var previous = @json(old('wallet_form') === 'recharge' ? old() : []);
     Object.keys(previous).forEach(function (name) { if (form.elements[name] && name !== '_token') form.elements[name].value = previous[name]; });
-    function toggleMethod() {
-        var iban = form.elements.recharge_method.value === 'IBAN';
-        form.querySelector('#recharge-iban-fields').hidden = !iban;
-        ['iban_country', 'iban_number'].forEach(function (name) { form.elements[name].disabled = !iban; form.elements[name].required = iban; });
-        form.elements.iban_bic.disabled = !iban;
-        form.elements.bank_account.required = !iban;
-    }
-    form.elements.recharge_method.addEventListener('change', toggleMethod);
-    toggleMethod();
+    form.elements.recharge_method.value = 'IBAN';
     updateAmount();
 })();
 </script>

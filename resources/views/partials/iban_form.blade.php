@@ -1,9 +1,9 @@
-<div class="bank-recipient-fields mb-3" hidden>
+<div class="bank-recipient-fields mb-3" @if(!($fixedBank ?? false)) hidden @endif>
     <div class="form-group"><label for="withdraw-holder">{{ translate('Account holder') }} <span class="text-danger">*</span></label><input id="withdraw-holder" class="form-control" name="iban_holder" value="{{ old('iban_holder') }}" maxlength="200" data-bank-required></div>
     <div class="form-group"><label for="withdraw-bank">{{ translate('Bank Name') }} <span class="text-danger">*</span></label><input id="withdraw-bank" class="form-control" name="iban_bank" value="{{ old('iban_bank') }}" maxlength="200" data-bank-required></div>
     <div class="form-group"><label for="withdraw-account">{{ translate('Bank Account Number') }}</label><input id="withdraw-account" class="form-control" name="bank_account" value="{{ old('bank_account') }}" maxlength="100" dir="ltr"></div>
 </div>
-<div class="iban-fields mb-3" hidden>
+<div class="iban-fields mb-3" @if(!($fixedBank ?? false)) hidden @endif>
     <div class="form-group"><label for="withdraw-iban-country">{{ translate('Account country') }} <span class="text-danger">*</span></label>
         <select id="withdraw-iban-country" name="iban_country" class="form-control" data-iban-required>
             @foreach(config('iban.lengths') as $code => $length)<option value="{{ $code }}" @if($code === old('iban_country', 'AE')) selected @endif>{{ $code }}</option>@endforeach
@@ -14,6 +14,12 @@
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    @if($fixedBank ?? false)
+    var fixedForm = document.querySelector('#request_modal form');
+    if (fixedForm) {
+        fixedForm.querySelectorAll('[data-bank-required], [data-iban-required], [name="bank_account"]').forEach(function (input) { input.required = true; });
+    }
+    @endif
     document.querySelectorAll('select[name="w_type"]').forEach(function (select) {
         var form = select.closest('form'), fields = form.querySelector('.iban-fields'), bank = form.querySelector('.bank-recipient-fields');
         if (!fields) return;

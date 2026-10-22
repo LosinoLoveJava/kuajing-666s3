@@ -5,6 +5,10 @@
                 <span></span>
             </button>
         </div>
+        <a href="{{ route('seller.dashboard') }}" class="d-flex d-xl-none align-items-center flex-shrink-0 mr-2">
+            <img src="{{ uploaded_asset(Auth::user()->shop->logo ?? get_setting('header_logo')) }}"
+                alt="{{ get_setting('site_name') }}" width="70" height="36" style="object-fit: contain;">
+        </a>
     </div>
     <div class="d-flex justify-content-between align-items-stretch flex-grow-xl-1">
         <div class="d-flex justify-content-around align-items-center align-items-stretch">
