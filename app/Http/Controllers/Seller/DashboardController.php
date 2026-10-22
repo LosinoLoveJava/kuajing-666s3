@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Seller;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Category;
 use Auth;
 use Carbon\Carbon;
 use DB;
@@ -22,6 +23,16 @@ class DashboardController extends Controller
             if ( Session::get('conversations-modal') != '0' ) Session::put('conversations-modal', '1');
         }
         $data['products'] = filter_products(Product::where('user_id', Auth::user()->id)->orderBy('num_of_sale', 'desc'))->limit(12)->get();
+        // Count only this seller's products in SQL. Never hydrate the platform's
+        // product catalogue (and its default translations/taxes) just to count it.
+        $categoryCounts = DB::table('products')->where('user_id', Auth::id())
+            ->selectRaw('category_id, COUNT(*) as product_count')->groupBy('category_id');
+        $data['product_categories'] = Category::query()
+            ->joinSub($categoryCounts, 'seller_product_counts', function ($join) {
+                $join->on('categories.id', '=', 'seller_product_counts.category_id');
+            })
+            ->select('categories.*', 'seller_product_counts.product_count')
+            ->orderBy('categories.id')->get();
         $sellerOrders = Order::where('seller_id', Auth::user()->id);
         $data['total_orders'] = (clone $sellerOrders)->count();
         $data['total_profit'] = (clone $sellerOrders)

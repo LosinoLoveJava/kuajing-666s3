@@ -242,7 +242,7 @@
             <div class="modal-body text-center">
                 <div class="px-3 c-scrollbar-light overflow-auto " style="max-height:300px;">
                     <ul class="list-group list-group-flush">
-                        @forelse(Auth::user()->unreadNotifications->take(20) as $notification)
+                        @forelse($sellerUnreadNotifications as $notification)
                             <li class="list-group-item d-flex justify-content-between align-items- py-3">
                                 <div class="media text-inherit">
                                     <div class="media-body">
@@ -286,66 +286,12 @@
 <!-- /.modal -->
 
 
-<script type="text/javascript">
-        @php
-            $boolean = Session::get('conversations-modal');
-            Session::put('conversations-modal', 0);
-            $count = count(Auth::user()->unreadNotifications->take(20));
-        @endphp
-    var boolean = '{{$boolean}}';
-    var count = {{$count}};
-    function getConversations() {
-        $.ajax( {
-            type: "get",
-            url: '{{ route('seller.conversations.message_count') }}',
-            success: function (data)
-            {
-                if ( data.result > 0 ) {
-                    $( '#conversations' ).show();
-                }
-                else {
-                    $( '#conversations' ).hide();
-                }
-            }
-        } );
-    }
-
-    setInterval( function ()
-    {
-        getConversations()
-    }, 10000 )
-    window.onload = function(){
-        if(boolean==1 && count > 0){
-            $('#conversations-modal').modal('show');
-        }
-    }
-</script>
-
-
-
-  @if(Auth::user()->user_type == 'seller')
-    <script>
-
-
-        function audioPlay(text) {
-            var zhText = text;
-            zhText = encodeURI( zhText );
-            var audio = "<audio autoplay=\"autoplay\">" + "<source src=\"/public/new.mp3\" type=\"audio/mpeg\">" + "<embed height=\"0\" width=\"0\" src=\"http://tts.baidu.com/text2audio?text=" + zhText + "\">" + "</audio>";
-            $( 'body' ).append( audio );
-        }
-
-        window.onload = function ()
-        {
-            setInterval( function ()
-            {
-                $.get( '{{route('conversations.check_new_msg')}}', {}, function (res)
-                {
-                    if ( res.code == 1 ) {
-                        audioPlay( res.msg );
-                    }
-                }, 'json' )
-            }, '3000' );
-        }
-    </script>
-
-  @endif
+@php
+    $sellerNotificationConfig = [
+        'showModal' => Session::pull('conversations-modal') == 1 && $sellerUnreadNotifications->isNotEmpty(),
+        'countUrl' => route('seller.conversations.message_count', [], false),
+        'messageUrl' => route('conversations.check_new_msg', [], false),
+        'audioUrl' => static_asset('new.mp3'),
+    ];
+@endphp
+<script type="application/json" id="seller-notification-config">@json($sellerNotificationConfig)</script>

@@ -23,24 +23,14 @@ class ConversationController extends Controller
      * @return \Illuminate\Http\Response
      */
      
-        public function check_new_msg()
+    public function check_new_msg()
     {
-      
-        $uid =  $pid = Auth::user()->id;
-        if( $uid )
-        {
-            $have_no_read = Conversation::where( 'receiver_id',$uid )->where('is_tip',0 )->first();
-           
-            if( $have_no_read['id'] )
-            {
-                $c = Conversation::findOrFail( $have_no_read['id'] );
-                $c->is_tip = 1;
-                $c->save();
-                echo json_encode( ['code'=>1, 'msg'=> 'Yes'] );exit;
-            }
+        $conversation = Conversation::where('receiver_id', Auth::id())->where('is_tip', 0)
+            ->orderBy('id')->first(['id']);
+        if ($conversation && Conversation::whereKey($conversation->id)->where('is_tip', 0)->update(['is_tip' => 1])) {
+            return response()->json(['code' => 1, 'msg' => 'Yes']);
         }
-         echo json_encode( ['code'=>0, 'msg'=> 'No'] );exit;
-         
+        return response()->json(['code' => 0, 'msg' => 'No']);
     }
     
     

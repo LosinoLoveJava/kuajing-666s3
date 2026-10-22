@@ -54,7 +54,7 @@
                         <span class="btn btn-icon p-0 d-flex justify-content-center align-items-center">
                             <span class="d-flex align-items-center position-relative">
                                 <i class="las la-bell fs-24"></i>
-                                @if(Auth::user()->unreadNotifications->count() > 0)
+                                @if($sellerUnreadNotifications->isNotEmpty())
                                     <span class="badge badge-sm badge-dot badge-circle badge-primary position-absolute absolute-top-right"></span>
                                 @endif
                             </span>
@@ -65,7 +65,7 @@
                         </div>
                         <div class="px-3 c-scrollbar-light overflow-auto " style="max-height:300px;">
                             <ul class="list-group list-group-flush">
-                                @forelse(Auth::user()->unreadNotifications->take(20) as $notification)
+                                @forelse($sellerUnreadNotifications as $notification)
                                     <li class="list-group-item d-flex justify-content-between align-items- py-3">
                                         <div class="media text-inherit">
                                             <div class="media-body">

@@ -1,5 +1,8 @@
 # Local automated tests and fixtures are not published with application code.
-/tests/
+/tests/*
+!/tests/Feature/
+/tests/Feature/*
+!/tests/Feature/SellerDashboardPerformanceTest.php
 /.phpunit.result.cache
 /.phpunit.cache/
 /coverage/

@@ -8,6 +8,7 @@ use App\Models\BusinessSetting;
 use App\Models\Message;
 use App\Models\ProductQuery;
 use Auth;
+use Illuminate\Support\Facades\DB;
 use phpDocumentor\Fileset\Collection;
 use function response;
 use function strtotime;
@@ -97,24 +98,28 @@ class ConversationController extends Controller
         return back();
     }
 
-    public function message_count(Request $request){
-        $conversations = \App\Models\Conversation::where('sender_id', Auth::user()->id)
-            ->orWhere('receiver_id', Auth::user()->id)
-            ->with('messages')
-            ->get();
-        $count = 0;
-        foreach ($conversations as $k=>$v){
-            if($v->sender_id === Auth::user()->id && $v->sender_viewed==0) $count++;
-            if($v->receiver_id === Auth::user()->id  && $v->receiver_viewed==0) $count++;
-            foreach ($v->messages as &$vv){
-                if(strtotime($vv->created_at) === strtotime($vv->updated_at) && $vv->user_id != Auth::user()->id) {
-                    $count++;
-                }
-            }
-        }
-        return response()->json([
-            'result' => $count,
-        ]);
+    public function message_count(Request $request)
+    {
+        $sellerId = Auth::id();
+        $count = Conversation::where('sender_id', $sellerId)->where('sender_viewed', 0)->count()
+            + Conversation::where('receiver_id', $sellerId)->where('receiver_viewed', 0)->count();
+        // Preserve the existing unread rule, including nullable legacy rows,
+        // without loading every conversation/message into PHP on each poll.
+        $count += DB::table('messages')->join('conversations', 'conversations.id', '=', 'messages.conversation_id')
+            ->where(function ($query) use ($sellerId) {
+                $query->where('conversations.sender_id', $sellerId)->orWhere('conversations.receiver_id', $sellerId);
+            })
+            ->where(function ($query) use ($sellerId) {
+                $query->where('messages.user_id', '<>', $sellerId)->orWhereNull('messages.user_id');
+            })
+            ->where(function ($query) {
+                $query->whereColumn('messages.created_at', 'messages.updated_at')
+                    ->orWhere(function ($query) {
+                        $query->whereNull('messages.created_at')->whereNull('messages.updated_at');
+                    });
+            })->count();
+
+        return response()->json(['result' => $count]);
     }
 
 }

@@ -434,7 +434,9 @@ class SellerDashboardTest extends TestCase
         $this->assertStringNotContainsString('bzj_money',$nav);
         $this->assertStringNotContainsString('mandatory_payment_switch',$side);
         $this->assertStringNotContainsString('compulsory_margin_amount',$side);
-        $this->assertStringContainsString('audioPlay',$side);
+        $this->assertStringContainsString('seller-notification-config',$side);
+        $this->assertStringContainsString("route('conversations.check_new_msg'",$side);
+        $this->assertStringContainsString('seller-notifications.js',file_get_contents(resource_path('views/seller/layouts/app.blade.php')));
         $this->assertStringNotContainsString('show_make_wallet_recharge_modal(2)',$wallet);
         $this->assertStringNotContainsString('value="2">{{translate(\'Guarantee',$wallet);
         $this->assertStringContainsString("@include('partials.iban_form')",$wallet);

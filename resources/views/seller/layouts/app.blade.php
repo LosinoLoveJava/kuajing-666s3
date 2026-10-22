@@ -18,7 +18,8 @@
 	<title>{{ get_setting('website_name').' | '.get_setting('site_motto') }}</title>
 
 	<!-- google font -->
-	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700&display=swap"></noscript>
 
 	<!-- aiz core css -->
 	<link rel="stylesheet" href="{{ static_asset('assets/css/vendors.css') }}">
@@ -84,6 +85,7 @@
 	<script src="{{ static_asset('assets/js/vendors.js') }}" ></script>
     <script src="{{ static_asset('assets/js/responsive-tables.js') }}"></script>
 	<script src="{{ static_asset('assets/js/aiz-core.js') }}" ></script>
+    <script src="{{ static_asset('assets/js/seller-notifications.js') }}"></script>
 
     @yield('script')
 

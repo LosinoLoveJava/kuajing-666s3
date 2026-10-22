@@ -208,15 +208,13 @@
                     </div>
                     <hr>
                     <ul class="list-group">
-                        @foreach (\App\Models\Category::all() as $key => $category)
-                            @if (count($category->products->where('user_id', Auth::user()->id)) > 0)
-                                <li class="d-flex justify-content-between align-items-center my-2 text-primary fs-13">
-                                    {{ $category->getTranslation('name') }}
-                                    <span class="">
-                                        {{ count($category->products->where('user_id', Auth::user()->id)) }}
-                                    </span>
-                                </li>
-                            @endif
+                        @foreach ($product_categories as $category)
+                            <li class="d-flex justify-content-between align-items-center my-2 text-primary fs-13">
+                                {{ $category->getTranslation('name') }}
+                                <span class="">
+                                    {{ $category->product_count }}
+                                </span>
+                            </li>
                         @endforeach
                     </ul>
                 </div>
