@@ -31,10 +31,6 @@
                 </div>
             </div>
 
-            @php
-                $salesmans = \App\Models\User::where('user_type', 'salesman')->orderBy('created_at', 'desc')->get();
-            @endphp
-
             <div class="col-md-2 ml-auto">
                 <div class="form-group mb-0">
                     <input type="text" class="aiz-date-range form-control" value="{{ $date }}" name="date" placeholder="{{ translate('Filter by date') }}" data-format="Y-MM-DD" data-separator=" to " data-advanced-range="true" autocomplete="on">
@@ -63,8 +59,8 @@
             <div class="col-md-2 ml-auto">
                 <select class="form-control aiz-selectpicker" name="approved_status" id="approved_status" onchange="sort_sellers()">
                     <option value="">{{translate('Filter by Approval')}}</option>
-                    <option value="1"  @isset($approved) @if($approved == 'paid') selected @endif @endisset>{{translate('Approved')}}</option>
-                    <option value="0"  @isset($approved) @if($approved == 'unpaid') selected @endif @endisset>{{translate('Non-Approved')}}</option>
+                    <option value="1" @if((string) $approved === '1') selected @endif>{{translate('Approved')}}</option>
+                    <option value="0" @if((string) $approved === '0') selected @endif>{{translate('Non-Approved')}}</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -143,7 +139,7 @@
                                 <span class="slider round"></span>
                             </label>
                         </td>
-                        <td>{{ $shop->user->products->count() }}</td>
+                        <td>{{ $shop->user->products_count }}</td>
                         <td>
                             @if ($shop->admin_to_pay >= 0)
                                 {{ single_price($shop->admin_to_pay) }}
@@ -176,16 +172,8 @@
                         </td>
 
                         @php
-                            $wallets = $shop->user->wallets;
-                            $recharge = 0;
-                            foreach ($wallets as $wallet) {
-                                if ($wallet->approval==1 && $wallet->payment_method !== 'seller_order_reward') $recharge += $wallet->amount;
-                            }
-                            $withdraws = $shop->user->seller_withdraw_requests;
-                            $withdraw_money = '0.00';
-                            foreach ($withdraws as $withdraw) {
-                                if ($withdraw->status==1) $withdraw_money += $withdraw->amount;
-                            }
+                            $recharge = $shop->user->recharge_total ?? 0;
+                            $withdraw_money = $shop->user->withdrawal_total ?? 0;
                             $difference = $recharge - $withdraw_money;
                             $total_recharge += $recharge;
                             $total_withdraw_money += $withdraw_money;
@@ -196,19 +184,7 @@
                         <td>{{single_price($withdraw_money)}}</td>
                         <td>{{single_price($difference)}}</td>
                         <td>
-                            @php
-                                $uid = $shop->user->pid;
-                                if( $uid == '')
-                                {
-                                   echo '---';
-                                }
-                                else
-                                {
-                                  $r =  \App\Models\User::where('id',$uid)->first() ;
-                                 echo $r['name'];
-
-                                }
-                            @endphp
+                            {{ optional($shop->user->parent_user)->name ?? '---' }}
                         </td>
 
 
@@ -254,7 +230,7 @@
                                      <span onclick="show_view({{$shop->id}},{{$shop->view_inc_num}},{{$shop->view_base_num}})" class="dropdown-item" style="cursor:pointer;">
                                         {{translate('Views')}}
                                     </span>
-                                       <span onclick="set_pid({{$shop->id}},{{$shop->user->pid}})" class="dropdown-item" style="cursor:pointer;">
+                                       <span onclick="set_pid({{$shop->id}},{{ (int) $shop->user->pid }})" class="dropdown-item" style="cursor:pointer;">
                                         {{translate('Set Salesman')}}
                                     </span>
 
@@ -400,19 +376,10 @@
 
      function set_pid(shop_id,pid)
      {
-          @php
-
-         $Salesmans =  \App\Models\User::where('user_type','salesman')->get();
-         @endphp
          var html = '';
-          @foreach ($Salesmans as $key => $us)
-            html +="<option ";
-            if( pid == @php echo $us['id'];@endphp )
-            {
-                html += ' selected ';
-            }
-
-            html += " value='@php echo $us['id'];@endphp'> @php echo $us['name'];@endphp</option>";
+          @foreach ($salesmans as $salesman)
+            html += '<option value="{{ (int) $salesman->id }}"' + (pid == {{ (int) $salesman->id }} ? ' selected' : '') + '>'
+                + $('<div>').text(@json($salesman->name)).html() + '</option>';
           @endforeach
 
           var html2 = "<select class='form-control' name='userid' id='userid'> ";

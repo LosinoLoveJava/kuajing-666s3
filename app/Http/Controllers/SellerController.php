@@ -92,28 +92,60 @@ class SellerController extends Controller
     
     public function index(Request $request)
     {
-        $sort_search = null;
-        $approved = null;
-        $shops = Shop::whereIn('user_id', function ($query) {
-                       $query->select('id')
-                       ->from(with(new User)->getTable());
-                    })->latest();
+        $filters = $request->validate([
+            'search' => 'nullable|string|max:255',
+            'approved_status' => 'nullable|in:0,1',
+            'is_virtual_user' => 'nullable|in:0,1',
+            'user_id' => 'nullable|integer|min:1',
+            'date' => ['nullable', 'string', 'regex:/^\d{4}-\d{2}-\d{2} to \d{4}-\d{2}-\d{2}$/'],
+        ]);
+        $sort_search = $filters['search'] ?? null;
+        $approved = $filters['approved_status'] ?? null;
+        $is_virtual_user = $filters['is_virtual_user'] ?? null;
+        $user_id = $filters['user_id'] ?? null;
+        $date = $filters['date'] ?? null;
 
-        if ($request->has('search')) {
-            $sort_search = $request->search;
-            $user_ids = User::where('user_type', 'seller')->where(function ($user) use ($sort_search) {
-                $user->where('name', 'like', '%' . $sort_search . '%')->orWhere('phone', 'like', '%' . $sort_search . '%')->orWhere('phone_normalized', 'like', '%' . $sort_search . '%')->orWhere('email', 'like', '%' . $sort_search . '%');
-            })->pluck('id')->toArray();
-            $shops = $shops->where(function ($shops) use ($user_ids) {
-                $shops->whereIn('user_id', $user_ids);
-            });
+        $shops = Shop::whereHas('user', function ($query) use ($sort_search, $is_virtual_user, $user_id) {
+            if ($sort_search !== null && $sort_search !== '') {
+                $query->where('user_type', 'seller')->where(function ($user) use ($sort_search) {
+                    $user->where('name', 'like', '%'.$sort_search.'%')
+                        ->orWhere('phone', 'like', '%'.$sort_search.'%')
+                        ->orWhere('phone_normalized', 'like', '%'.$sort_search.'%')
+                        ->orWhere('email', 'like', '%'.$sort_search.'%');
+                });
+            }
+            if ($is_virtual_user !== null && $is_virtual_user !== '') {
+                $query->where('is_virtual', $is_virtual_user);
+            }
+            if ($user_id !== null && $user_id !== '') {
+                $query->where('pid', $user_id);
+            }
+        })->with(['user' => function ($query) {
+            // Only hydrate this page's accounts; catalogue and ledger rows stay in SQL.
+            $query->withCount('products')->withSum(['wallets as recharge_total' => function ($wallets) {
+                $wallets->where('approval', 1)->where(function ($query) {
+                    $query->whereNull('payment_method')->orWhere('payment_method', '!=', 'seller_order_reward');
+                });
+            }], 'amount')->withSum(['seller_withdraw_requests as withdrawal_total' => function ($withdrawals) {
+                $withdrawals->where('status', 1);
+            }], 'amount')->with('parent_user:id,name');
+        }])->latest()->orderByDesc('id');
+
+        if ($approved !== null && $approved !== '') {
+            $shops->where('verification_status', $approved);
         }
-        if ($request->approved_status != null) {
-            $approved = $request->approved_status;
-            $shops = $shops->where('verification_status', $approved);
+        if ($date !== null && $date !== '') {
+            [$start, $end] = explode(' to ', $date);
+            validator(['start' => $start, 'end' => $end], [
+                'start' => 'required|date_format:Y-m-d',
+                'end' => 'required|date_format:Y-m-d|after_or_equal:start',
+            ])->validate();
+            $shops->whereBetween('created_at', [$start.' 00:00:00', $end.' 23:59:59']);
         }
         $shops = $shops->paginate(15);
-        return view('backend.sellers.index', compact('shops', 'sort_search', 'approved'));
+        $salesmans = User::where('user_type', 'salesman')->latest()->get(['id', 'name', 'email']);
+
+        return view('backend.sellers.index', compact('shops', 'sort_search', 'approved', 'date', 'user_id', 'is_virtual_user', 'salesmans'));
     }
 
     /**
