@@ -99,13 +99,16 @@ class WalletService
         if ($principal->user_type === 'seller') {
             $rules += [
                 'recharge_method' => 'required|in:Bank,IBAN',
-                'bank_name' => 'required|string|max:200', 'account_holder' => 'required|string|max:200',
-                'bank_account' => 'required_if:recharge_method,Bank|nullable|string|max:100',
-                'iban_country' => 'required_if:recharge_method,IBAN|nullable|string|size:2',
-                'iban_number' => 'required_if:recharge_method,IBAN|nullable|string|max:64',
-                'iban_bic' => ['nullable', 'string', 'regex:/^[a-zA-Z]{6}[a-zA-Z0-9]{2}([a-zA-Z0-9]{3})?$/D'],
+                'bank_name' => 'nullable|string|max:2000', 'account_holder' => 'nullable|string|max:2000',
+                'bank_account' => 'nullable|string|max:2000',
+                'iban_country' => 'nullable|string|max:2000',
+                'iban_number' => 'nullable|string|max:2000',
+                'iban_bic' => 'nullable|string|max:2000',
+                'request_token' => 'required_without:trx_id|nullable|uuid',
                 'amount_aed' => ['nullable', 'numeric', 'regex:/^[0-9]{1,10}(\.[0-9]{1,2})?$/D', 'min:0.02'],
             ];
+            $rules['trx_id'] = 'nullable|string|max:200';
+            if ($request->filled('amount_aed')) $rules['amount'] = 'exclude';
         } else {
             $rules['payment_option'] = 'required|string|max:200';
         }
@@ -120,15 +123,12 @@ class WalletService
         $method = $data['recharge_method'] ?? $data['payment_option'];
         $details = [];
         if ($principal->user_type === 'seller') {
-            $details = ['Bank: '.$data['bank_name'], 'Account holder: '.$data['account_holder'],
+            $details = ['Bank: '.($data['bank_name'] ?? ''), 'Account holder: '.($data['account_holder'] ?? ''),
                 'Account number: '.($data['bank_account'] ?? '')];
             if ($method === 'IBAN') {
-                if (!Iban::valid($data['iban_number'], $data['iban_country'])) {
-                    throw ValidationException::withMessages(['iban_number' => 'Invalid IBAN or account country.']);
-                }
-                $details[] = 'IBAN: '.Iban::normalize($data['iban_number']);
-                $details[] = 'Country: '.strtoupper($data['iban_country']);
-                $details[] = 'SWIFT / BIC: '.strtoupper($data['iban_bic'] ?? '');
+                $details[] = 'IBAN: '.($data['iban_number'] ?? '');
+                $details[] = 'Country: '.($data['iban_country'] ?? '');
+                $details[] = 'SWIFT / BIC: '.($data['iban_bic'] ?? '');
             }
             if (isset($data['amount_aed'])) {
                 // AED entry uses the same fixed rate as the existing seller form. Never trust its hidden USD amount.
@@ -141,13 +141,14 @@ class WalletService
         } elseif (!$methods->contains('heading', $method)) {
             throw ValidationException::withMessages(['payment_option' => 'Please select a configured payment method.']);
         }
-        $reference = trim($data['trx_id']);
-        if ($reference === '') {
+        $reference = trim($data['trx_id'] ?? '');
+        if ($reference === '' && $principal->user_type !== 'seller') {
             throw ValidationException::withMessages(['trx_id' => 'Please enter the bank transaction reference.']);
         }
         $details[] = 'Transaction ID: '.$reference;
         // One bank transfer must never become two deposits, even after its first review.
-        $key = hash('sha256', 'offline|'.$principal->id.'|'.strtolower($reference));
+        $key = $reference !== '' ? hash('sha256', 'offline|'.$principal->id.'|'.strtolower($reference))
+            : hash('sha256', 'offline-form|'.$principal->id.'|'.$data['request_token']);
         return DB::transaction(function () use ($principal, $data, $method, $details, $reference, $key) {
             $user = User::whereKey($principal->id)->lockForUpdate()->firstOrFail();
             abort_if($user->banned, 403);

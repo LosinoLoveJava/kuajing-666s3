@@ -41,29 +41,12 @@
                             <input type="text" class="form-control" value="{{ translate($payment_status) }}" disabled>
                         @endif
                     </div>
-                    <div class="col-md-3 ml-auto">
-                        <label for="update_delivery_status">{{ translate('Delivery Status') }}</label>
-                        @if ($delivery_status != 'delivered' && $delivery_status != 'cancelled')
-                            <select class="form-control aiz-selectpicker" data-minimum-results-for-search="Infinity"
-                                    id="update_delivery_status">
-                                <option value="pending" @if ($delivery_status == 'pending') selected @endif>
-                                    {{ translate('Pending') }}</option>
-                                <option value="confirmed" @if ($delivery_status == 'confirmed') selected @endif>
-                                    {{ translate('Confirmed') }}</option>
-                                <option value="picked_up" @if ($delivery_status == 'picked_up') selected @endif>
-                                    {{ translate('Picked Up') }}</option>
-                                <option value="on_the_way" @if ($delivery_status == 'on_the_way') selected @endif>
-                                    {{ translate('On The Way') }}</option>
-                                <option value="delivered" @if ($delivery_status == 'delivered') selected @endif>
-                                    {{ translate('Delivered') }}</option>
-                                <option value="cancelled" @if ($delivery_status == 'cancelled') selected @endif>
-                                    {{ translate('Cancel') }}</option>
-                            </select>
-                        @else
-                            <input type="text" class="form-control" value="{{ translate(ucfirst(str_replace('_', ' ', $delivery_status))) }}" disabled>
-                        @endif
-                    </div>
                 @endif
+                <div class="col-md-3 ml-auto">
+                    <label for="delivery_status">{{ translate('Delivery Status') }}</label>
+                    <input id="delivery_status" type="text" class="form-control" value="{{ translate(ucfirst(str_replace('_', ' ', $delivery_status))) }}" readonly aria-describedby="delivery-status-permission">
+                    <small id="delivery-status-permission" class="form-text text-muted">{{ __('seller_orders.delivery_status_admin_only') }}</small>
+                </div>
             </div>
 
 
@@ -508,31 +491,6 @@
                 }
             });
         })
-        $('#update_delivery_status').on('change', function () {
-            var $select = $(this);
-            var order_id = {{ $order->id }};
-            var status = $select.val();
-            $.post('{{ route('seller.orders.update_delivery_status') }}', {
-                _token: '{{ @csrf_token() }}',
-                order_id: order_id,
-                status: status
-            }, function (data) {
-                if (data == 1 || (data && data.success == 1)) {
-                    AIZ.plugins.notify('success', (data && data.message) ? data.message : '{{ translate('Order status has been updated') }}');
-                    setTimeout(function () {
-                        location.reload();
-                    }, 500);
-                } else {
-                    AIZ.plugins.notify('danger', (data && data.message) ? data.message : '{{ translate('Something went wrong') }}');
-                    location.reload();
-                }
-            }).fail(function (xhr) {
-                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : '{{ translate('Something went wrong') }}';
-                AIZ.plugins.notify('danger', msg);
-                location.reload();
-            });
-        });
-
         $('#update_payment_status').on('change', function () {
             var order_id = {{ $order->id }};
             var status = $('#update_payment_status').val();

@@ -8,6 +8,7 @@
 !/tests/Feature/AdminDisplayTest.php
 !/tests/Feature/SellerProductDeletionTest.php
 !/tests/Feature/SellerWalletDisplayTest.php
+!/tests/Feature/SellerOrderDeliveryPermissionTest.php
 !/tests/Feature/WalletWorkflowTest.php
 !/tests/Concerns/
 !/tests/Concerns/InteractsWithPortalSessions.php

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Seller;
 
 use App\Models\Order;
-use App\Models\ProductStock;
 use App\Models\SmsTemplate;
 use App\Models\User;
 use App\Utility\NotificationUtility;
@@ -118,97 +117,13 @@ class OrderController extends Controller
         return response()->json(['success' => 0, 'message' => translate('Insufficient balance')]);
     }
 
-    // Update Delivery Status
+    // Keep stale clients from changing delivery status through the seller endpoint.
     public function update_delivery_status(Request $request)
     {
-        $allowedStatuses = ['pending', 'confirmed', 'picked_up', 'on_the_way', 'delivered', 'cancelled'];
-        if (!$request->filled('order_id') || !$request->filled('status') || !in_array($request->status, $allowedStatuses)) {
-            return response()->json(['success' => 0, 'message' => translate('Something went wrong')], 422);
-        }
-
-        $order = Order::findOrFail($request->order_id);
-        if ($order->seller_id != Auth::user()->id) {
-            return response()->json(['success' => 0, 'message' => translate('Something went wrong')], 403);
-        }
-
-        if (in_array($order->delivery_status, ['delivered', 'cancelled'])) {
-            return response()->json(['success' => 0, 'message' => translate('Order status can not be changed')], 422);
-        }
-
-        // 云仓订单需先完成提货付款，才能进入发货/签收流程
-        $needStorehousePay = $order->product_storehouse_total > 0 && (int)$order->product_storehouse_status !== 1;
-        if ($needStorehousePay && in_array($request->status, ['picked_up', 'on_the_way', 'delivered'])) {
-            return response()->json(['success' => 0, 'message' => translate('Please complete storehouse payment first')], 422);
-        }
-
-        $order->delivery_viewed = '0';
-        $order->delivery_status = $request->status;
-        $order->save();
-
-        if ($request->status == 'cancelled' && $order->payment_type == 'wallet' && $order->picking_switch == 1) {
-            $user = User::where('id', $order->user_id)->first();
-            if ($user) {
-                $user->balance += $order->grand_total;
-                $user->save();
-            }
-        }
-
-        if ($request->status == 'delivered') {
-            product_storehouse_order_free_up($order->id);
-        }
-
-        foreach ($order->orderDetails->where('seller_id', Auth::user()->id) as $key => $orderDetail) {
-            $orderDetail->delivery_status = $request->status;
-            $orderDetail->save();
-
-            if ($request->status == 'cancelled') {
-                $variant = $orderDetail->variation;
-                if ($orderDetail->variation == null) {
-                    $variant = '';
-                }
-
-                $product_stock = ProductStock::where('product_id', $orderDetail->product_id)
-                    ->where('variant', $variant)
-                    ->first();
-
-                if ($product_stock != null) {
-                    $product_stock->qty += $orderDetail->quantity;
-                    $product_stock->save();
-                }
-            }
-        }
-
-        if (addon_is_activated('otp_system') && SmsTemplate::where('identifier', 'delivery_status_change')->first()->status == 1) {
-            try {
-                SmsUtility::delivery_status_change(json_decode($order->shipping_address)->phone, $order);
-            } catch (\Exception $e) {
-
-            }
-        }
-
-        //sends Notifications to user
-        NotificationUtility::sendNotification($order, $request->status);
-        if (get_setting('google_firebase') == 1 && $order->user && $order->user->device_token != null) {
-            $request->device_token = $order->user->device_token;
-            $request->title = "Order updated !";
-            $status = str_replace("_", "", $order->delivery_status);
-            $request->text = " Your order {$order->code} has been {$status}";
-
-            $request->type = "order";
-            $request->id = $order->id;
-            $request->user_id = $order->user->id;
-
-            NotificationUtility::sendFirebaseNotification($request);
-        }
-
-        if (addon_is_activated('delivery_boy')) {
-            if (Auth::user()->user_type == 'delivery_boy') {
-                $deliveryBoyController = new \App\Http\Controllers\DeliveryBoyController;
-                $deliveryBoyController->store_delivery_history($order);
-            }
-        }
-
-        return response()->json(['success' => 1, 'message' => translate('Order status has been updated')]);
+        return response()->json([
+            'success' => 0,
+            'message' => __('seller_orders.delivery_status_admin_only'),
+        ], 403);
     }
 
     // Update Payment Status

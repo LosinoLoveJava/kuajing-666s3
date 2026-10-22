@@ -42,7 +42,7 @@ class SellerRechargeFormTest extends TestCase
         $this->assertEquals(10000, auth()->user()->balance);
     }
 
-    public function testIbanDetailsAreValidatedAndSaved()
+    public function testIbanDetailsAreSavedForManualReview()
     {
         $data = array_merge($this->payload(), ['recharge_method' => 'IBAN',
             'iban_country' => 'AE',
@@ -54,20 +54,25 @@ class SellerRechargeFormTest extends TestCase
         $this->assertStringContainsString('IBAN: AE070331234567890123456', $wallet->payment_details);
     }
 
-    public function testInvalidIbanAndMissingBankAccountAreRejected()
+    public function testArbitraryIbanAndMissingBankAccountAreAllowedForManualReview()
     {
         $data = $this->payload();
         unset($data['bank_account']);
-        $this->postJson('/offline-wallet-recharge', $data)->assertStatus(422)->assertJsonValidationErrors('bank_account');
-        $data = array_merge($data, ['recharge_method' => 'IBAN', 'iban_country' => 'AE', 'iban_number' => 'AE000']);
-        $this->postJson('/offline-wallet-recharge', $data)->assertStatus(422)->assertJsonValidationErrors('iban_number');
-        $this->assertEquals(0, DB::table('wallets')->count());
+        $data = array_merge($data, ['recharge_method' => 'IBAN', 'iban_country' => '中国', 'iban_number' => 'AE000', 'iban_bic'=>'123']);
+        $this->post('/offline-wallet-recharge', $data)->assertRedirect(route('seller.money_withdraw_requests.index'));
+        $wallet = DB::table('wallets')->first();
+        $this->assertStringContainsString('IBAN: AE000', $wallet->payment_details);
+        $this->assertStringContainsString('SWIFT / BIC: 123', $wallet->payment_details);
+        $this->assertEquals(0, $wallet->approval);
+        $this->assertEquals(10000, auth()->user()->fresh()->balance);
     }
 
     public function testSellerModalUsesFixedBankWithIbanFields()
     {
         $this->post('/offline-wallet-recharge-modal', ['type' => 1])->assertOk()
             ->assertSee('name="recharge_method"', false)->assertSee('value="BANK"', false)
-            ->assertSee('value="IBAN"', false)->assertSee('3.67')->assertDontSee('Test transfer instructions')->assertSee('name="amount_aed"', false)->assertDontSee('aiz-megabox');
+            ->assertSee('value="IBAN"', false)->assertSee('3.67')->assertDontSee('Test transfer instructions')->assertSee('name="amount_aed"', false)->assertDontSee('aiz-megabox')
+            ->assertSee(__('seller_wallet.manual_review_hint'))->assertSee('aria-describedby="recharge-bic-hint"', false)
+            ->assertSee('name="request_token"', false)->assertDontSee('data-iban-required');
     }
 }

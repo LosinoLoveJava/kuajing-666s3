@@ -16,8 +16,6 @@ use App\Models\DeliveryHistory;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\User;
-use App\Models\SmsTemplate;
-use App\Utility\SmsUtility;
 
 
 class DeliveryBoyController extends Controller
@@ -304,84 +302,13 @@ class DeliveryBoyController extends Controller
         ]);
     }
 
-    /**
-     * For only delivery boy while changing delivery status.
-     * Call from order controller
-     *
-     * @param int $id
-     * @return \Illuminate\Http\Response
-     */
-    public function change_delivery_status(Request $request) {
-        $order = Order::find($request->order_id);
-        $order->delivery_viewed = '0';
-        $order->delivery_status = $request->status;
-        $order->save();
-
-        $delivery_history = new DeliveryHistory;
-
-        $delivery_history->order_id         = $order->id;
-        $delivery_history->delivery_boy_id  = $request->delivery_boy_id;
-        $delivery_history->delivery_status  = $order->delivery_status;
-        $delivery_history->payment_type     = $order->payment_type;
-
-        if($order->delivery_status == 'delivered') {
-            foreach ($order->orderDetails as $key => $orderDetail) {
-                if (addon_is_activated('affiliate_system')) {
-                    if ($orderDetail->product_referral_code) {
-                        $no_of_delivered = 0;
-                        $no_of_canceled = 0;
-
-                        if($request->status == 'delivered') {
-                            $no_of_delivered = $orderDetail->quantity;
-                        }
-                        if($request->status == 'cancelled') {
-                            $no_of_canceled = $orderDetail->quantity;
-                        }
-
-                        $referred_by_user = User::where('referral_code', $orderDetail->product_referral_code)->first();
-
-                        $affiliateController = new AffiliateController;
-                        $affiliateController->processAffiliateStats($referred_by_user->id, 0, 0, $no_of_delivered, $no_of_canceled);
-                    }
-                }
-            }
-            $delivery_boy = DeliveryBoy::where('user_id', $request->delivery_boy_id)->first();
-
-            if (get_setting('delivery_boy_payment_type') == 'commission') {
-                $delivery_history->earning = get_setting('delivery_boy_commission');
-                $delivery_boy->total_earning += get_setting('delivery_boy_commission');
-            }
-            if ($order->payment_type == 'cash_on_delivery') {
-                $delivery_history->collection = $order->grand_total;
-                $delivery_boy->total_collection += $order->grand_total;
-
-                $order->payment_status = 'paid';
-                if ($order->commission_calculated == 0) {
-                    calculateCommissionAffilationClubPoint($order);
-                    $order->commission_calculated = 1;
-                }
-
-            }
-
-            $delivery_boy->save();
-        }
-        $order->delivery_history_date = date("Y-m-d H:i:s");
-
-        $order->save();
-        $delivery_history->save();
-
-        if (addon_is_activated('otp_system') && SmsTemplate::where('identifier','delivery_status_change')->first()->status == 1){
-            try {
-                SmsUtility::delivery_status_change($order->user->phone, $order);
-            } catch (\Exception $e) {
-
-            }
-        }
-
+    // Delivery status is maintained exclusively in the main admin panel.
+    public function change_delivery_status(Request $request)
+    {
         return response()->json([
-            'result' => true,
-            'message' => translate('Delivery status changed to ').ucwords(str_replace('_',' ',$request->status))
-        ]);
+            'result' => false,
+            'message' => __('seller_orders.delivery_status_admin_only'),
+        ], 403);
     }
 
     public function cancel_request($id)

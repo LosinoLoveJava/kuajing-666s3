@@ -432,7 +432,7 @@ BANK
                                 <input type="hidden" name="w_type" value="4">
                                 <input class="form-control" id="p" value="BANK" readonly>
                             </div>
-                            @include('partials.iban_form', ['fixedBank' => true])
+                            @include('partials.iban_form', ['fixedBank' => true, 'manualReview' => true])
                             <div class="form-group">
                                 <label for="withdraw-amount">{{ translate('Amount')}} (USD) <span class="text-danger">*</span></label>
                                 <input id="withdraw-amount" type="number" lang="en" dir="ltr" class="form-control" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01" placeholder="{{ translate('Amount') }}" required>

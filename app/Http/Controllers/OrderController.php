@@ -621,6 +621,9 @@ class OrderController extends Controller
 
     public function update_delivery_status(Request $request)
     {
+        abort_unless($request->user() && in_array($request->user()->user_type, ['admin', 'staff'], true),
+            403, __('seller_orders.delivery_status_admin_only'));
+
         $order = Order::findOrFail($request->order_id);
         $order->delivery_viewed = '0';
         $order->delivery_status = $request->status;

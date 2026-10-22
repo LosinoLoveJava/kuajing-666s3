@@ -6,6 +6,7 @@
 <form id="seller-recharge-form" lang="{{ $rechargeLocale }}" action="{{ route('wallet_recharge.make_payment', ['portal' => 'seller']) }}" method="post" enctype="multipart/form-data">
     @csrf
     <input type="hidden" name="wallet_form" value="recharge">
+    <input type="hidden" name="request_token" value="{{ old('request_token', (string) \Illuminate\Support\Str::uuid()) }}">
     <input type="hidden" name="type" value="{{ $type }}">
     <div class="modal-body p-4">
         <div class="form-group">
@@ -14,32 +15,32 @@
             <input id="recharge-method" class="form-control" value="BANK" readonly>
         </div>
         <div class="form-group">
-            <label for="recharge-holder">{{ translate('Account holder') }} <span class="text-danger">*</span></label>
-            <input id="recharge-holder" class="form-control" name="account_holder" maxlength="200" placeholder="{{ translate('Please enter the name') }}" required>
-            <label for="recharge-bank" class="mt-3">{{ translate('Bank Name') }} <span class="text-danger">*</span></label>
-            <input id="recharge-bank" class="form-control" name="bank_name" maxlength="200" placeholder="{{ translate('Please enter the bank name') }}" required>
+            <label for="recharge-holder">{{ translate('Account holder') }}</label>
+            <input id="recharge-holder" class="form-control" name="account_holder" maxlength="2000" placeholder="{{ translate('Please enter the name') }}">
+            <label for="recharge-bank" class="mt-3">{{ translate('Bank Name') }}</label>
+            <input id="recharge-bank" class="form-control" name="bank_name" maxlength="2000" placeholder="{{ translate('Please enter the bank name') }}">
         </div>
         <div class="form-group" id="recharge-bank-fields">
-            <label for="recharge-account">{{ translate('Bank Account Number') }} <span class="text-danger">*</span></label>
-            <input id="recharge-account" class="form-control" name="bank_account" dir="ltr" maxlength="100" autocomplete="off" placeholder="{{ translate('Please enter the bank account') }}" required>
+            <label for="recharge-account">{{ translate('Bank Account Number') }}</label>
+            <input id="recharge-account" class="form-control" name="bank_account" dir="ltr" maxlength="2000" autocomplete="off" placeholder="{{ translate('Please enter the bank account') }}">
         </div>
         <div id="recharge-iban-fields">
             <div class="form-group">
-                <label for="recharge-country">{{ translate('Account country') }} <span class="text-danger">*</span></label>
-                <select id="recharge-country" name="iban_country" class="form-control" required>
-                    @foreach(config('iban.lengths') as $code => $length)
-                        <option value="{{ $code }}" @if($code === 'AE') selected @endif>{{ $code }}</option>
-                    @endforeach
-                </select>
+                <label for="recharge-country">{{ translate('Account country') }}</label>
+                <input id="recharge-country" name="iban_country" class="form-control" maxlength="2000">
             </div>
             <div class="form-group">
-                <label for="recharge-iban">IBAN <span class="text-danger">*</span></label>
-                <input id="recharge-iban" name="iban_number" class="form-control" dir="ltr" maxlength="64" autocomplete="off" required>
+                <label for="recharge-iban">IBAN</label>
+                <input id="recharge-iban" name="iban_number" class="form-control" dir="ltr" maxlength="2000" autocomplete="off">
             </div>
         </div>
         <div class="form-group">
             <label for="recharge-bic">SWIFT / BIC ({{ translate('Optional') }})</label>
-            <input id="recharge-bic" name="iban_bic" class="form-control" dir="ltr" maxlength="11" autocomplete="off">
+            <input id="recharge-bic" name="iban_bic" class="form-control" dir="ltr" maxlength="2000" autocomplete="off" spellcheck="false" aria-describedby="recharge-bic-hint">
+            <small id="recharge-bic-hint" class="form-text text-muted">{{ __('seller_wallet.manual_review_hint') }}</small>
+            @if(old('wallet_form') === 'recharge')
+                @error('iban_bic')<div class="text-danger" role="alert">{{ $message }}</div>@enderror
+            @endif
         </div>
         <div class="form-group">
             <label for="recharge-amount">{{ translate('Amount') }} (AED) <span class="text-danger">*</span></label>
@@ -49,8 +50,8 @@
             <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="recharge-usd">0.00</span> USD</bdi></div>
         </div>
         <div class="form-group">
-            <label for="recharge-transaction">{{ translate('Transaction ID') }} <span class="text-danger">*</span></label>
-            <input id="recharge-transaction" name="trx_id" class="form-control" maxlength="200" required>
+            <label for="recharge-transaction">{{ translate('Transaction ID') }}</label>
+            <input id="recharge-transaction" name="trx_id" class="form-control" maxlength="200">
         </div>
         <div class="form-group">
             <label>{{ translate('Photo') }}</label>
@@ -68,12 +69,6 @@
 (function () {
     var form = document.getElementById('seller-recharge-form');
     var numberFormat = new Intl.NumberFormat(form.lang, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    if (Intl.DisplayNames) {
-        var countries = new Intl.DisplayNames([form.lang], {type: 'region'});
-        Array.from(form.elements.iban_country.options).forEach(function (option) {
-            option.textContent = countries.of(option.value) + ' (' + option.value + ')';
-        });
-    }
     form.querySelector('#recharge-rate').textContent = new Intl.NumberFormat(form.lang).format(1) + ' USD = ' + numberFormat.format(3.67) + ' AED';
     function updateAmount() {
         var aed = Number(form.elements.amount_aed.value);
