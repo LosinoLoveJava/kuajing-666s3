@@ -31,9 +31,8 @@ class LoginController extends Controller
     public function adminPhoneLogin(Request $request)
     {
         $user = app(\App\Services\PhoneAuth::class)->loginAdmin($request);
-        auth()->login($user, $request->boolean('remember'));
-        $request->session()->regenerate();
-        return redirect()->route($user->user_type === 'salesman' ? 'dashboard' : 'admin.dashboard');
+        app(\App\Services\PortalLogin::class)->login($user, $request, $request->boolean('remember'));
+        return redirect(\App\Services\PortalContext::dashboardUrl($user));
     }
 
     public function adminPhoneCode(Request $request)
@@ -46,22 +45,18 @@ class LoginController extends Controller
     {
         $request->validate(['mode' => 'required|in:login']);
         $user = app(\App\Services\PhoneAuth::class)->loginAdmin($request);
-        auth()->login($user, $request->boolean('remember'));
-        $request->session()->regenerate();
-        return redirect()->route($user->user_type === 'salesman' ? 'dashboard' : 'admin.dashboard');
+        app(\App\Services\PortalLogin::class)->login($user, $request, $request->boolean('remember'));
+        return redirect(\App\Services\PortalContext::dashboardUrl($user));
     }
 
     public function showLoginForm()
     {
-        $hosts = [request()->getHost(), parse_url(url('/'), PHP_URL_HOST)];
-        foreach (['admin', 'sales', 'assig'] as $portal) {
-            if (in_array($portal.'.'.config('portals.domain'), $hosts, true)) {
-                return view('auth.login');
-            }
+        if (in_array(\App\Services\PortalContext::current(), ['admin', 'sales', 'delivery'], true)) {
+            return view('auth.login');
         }
         return view('frontend.phone_access', [
             'mode' => 'login',
-            'isSellerPortal' => true,
+            'isSellerPortal' => \App\Services\PortalContext::current() === 'seller',
         ]);
     }
 
@@ -123,7 +118,7 @@ class LoginController extends Controller
 
         if ($existingUserByProviderId) {
             //proceed to login
-            auth()->login($existingUserByProviderId, true);
+            $account = $existingUserByProviderId;
         }
         else {
             //check if email exist
@@ -136,7 +131,7 @@ class LoginController extends Controller
                 $existing_User->save();
 
                 //proceed to login
-                auth()->login($existing_User, true);
+                $account = $existing_User;
             } else {
                 //create a new user
                 $newUser = new User;
@@ -152,14 +147,16 @@ class LoginController extends Controller
                 // $customer->save();
 
                 //proceed to login
-                auth()->login($newUser, true);
+                $account = $newUser;
             }
         }
+
+        app(\App\Services\PortalLogin::class)->login($account, $request, true);
 
         if (session('temp_user_id') != null) {
             Cart::where('temp_user_id', session('temp_user_id'))
                 ->update([
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $account->id,
                     'temp_user_id' => null
                 ]);
 
@@ -169,10 +166,7 @@ class LoginController extends Controller
         if (session('link') != null) {
             return redirect(session('link'));
         } else {
-            if(auth()->user()->user_type == 'seller') {
-                return redirect()->route('seller.dashboard');
-            }
-            return redirect()->route('dashboard');
+            return redirect(\App\Services\PortalContext::dashboardUrl($account));
         }
     }
 
@@ -228,6 +222,12 @@ class LoginController extends Controller
      */
     public function authenticated()
     {
+        $user = auth()->user();
+        if (\App\Services\PortalContext::forUser($user) !== \App\Services\PortalContext::current()) {
+            app(\App\Services\PortalLogin::class)->login($user, request(), request()->boolean('remember'));
+            $this->guard()->logoutCurrentDevice();
+            return redirect(\App\Services\PortalContext::dashboardUrl($user));
+        }
         if (session('temp_user_id') != null) {
             Cart::where('temp_user_id', session('temp_user_id'))
                 ->update(
@@ -250,7 +250,7 @@ class LoginController extends Controller
             if (session('link') != null) {
                 return redirect(session('link'));
             } else {
-                return redirect()->route('dashboard');
+                return redirect(\App\Services\PortalContext::dashboardUrl(auth()->user()));
             }
         }
     }
@@ -277,22 +277,7 @@ class LoginController extends Controller
      */
     public function logout(Request $request)
     {
-        $portal = $request->query('portal');
-        $host = strtolower($request->getHost());
-        $sellerHost = strtolower('seller.'.config('portals.domain'));
-        $refererPath = parse_url((string) $request->headers->get('referer'), PHP_URL_PATH) ?: '';
-        $isSellerPortal = $portal === 'seller' || $host === $sellerHost || strpos($refererPath, '/seller/') === 0;
-
-        if (auth()->user() != null && (auth()->user()->user_type == 'admin' || auth()->user()->user_type == 'staff')) {
-            $redirect_route = 'login';
-            $redirect_url = null;
-        } elseif ($isSellerPortal) {
-            $redirect_route = null;
-            $redirect_url = '/login';
-        } else {
-            $redirect_route = null;
-            $redirect_url = '/users/login';
-        }
+        $redirect_url = \App\Services\PortalContext::loginUrl();
 
         //User's Cart Delete
         if (auth()->user()) {
@@ -302,10 +287,9 @@ class LoginController extends Controller
         $this->guard()->logout();
 
         $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-        Session::flush();
-
-        return $this->loggedOut($request) ?: ($redirect_url !== null ? redirect($redirect_url) : redirect()->route($redirect_route));
+        return $this->loggedOut($request) ?: redirect($redirect_url);
     }
 
     /**

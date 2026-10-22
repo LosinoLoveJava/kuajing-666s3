@@ -17,6 +17,13 @@ class AppServiceProvider extends ServiceProvider
    */
   public function boot()
   {
+      Auth::extend('portal-session', function ($app, $name, $config) {
+          $guard = new \App\Auth\PortalSessionGuard($name, Auth::createUserProvider($config['provider']), $app['session.store']);
+          $guard->setCookieJar($app['cookie']);
+          $guard->setDispatcher($app['events']);
+          $guard->setRequest($app->refresh('request', $guard, 'setRequest'));
+          return $guard;
+      });
       Schema::defaultStringLength(191);
       Paginator::useBootstrap();
 

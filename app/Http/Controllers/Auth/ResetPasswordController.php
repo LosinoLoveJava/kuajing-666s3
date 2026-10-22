@@ -47,13 +47,12 @@ class ResetPasswordController extends Controller
      */
     protected function sendResetResponse(Request $request, $response)
     {
-        if(auth()->user()->user_type == 'admin' || auth()->user()->user_type == 'staff')
-        {
-            return redirect()->route('admin.dashboard')
-                            ->with('status', trans($response));
+        $user = $this->guard()->user();
+        if (\App\Services\PortalContext::forUser($user) !== \App\Services\PortalContext::current()) {
+            app(\App\Services\PortalLogin::class)->login($user, $request);
+            $this->guard()->logoutCurrentDevice();
         }
 
-        return redirect()->route('home')
-                            ->with('status', trans($response));
+        return redirect(\App\Services\PortalContext::dashboardUrl($user))->with('status', trans($response));
     }
 }

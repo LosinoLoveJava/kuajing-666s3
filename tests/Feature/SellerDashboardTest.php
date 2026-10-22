@@ -25,6 +25,10 @@ class SellerDashboardTest extends TestCase
         ]);
         if ($seller) {
             // Exercise real session authentication, without actingAs or a bearer token.
+            request()->attributes->set('portal', 'seller');
+            $cookie = config('session.portal_cookie', config('session.cookie'));
+            config(['session.portal_cookie' => $cookie, 'session.cookie' => $cookie.'_seller']);
+            session()->setName(config('session.cookie'));
             $guard = auth()->guard('web');
             session()->start();
             session()->put($guard->getName(), $seller->id);

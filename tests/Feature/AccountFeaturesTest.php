@@ -19,6 +19,8 @@ use Tests\TestCase;
 
 class AccountFeaturesTest extends TestCase
 {
+    use \Tests\Concerns\InteractsWithPortalSessions;
+
     private $code;
 
     protected function setUp(): void
@@ -155,8 +157,8 @@ class AccountFeaturesTest extends TestCase
     public function testLegacyLoginAndCartDefaultToFixedUaeWithoutCountryCode()
     {
         $user = $this->user(); $user->phone_verified_at = now(); $user->save();
-        $this->post('/login', ['phone'=>'0501234567','password'=>'password123'])->assertRedirect(route('dashboard'));
-        $this->assertAuthenticatedAs($user); auth()->logout();
+        $response = $this->post('/login', ['phone'=>'0501234567','password'=>'password123'])->assertRedirect(route('dashboard', ['portal' => 'customer']));
+        $this->assertPortalAuthenticatedAs($user, $response); auth()->logout();
         $this->post(route('cart.login.submit'), ['phone'=>'501234567','password'=>'password123'])->assertRedirect();
         $this->assertAuthenticatedAs($user); auth()->logout();
         $this->postJson('/login', ['phone'=>'501234567','country_code'=>'1','password'=>'password123'])

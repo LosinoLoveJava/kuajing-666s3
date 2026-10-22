@@ -113,7 +113,7 @@
                     <div class="text-right">
                         <button type="submit" class="btn btn-primary fw-600">{{ translate('Register Your Shop')}}</button>
                     </div>
-                    <div class="mt-3 text-center"><a href="{{ route(request()->query('source') === 'user' ? 'phone.access' : 'login') }}">{{ translate('Phone login') }}</a></div>
+                    <div class="mt-3 text-center"><a href="{{ request()->query('source') === 'user' ? route('phone.access', ['portal' => 'customer']) : route('login', ['portal' => 'seller']) }}">{{ translate('Phone login') }}</a></div>
                 </form>
             </div>
         </div>

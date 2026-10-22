@@ -86,17 +86,14 @@ class VerificationController extends Controller
         if($user != null){
             $user->email_verified_at = Carbon::now();
             $user->save();
-            auth()->login($user, true);
+            app(\App\Services\PortalLogin::class)->login($user, request(), true);
             flash(translate('Your email has been verified successfully'))->success();
         }
         else {
             flash(translate('Sorry, we could not verifiy you. Please try again'))->error();
         }
 
-        if($user->user_type == 'seller') {
-            return redirect()->route('seller.dashboard');
-        }
-
-        return redirect()->route('dashboard');
+        return $user ? redirect(\App\Services\PortalContext::dashboardUrl($user))
+            : redirect(\App\Services\PortalContext::loginUrl());
     }
 }

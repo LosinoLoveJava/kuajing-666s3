@@ -90,13 +90,13 @@ class HomeController extends Controller
 
     public function login()
     {
-        if (Auth::check()) {
-            $role = Auth::user()->user_type;
-            $route = in_array($role, ['admin', 'staff'], true) ? 'admin.dashboard'
-                : ($role === 'seller' ? 'seller.dashboard' : 'dashboard');
-            return redirect()->route($route);
+        if (in_array(\App\Services\PortalContext::current(), ['admin', 'sales', 'delivery'], true)) {
+            return redirect(\App\Services\PortalContext::loginUrl());
         }
-        return view('frontend.phone_access', ['mode' => 'login', 'isSellerPortal' => false]);
+        if (Auth::check()) {
+            return redirect(\App\Services\PortalContext::dashboardUrl(Auth::user()));
+        }
+        return view('frontend.phone_access', ['mode' => 'login', 'isSellerPortal' => \App\Services\PortalContext::current() === 'seller']);
     }
 
     public function registration(Request $request)
@@ -128,8 +128,7 @@ class HomeController extends Controller
         $request->validate(['email' => 'prohibited', 'phone' => 'required|string|max:40', 'country_code' => 'nullable|in:971']);
         $request->merge(['phone' => app(\App\Services\PhoneNumber::class)->normalize($request->phone, $request->country), 'country' => 'AE']);
         $user = app(\App\Services\PhoneAuth::class)->login($request);
-        auth()->login($user, $request->boolean('remember'));
-        $request->session()->regenerate();
+        app(\App\Services\PortalLogin::class)->login($user, $request, $request->boolean('remember'));
         return back();
     }
 
@@ -689,13 +688,10 @@ class HomeController extends Controller
                 $user->new_email_verificiation_code = null;
                 $user->save();
 
-                auth()->login($user, true);
+                app(\App\Services\PortalLogin::class)->login($user, $request, true);
 
                 flash(translate('Email Changed successfully'))->success();
-                if ($user->user_type == 'seller') {
-                    return redirect()->route('seller.dashboard');
-                }
-                return redirect()->route('dashboard');
+                return redirect(\App\Services\PortalContext::dashboardUrl($user));
             }
         }
 
@@ -711,14 +707,11 @@ class HomeController extends Controller
                 $user->email_verified_at = date('Y-m-d h:m:s');
                 $user->save();
                 event(new PasswordReset($user));
-                auth()->login($user, true);
+                app(\App\Services\PortalLogin::class)->login($user, $request, true);
 
                 flash(translate('Password updated successfully'))->success();
 
-                if (auth()->user()->user_type == 'admin' || auth()->user()->user_type == 'staff') {
-                    return redirect()->route('admin.dashboard');
-                }
-                return redirect()->route('home');
+                return redirect(\App\Services\PortalContext::dashboardUrl($user));
             } else {
                 flash("Password and confirm password didn't match")->warning();
                 return redirect()->route('password.request');

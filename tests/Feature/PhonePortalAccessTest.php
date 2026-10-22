@@ -11,6 +11,8 @@ use Tests\TestCase;
 
 class PhonePortalAccessTest extends TestCase
 {
+    use \Tests\Concerns\InteractsWithPortalSessions;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -54,9 +56,9 @@ class PhonePortalAccessTest extends TestCase
     public function testBackendPhoneLoginAcceptsExistingBackendRoles($role, $route)
     {
         $user = $this->account($role);
-        $this->post('/admin/phone-login', ['phone' => '+971 50 123 4567', 'password' => 'password123'])
-            ->assertRedirect(route($route));
-        $this->assertAuthenticatedAs($user);
+        $response = $this->post('/admin/phone-login', ['phone' => '+971 50 123 4567', 'password' => 'password123'])
+            ->assertRedirect(\App\Services\PortalContext::dashboardUrl($user));
+        $this->assertPortalAuthenticatedAs($user, $response);
     }
 
     public function allowedRoles()

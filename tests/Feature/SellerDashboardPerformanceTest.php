@@ -187,4 +187,31 @@ class SellerDashboardPerformanceTest extends TestCase
         $this->assertSame(['existing_seller_index'], array_column(DB::select('PRAGMA index_list("products")'), 'name'));
         $this->assertDatabaseCount('products', 6);
     }
+
+    public function testStockLookupIndexAvoidsCorrelatedFullScansAndPreservesData()
+    {
+        Schema::create('product_stocks', function (Blueprint $t) {
+            $t->increments('id'); $t->integer('product_id'); $t->string('sku');
+        });
+        DB::table('product_stocks')->insert(['product_id' => 1, 'sku' => 'fixture-sku']);
+        require_once database_path('migrations/2026_10_23_010000_add_product_stock_lookup_index.php');
+        $migration = new \AddProductStockLookupIndex;
+        $migration->up(); $migration->up();
+        $plan = DB::select('EXPLAIN QUERY PLAN SELECT * FROM product_stocks WHERE product_id = ? AND sku LIKE ?', [1, '%missing%']);
+        $this->assertStringContainsString('USING INDEX product_stocks_product_lookup', $plan[0]->detail);
+        $migration->down();
+        $this->assertDatabaseCount('product_stocks', 1);
+        $this->assertSame(['product_stocks_product_lookup'], array_column(DB::select('PRAGMA index_list("product_stocks")'), 'name'));
+    }
+
+    public function testStockLookupMigrationReusesAnExistingCompositeIndex()
+    {
+        Schema::create('product_stocks', function (Blueprint $t) {
+            $t->increments('id'); $t->integer('product_id'); $t->string('sku');
+            $t->index(['product_id', 'sku'], 'existing_product_stock_index');
+        });
+        require_once database_path('migrations/2026_10_23_010000_add_product_stock_lookup_index.php');
+        (new \AddProductStockLookupIndex)->up();
+        $this->assertSame(['existing_product_stock_index'], array_column(DB::select('PRAGMA index_list("product_stocks")'), 'name'));
+    }
 }

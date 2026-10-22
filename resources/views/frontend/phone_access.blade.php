@@ -31,7 +31,7 @@
         </div>
         <button class="btn btn-primary btn-block mt-3">{{ translate($mode === 'register' ? 'Create Account' : ($mode === 'reset_password' ? 'Reset password' : 'Login')) }}</button>
     </form>
-    <div class="mt-3 d-flex flex-wrap" style="gap:12px"><a href="{{ $isSellerPortal ? route('login') : route('user.login') }}">{{ translate('Phone login') }}</a><a href="{{ $isSellerPortal ? route('shops.create', ['source' => 'seller']) : route('phone.access', ['mode'=>'register']) }}">{{ translate('Register') }}</a><a href="{{ $isSellerPortal ? route('seller.phone.reset') : route('phone.access', ['mode'=>'reset_password']) }}">{{ translate('Forgot password?') }}</a></div>
+    <div class="mt-3 d-flex flex-wrap" style="gap:12px"><a href="{{ $isSellerPortal ? route('login', ['portal' => 'seller']) : route('user.login', ['portal' => 'customer']) }}">{{ translate('Phone login') }}</a><a href="{{ $isSellerPortal ? route('shops.create', ['source' => 'seller', 'portal' => 'seller']) : route('phone.access', ['mode'=>'register', 'portal'=>'customer']) }}">{{ translate('Register') }}</a><a href="{{ $isSellerPortal ? route('seller.phone.reset') : route('phone.access', ['mode'=>'reset_password', 'portal'=>'customer']) }}">{{ translate('Forgot password?') }}</a></div>
     @if($mode === 'register')<p class="small text-muted mt-3">{{ translate('Merchant accounts must complete the existing shop application and approval process.') }}</p>@endif
                 </div></div>
             </div>

@@ -3,6 +3,9 @@
 !/tests/Feature/
 /tests/Feature/*
 !/tests/Feature/SellerDashboardPerformanceTest.php
+!/tests/Feature/PortalSessionIsolationTest.php
+!/tests/Concerns/
+!/tests/Concerns/InteractsWithPortalSessions.php
 /.phpunit.result.cache
 /.phpunit.cache/
 /coverage/

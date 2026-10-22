@@ -13,6 +13,8 @@ use Tests\TestCase;
 
 class EmailAuthenticationRestrictionsTest extends TestCase
 {
+    use \Tests\Concerns\InteractsWithPortalSessions;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -137,9 +139,9 @@ class EmailAuthenticationRestrictionsTest extends TestCase
     public function testExistingManagementEmailAuthenticationStillWorks($role)
     {
         $user = $this->account($role);
-        $this->post('http://admin.example.test/login', ['email' => $user->email, 'password' => 'password123'])
-            ->assertRedirect(route(in_array($role, ['admin', 'staff'], true) ? 'admin.dashboard' : 'dashboard'));
-        $this->assertAuthenticatedAs($user);
+        $response = $this->post('http://admin.example.test/login', ['email' => $user->email, 'password' => 'password123'])
+            ->assertRedirect(\App\Services\PortalContext::dashboardUrl($user));
+        $this->assertPortalAuthenticatedAs($user, $response);
     }
 
     public function testWrongAdminPasswordDoesNotLogIn()
@@ -183,14 +185,14 @@ class EmailAuthenticationRestrictionsTest extends TestCase
     {
         $user = $this->account($role);
         $payload = ['phone' => $user->phone, 'password' => 'password123'];
-        $this->post('/login', $payload)->assertRedirect(route($role === 'seller' ? 'seller.dashboard' : 'dashboard'));
-        $this->assertAuthenticatedAs($user);
+        $response = $this->post('/login', $payload)->assertRedirect(\App\Services\PortalContext::dashboardUrl($user));
+        $this->assertPortalAuthenticatedAs($user, $response);
         auth()->logout();
         $this->postJson('/api/v2/auth/login', $payload)->assertOk()->assertJsonPath('user.type', $role);
         $this->postJson('/api/v2/auth/login', ['email' => $user->phone, 'password' => 'password123'])
             ->assertOk()->assertJsonPath('user.type', $role);
-        $this->post('/users/login/cart', $payload)->assertRedirect();
-        $this->assertAuthenticatedAs($user);
+        $response = $this->post('/users/login/cart', $payload)->assertRedirect();
+        $this->assertPortalAuthenticatedAs($user, $response);
     }
 
     public function testPublicPhonePageAndSharedPromptsContainNoEmailAuthentication()

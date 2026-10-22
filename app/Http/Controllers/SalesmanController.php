@@ -151,9 +151,9 @@ class SalesmanController extends Controller
     public function login( $id ) {
         $user = User::findOrFail(decrypt($id));
 
-        auth()->login($user, true);
+        app(\App\Services\PortalLogin::class)->login($user, request(), true);
 
-        return redirect()->route('dashboard');
+        return redirect(\App\Services\PortalContext::dashboardUrl($user));
     }
 
     public function ban( $id ) {

@@ -15,6 +15,8 @@ use Tests\TestCase;
 
 class SellerPhoneRegistrationTest extends TestCase
 {
+    use \Tests\Concerns\InteractsWithPortalSessions;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -92,9 +94,10 @@ class SellerPhoneRegistrationTest extends TestCase
 
     public function testApplicationCreatesVerifiedSellerShopAndDefaultPackageAtomically()
     {
-        $this->post('/shops', $this->payload())->assertRedirect(route('shops.index'));
+        $response = $this->post('/shops', $this->payload())->assertRedirect(route('shops.index', ['portal' => 'seller']));
         $user = User::firstOrFail();
-        $this->assertAuthenticatedAs($user);
+        $this->assertGuest();
+        $this->assertPortalAuthenticatedAs($user, $response);
         $this->assertSame('seller', $user->user_type);
         $this->assertSame('Test Merchant', $user->name);
         $this->assertSame('+971501234567', $user->phone_normalized);
@@ -115,7 +118,7 @@ class SellerPhoneRegistrationTest extends TestCase
 
     public function testGenericCodeCreatesTheSameVerifiedSellerAndShopWithoutAnSmsRecord()
     {
-        $this->post('/shops', $this->payload(['code'=>'89001']))->assertRedirect(route('shops.index'));
+        $this->post('/shops', $this->payload(['code'=>'89001']))->assertRedirect(route('shops.index', ['portal' => 'seller']));
         $user = User::firstOrFail();
         $this->assertSame('seller', $user->user_type);
         $this->assertNotNull($user->phone_verified_at);
@@ -130,7 +133,7 @@ class SellerPhoneRegistrationTest extends TestCase
     public function testPublicApplicationReceivesHighestPackageRatherThanTheOldDefault()
     {
         DB::table('seller_packages')->insert(['id'=>2,'amount'=>999,'is_default'=>0,'duration'=>1,'product_upload_limit'=>2000]);
-        $this->post('/shops',$this->payload())->assertRedirect(route('shops.index'));
+        $this->post('/shops',$this->payload())->assertRedirect(route('shops.index', ['portal' => 'seller']));
         $this->assertDatabaseHas('shops',['seller_package_id'=>2,'product_upload_limit'=>2000,'package_invalid_at'=>'9999-12-31']);
         $this->assertDatabaseHas('seller_package_payments',['seller_package_id'=>2,'payment_method'=>'free']);
     }
@@ -150,7 +153,7 @@ class SellerPhoneRegistrationTest extends TestCase
     {
         $payload = $this->payload();
         unset($payload['identity_card_front'], $payload['identity_card_back']);
-        $this->post('/shops', array_merge($payload, $documents))->assertRedirect(route('shops.index'));
+        $this->post('/shops', array_merge($payload, $documents))->assertRedirect(route('shops.index', ['portal' => 'seller']));
         $user = User::firstOrFail();
         $this->assertSame('seller', $user->user_type);
         $this->assertNotNull($user->phone_verified_at);
@@ -205,7 +208,7 @@ class SellerPhoneRegistrationTest extends TestCase
 
     public function testRemovedLicenseFieldIsIgnoredAndItsUploadIsNotClaimed()
     {
-        $this->post('/shops', $this->payload(['identity_card_back2' => 3]))->assertRedirect(route('shops.index'));
+        $this->post('/shops', $this->payload(['identity_card_back2' => 3]))->assertRedirect(route('shops.index', ['portal' => 'seller']));
         $this->assertDatabaseHas('uploads', ['id' => 3, 'user_id' => 0]);
         $this->assertDatabaseHas('uploads', ['id' => 1, 'user_id' => User::firstOrFail()->id]);
     }
@@ -213,12 +216,12 @@ class SellerPhoneRegistrationTest extends TestCase
     public function testSellerWithOnlyFrontDocumentCanUseNormalPhoneLogin()
     {
         $this->post('/shops', $this->payload(['identity_card_back' => '', 'code' => '89001']))
-            ->assertRedirect(route('shops.index'));
+            ->assertRedirect(route('shops.index', ['portal' => 'seller']));
         $user = User::firstOrFail();
         auth()->logout();
-        $this->post('/users/phone', ['mode' => 'login', 'phone' => $user->phone, 'password' => 'password123'])
+        $response = $this->post('/users/phone', ['mode' => 'login', 'phone' => $user->phone, 'password' => 'password123'])
             ->assertRedirect(route('seller.dashboard'));
-        $this->assertAuthenticatedAs($user);
+        $this->assertPortalAuthenticatedAs($user, $response);
         $this->assertDatabaseCount('shops', 1);
     }
 
@@ -251,23 +254,23 @@ class SellerPhoneRegistrationTest extends TestCase
         $this->assertSame(1, $xpath->query('//input[@name="address" and @required]')->length);
     }
 
-    public function testNewSellerCanLogInWithPhonePasswordAndSms()
+    public function testNewSellerCanLogInWithPhonePasswordAndWebRejectsSmsLogin()
     {
         $this->post('/shops', $this->payload())->assertRedirect();
         $user = User::firstOrFail();
         auth()->logout();
-        $this->post('/users/phone', ['mode'=>'login','phone'=>$user->phone,'password'=>'password123'])
+        $response = $this->post('/users/phone', ['mode'=>'login','phone'=>$user->phone,'password'=>'password123'])
             ->assertRedirect(route('seller.dashboard'));
-        $this->assertAuthenticatedAs($user);
+        $this->assertPortalAuthenticatedAs($user, $response);
         auth()->logout();
-        $this->post('/login', ['country_code'=>'971','phone'=>'501234567','password'=>'password123'])
+        $response = $this->post('/login', ['country_code'=>'971','phone'=>'501234567','password'=>'password123'])
             ->assertRedirect(route('seller.dashboard'));
-        $this->assertAuthenticatedAs($user);
+        $this->assertPortalAuthenticatedAs($user, $response);
         auth()->logout();
         $this->seedCode('login');
-        $this->post('/users/phone', ['mode'=>'login','phone'=>$user->phone,'code'=>'123456'])
-            ->assertRedirect(route('seller.dashboard'));
-        $this->assertAuthenticatedAs($user);
+        $this->postJson('/users/phone', ['mode'=>'login','phone'=>$user->phone,'code'=>'123456'])
+            ->assertStatus(422)->assertJsonValidationErrors(['password', 'code']);
+        $this->assertGuest();
         $this->assertDatabaseCount('users', 1);
         $this->assertDatabaseCount('shops', 1);
     }
@@ -396,22 +399,22 @@ class SellerPhoneRegistrationTest extends TestCase
             $html = $response->getContent();
             $this->assertStringContainsString('action="'.route('seller.phone.submit').'"', $html);
             $this->assertStringContainsString(route('seller.phone.send'), str_replace('\\/', '/', $html));
-            $this->assertStringContainsString('href="'.route('shops.create', ['source' => 'seller']).'"', $html);
+            $this->assertStringContainsString('href="'.e(route('shops.create', ['source' => 'seller', 'portal' => 'seller'])).'"', $html);
             $this->assertStringContainsString('href="'.route('seller.phone.reset').'"', $html);
             $this->assertStringNotContainsString('/users/', $html);
         }
         $html = $this->get('/shops/create')->assertOk()->getContent();
         $this->assertStringContainsString('action="'.route('shops.store').'"', $html);
-        $this->assertStringContainsString('href="'.route('login').'"', $html);
+        $this->assertStringContainsString('href="'.route('login', ['portal' => 'seller']).'"', $html);
         $this->assertStringNotContainsString('/users/', $html);
 
         foreach (['user' => 'phone.access', 'seller' => 'login'] as $source => $loginRoute) {
             $registrationUrl = route('shops.create', ['source' => $source]);
             $html = $this->get($registrationUrl)->assertOk()->getContent();
-            $this->assertStringContainsString('href="'.route($loginRoute).'"', $html);
+            $this->assertStringContainsString('href="'.route($loginRoute, ['portal' => $source === 'user' ? 'customer' : 'seller']).'"', $html);
             $this->from($registrationUrl)->post('/shops', [])->assertRedirect($registrationUrl)->assertSessionHasErrors();
             $html = $this->get($registrationUrl)->assertOk()->getContent();
-            $this->assertStringContainsString('href="'.route($loginRoute).'"', $html);
+            $this->assertStringContainsString('href="'.route($loginRoute, ['portal' => $source === 'user' ? 'customer' : 'seller']).'"', $html);
         }
 
         foreach (['register', 'reset_password'] as $mode) {
@@ -475,9 +478,9 @@ class SellerPhoneRegistrationTest extends TestCase
         if ($route === 'sellers.store') { $this->assertDatabaseHas('sellers', ['user_id' => $seller->id]); }
         Notification::assertNothingSent(); Http::assertNothingSent();
         auth()->logout();
-        $this->post('/users/phone', ['mode' => 'login', 'phone' => $seller->phone, 'password' => 'password123'])
+        $response = $this->post('/users/phone', ['mode' => 'login', 'phone' => $seller->phone, 'password' => 'password123'])
             ->assertRedirect(route('seller.dashboard'));
-        $this->assertAuthenticatedAs($seller);
+        $this->assertPortalAuthenticatedAs($seller, $response);
     }
 
     public function managedSellerEntrypoints(): array
@@ -578,8 +581,8 @@ class SellerPhoneRegistrationTest extends TestCase
         $this->assertDatabaseHas('shops', ['id' => $shop->id, 'phone' => $seller->phone, 'views' => 4]);
         $this->assertDatabaseCount('personal_access_tokens', 0);
         auth()->logout();
-        $this->post('/users/phone', ['mode' => 'login', 'phone' => $seller->phone, 'password' => 'password123'])->assertRedirect(route('seller.dashboard'));
-        $this->assertAuthenticatedAs($seller);
+        $response = $this->post('/users/phone', ['mode' => 'login', 'phone' => $seller->phone, 'password' => 'password123'])->assertRedirect(route('seller.dashboard'));
+        $this->assertPortalAuthenticatedAs($seller, $response);
     }
 
     public function testSalesmanCanOnlyEditOwnSellersAndCannotStealAnotherNumber()
@@ -613,7 +616,7 @@ class SellerPhoneRegistrationTest extends TestCase
         $this->assertEquals(12.50, $user->balance);
         if ($role === 'salesman') { $this->assertSame($operator->id, (int) $user->referred_by); }
         auth()->logout();
-        $this->post('/users/phone', ['mode' => 'login', 'phone' => $user->phone, 'password' => 'password123'])->assertRedirect(route('dashboard'));
+        $this->post('/users/phone', ['mode' => 'login', 'phone' => $user->phone, 'password' => 'password123'])->assertRedirect(route('dashboard', ['portal' => 'customer']));
         $this->assertAuthenticatedAs($user);
         Notification::assertNothingSent(); Http::assertNothingSent();
     }

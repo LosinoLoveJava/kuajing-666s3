@@ -77,10 +77,9 @@ class ShopController extends Controller
         if (!Auth::check()) {
             // The public shop application uses the same verified phone registration as customers.
             $user = app(\App\Services\SellerRegistration::class)->register($request);
-            auth()->login($user, false);
-            $request->session()->regenerate();
+            app(\App\Services\PortalLogin::class)->login($user, $request);
             flash(translate('Your Shop has been created successfully!'))->success();
-            return redirect()->route('shops.index');
+            return redirect()->route('shops.index', ['portal' => 'seller']);
         }
 
         app(\App\Services\ManagedPhoneAccounts::class)->createSeller($request, Auth::user());

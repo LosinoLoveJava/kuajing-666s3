@@ -136,7 +136,7 @@
                             <span>{{translate('Profile')}}</span>
                         </a>
 
-                        <a href="{{ route('logout')}}" class="dropdown-item">
+                        <a href="{{ route('logout', ['portal' => 'sales']) }}" class="dropdown-item">
                             <i class="las la-sign-out-alt"></i>
                             <span>{{translate('Logout')}}</span>
                         </a>

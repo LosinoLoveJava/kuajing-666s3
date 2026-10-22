@@ -305,7 +305,7 @@ class SellerController extends Controller
     {
         $shop = Shop::findOrFail(decrypt($id));
         $user  = $shop->user;
-        auth()->login($user, true);
+        app(\App\Services\PortalLogin::class)->login($user, request(), true);
 
         return redirect()->route('seller.dashboard');
     }

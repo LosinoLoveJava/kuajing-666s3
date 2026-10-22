@@ -13,23 +13,7 @@ class PhoneAccessController extends Controller
     {
         $mode = $request->route('mode') ?? $request->query('mode', 'login');
         abort_unless(in_array($mode, ['login', 'register', 'reset_password'], true), 404);
-        // The application can sit behind a reverse proxy that rewrites the
-        // request host. Check both the request and the URL Laravel generates
-        // for the current portal so the seller phone form is selected reliably.
-        $sellerHost = strtolower('seller.'.config('portals.domain'));
-        $hostCandidates = [
-            $request->getHost(),
-            $request->getHttpHost(),
-            parse_url($request->fullUrl(), PHP_URL_HOST),
-            parse_url(url('/'), PHP_URL_HOST),
-        ];
-        $isSellerPortal = $request->routeIs('seller.phone.*');
-        foreach ($hostCandidates as $host) {
-            if ($host && strtolower($host) === $sellerHost) {
-                $isSellerPortal = true;
-                break;
-            }
-        }
+        $isSellerPortal = ($request->attributes->get('portal') ?? \App\Services\PortalContext::resolve($request)) === 'seller';
         if ($isSellerPortal && $mode === 'register') {
             return redirect()->route('shops.create', ['source' => 'seller']);
         }
@@ -48,7 +32,7 @@ class PhoneAccessController extends Controller
 
     public function submit(Request $request)
     {
-        $isSellerPortal = $request->routeIs('seller.phone.*');
+        $isSellerPortal = \App\Services\PortalContext::current() === 'seller';
         $request->validate(['mode' => $isSellerPortal ? 'required|in:login,reset_password' : 'required|in:login,register,reset_password']);
         if ($request->mode === 'login') {
             $request->validate(['password' => 'required|string|max:100', 'code' => 'prohibited']);
@@ -58,12 +42,11 @@ class PhoneAccessController extends Controller
             return redirect()->route($isSellerPortal ? 'login' : 'phone.access')->with('status', 'Password updated. Please log in.');
         }
         $user = $request->mode === 'register' ? app(PhoneAuth::class)->register($request) : app(PhoneAuth::class)->login($request);
-        auth()->login($user, $request->boolean('remember'));
-        $request->session()->regenerate();
+        app(\App\Services\PortalLogin::class)->login($user, $request, $request->boolean('remember'));
         if (session('temp_user_id')) {
             Cart::where('temp_user_id', session('temp_user_id'))->update(['user_id' => $user->id, 'temp_user_id' => null]);
             $request->session()->forget('temp_user_id');
         }
-        return redirect()->route($user->user_type === 'seller' ? 'seller.dashboard' : 'dashboard');
+        return redirect(\App\Services\PortalContext::dashboardUrl($user));
     }
 }
