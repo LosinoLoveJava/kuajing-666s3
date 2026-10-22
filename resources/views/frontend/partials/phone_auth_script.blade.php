@@ -28,15 +28,6 @@
         });
         if (readPhone()) input.value = intlTelInputUtils.formatNumber(form.elements.phone.value, 'AE', intlTelInputUtils.numberFormat.NATIONAL);
     }
-    var method = document.getElementById('phone-login-method');
-    if (method) method.addEventListener('change', function () {
-        var useCode = method.value === 'code';
-        document.getElementById('phone-code-fields').hidden = !useCode;
-        document.getElementById('phone-password-fields').hidden = useCode;
-        form.elements.code.disabled = !useCode; form.elements.code.required = useCode;
-        form.elements.password.disabled = useCode; form.elements.password.required = !useCode;
-        form.elements.password.minLength = 1;
-    });
     if (button) button.addEventListener('click', async function () {
         if (!syncPhone()) { form.elements.national_phone.reportValidity(); return; }
         button.disabled = true; feedback.textContent = @json(translate('Sending...'));
