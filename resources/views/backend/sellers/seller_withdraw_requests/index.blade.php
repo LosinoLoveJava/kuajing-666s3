@@ -50,7 +50,6 @@
                                     @elseif($seller_withdraw_request->w_type == 4)
 IBAN
 @endif
-@include('partials.iban_details')
                                 </td>
                                 <td>
                                     {{ $seller_withdraw_request->message }}

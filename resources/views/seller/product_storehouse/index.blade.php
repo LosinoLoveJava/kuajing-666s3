@@ -93,6 +93,27 @@
         var productLoadId = 0, productRequest = null, productsLoading = false, productsPosting = false;
 
         $(document).ready(function () {
+            var categorySelect = $('select[name=poscategory]');
+            AIZ.plugins.bootstrapSelect();
+            var categoryPicker = categorySelect.data('selectpicker');
+            var categorySearch = categoryPicker.$searchbox[0];
+            function updateCategoryOptions() {
+                var searching = categorySearch.value.trim() !== '';
+                var categoryIndex = 0;
+                var changed = false;
+                Array.from(categorySelect[0].options).forEach(function (option) {
+                    var hidden = option.value !== '' && ++categoryIndex > 15 && !searching;
+                    if (option.hidden !== hidden) { option.hidden = hidden; changed = true; }
+                });
+                if (changed) categorySelect.selectpicker('refresh');
+            }
+            // Update available options before bootstrap-select runs its live search.
+            categorySearch.addEventListener('input', updateCategoryOptions, true);
+            categorySelect.on('shown.bs.select', function () {
+                updateCategoryOptions();
+                categoryPicker.$searchbox.trigger('input');
+            });
+            updateCategoryOptions();
             // $('body').addClass('side-menu-closed');
             $('#product-list').on('click', '.add-plus:not(.c-not-allowed)', function () {
                 var product_id = $(this).data('product-id');

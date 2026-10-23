@@ -201,24 +201,6 @@
             </div>
         </div>
         <div class="col-sm-6 col-md-6 col-lg-3 mb-4" style="display: flex;flex-direction: column;justify-content: space-between;">
-            <div class="card shadow-none mb-0">
-                <div class="card-body">
-                    <div class="card-title text-primary fs-16 fw-600">
-                        {{ translate('Category wise product count') }}
-                    </div>
-                    <hr>
-                    <ul class="list-group">
-                        @foreach ($product_categories as $category)
-                            <li class="d-flex justify-content-between align-items-center my-2 text-primary fs-13">
-                                {{ $category->getTranslation('name') }}
-                                <span class="">
-                                    {{ $category->product_count }}
-                                </span>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
             <div class="card shadow-none py-4 mt-1 mb-0" style="justify-self: end">
                 <div class="card-body">
                     <div class="row align-items-center">
