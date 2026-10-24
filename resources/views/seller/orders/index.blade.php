@@ -167,6 +167,10 @@
                     {{ $orders->links() }}
               	</div>
             </div>
+        @else
+            <div class="card-body text-center text-muted py-5" role="status">
+                {{ translate('Nothing found') }}
+            </div>
         @endif
     </div>
 

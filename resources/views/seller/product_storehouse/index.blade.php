@@ -19,7 +19,7 @@
                                 <select name="poscategory" class="form-control form-control-lg aiz-selectpicker"
                                         data-live-search="true" onchange="filterProducts()">
                                     <option value="">{{ translate('All Categories') }}</option>
-                                    @foreach (\App\Models\Category::all() as $key => $category)
+                                    @foreach (\App\Models\Category::orderBy('order_level', 'desc')->get() as $key => $category)
                                         <option
                                             value="category-{{ $category->id }}">{{ $category->getTranslation('name') }}</option>
                                     @endforeach

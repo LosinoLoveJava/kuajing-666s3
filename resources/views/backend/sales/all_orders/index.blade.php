@@ -131,12 +131,7 @@
                         </td>  
                         
                         <td>
-                            @php
-                            $shop = App\Models\User::where('id',$order->seller_id)->first();
-                            echo $shop['email'];
-                            @endphp
-                            
-                            
+                            {{ optional($order->shop)->name ?? '-' }}
                         </td>
                         <td>
                             {{ count($order->orderDetails) }}

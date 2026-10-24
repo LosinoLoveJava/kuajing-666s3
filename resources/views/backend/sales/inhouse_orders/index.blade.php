@@ -74,11 +74,9 @@
                         
                          <td>
                             @php
-                            $shop = App\Models\User::where('id',$order->seller_id)->first();
-                            echo $shop['email'];
+                            $seller = App\Models\User::find($order->seller_id);
+                            echo optional($order->shop)->name ?: optional($seller)->email ?: '-';
                             @endphp
-                            
-                            
                         </td>
                         
                         
