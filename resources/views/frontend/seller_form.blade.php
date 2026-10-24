@@ -104,6 +104,13 @@
                         </div>
                     </div>
 
+                    <div class="form-group mb-4 d-flex align-items-start">
+                        <input type="checkbox" id="seller-terms" style="flex: 0 0 14px; width: 14px; height: 14px; margin: 3px 0 0; margin-inline-end: 8px;" checked required aria-describedby="seller-terms-copy">
+                        <div style="min-width: 0; line-height: 20px;">
+                            <span id="seller-terms-copy" data-seller-terms-copy>By checking the box below, the Seller confirms that: They have read and understood these <a id="seller-terms-link" href="{{ static_asset('seller-registration-terms.html') }}?lang={{ app()->getLocale() }}" target="_blank" rel="noopener"><strong>Seller Registration Terms and Conditions</strong></a>.</span>
+                        </div>
+                    </div>
+
                     @if(get_setting('google_recaptcha') == 1)
                         <div class="form-group mt-2 mx-auto row">
                             <div class="g-recaptcha" data-sitekey="{{ env('CAPTCHA_KEY') }}"></div>
@@ -123,6 +130,7 @@
 @endsection
 
 @section('script')
+<script src="{{ static_asset('assets/js/seller-registration-terms.js') }}"></script>
 @include('frontend.partials.seller_document_validation')
 @include('frontend.partials.phone_auth_script', ['mode' => 'register', 'phoneFormId' => 'shop', 'phoneSendRoute' => 'seller.phone.send'])
 @if(get_setting('google_recaptcha') == 1)

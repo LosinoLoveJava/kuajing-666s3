@@ -207,3 +207,11 @@
         </div>
     </section>
 @endsection
+
+@section('script')
+@if (!collect(session('flash_notification', []))->contains('level', 'success'))
+<script>
+    AIZ.plugins.notify('success', @json(translate('Your order has been placed successfully')));
+</script>
+@endif
+@endsection
