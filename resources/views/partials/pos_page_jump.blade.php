@@ -1,6 +1,6 @@
 <div id="pos-pagination-status" class="text-center mt-2" role="status"></div>
-<div class="d-flex flex-nowrap align-items-center mt-2 mb-3" style="gap: 12px; overflow-x: auto;">
-    <nav id="pos-pagination" class="d-flex flex-nowrap flex-shrink-0" style="gap: 4px;" aria-label="{{ __('pagination.page') }}"></nav>
+<div class="aiz-pagination-nav d-flex flex-wrap align-items-center mt-2 mb-3">
+    <nav id="pos-pagination" class="d-flex flex-wrap" style="gap: 4px;" aria-label="{{ __('pagination.page') }}"></nav>
     <div id="pos-page-jump" class="d-none flex-shrink-0">@include('partials.page_jump')</div>
 </div>
 @once

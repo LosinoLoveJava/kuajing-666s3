@@ -42,8 +42,8 @@
                         </div>
                         <div class="d-flex flex-wrap align-items-center justify-content-between mt-3" style="gap:12px">
                             <div id="product-page-summary" role="status" aria-live="polite"></div>
-                            <div class="d-flex flex-nowrap align-items-center" style="gap: 12px; overflow-x: auto;">
-                                <nav class="flex-shrink-0" aria-label="{{ translate('Pagination') }}"><div id="product-pagination" class="d-flex flex-nowrap" style="gap:4px"></div></nav>
+                            <div class="aiz-pagination-nav d-flex flex-wrap align-items-center">
+                                <nav aria-label="{{ translate('Pagination') }}"><div id="product-pagination" class="d-flex flex-wrap" style="gap:4px"></div></nav>
                                 <div id="product-page-jump" class="d-none flex-shrink-0">@include('partials.page_jump')</div>
                             </div>
                         </div>
