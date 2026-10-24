@@ -1003,7 +1003,7 @@
         $(window).on('hashchange', function() {
             if (window.location.hash) {
                 var page = window.location.hash.replace('#', '');
-                if (page == Number.NaN || page <= 0) {
+                if (!Number.isInteger(Number(page)) || Number(page) <= 0) {
                     return false;
                 } else {
                     getQuestions(page);
@@ -1012,19 +1012,25 @@
         });
 
         $(document).ready(function() {
-            $(document).on('click', '.pagination a', function(e) {
-                getQuestions($(this).attr('href').split('page=')[1]);
+            var questions = document.querySelector('.pagination-area');
+            if (questions) window.initializePageJumps(questions, getQuestions);
+            $(document).on('click', '.pagination-area .pagination a', function(e) {
+                getQuestions(new URL(this.href).searchParams.get('page'));
                 e.preventDefault();
             });
         });
 
         function getQuestions(page) {
+            var target = new URL(window.location.href);
+            target.searchParams.set('page', page);
+            target.hash = '';
             $.ajax({
-                url: '?page=' + page,
+                url: target.href,
                 dataType: 'json',
             }).done(function(data) {
                 $('.pagination-area').html(data);
-                location.hash = page;
+                window.initializePageJumps(document.querySelector('.pagination-area'), getQuestions);
+                history.replaceState(null, '', '#' + page);
             }).fail(function() {
                 alert('Something went worng! Questions could not be loaded.');
             });

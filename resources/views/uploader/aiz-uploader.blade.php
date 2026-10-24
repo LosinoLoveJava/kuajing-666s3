@@ -65,7 +65,7 @@
 				</div>
 			</div>
 			<div class="modal-footer justify-content-between bg-light">
-				<div class="flex-grow-1 overflow-hidden d-flex">
+				<div class="flex-grow-1 d-flex flex-wrap align-items-center" style="gap: 12px;">
 					<div class="">
 						<div class="aiz-uploader-selected">{{ translate('0 File selected') }}</div>
 						<button type="button" class="btn-link btn btn-sm p-0 aiz-uploader-selected-clear">{{ translate('Clear') }}</button>
@@ -74,6 +74,7 @@
 						<button type="button" class="btn btn-sm btn-primary" id="uploader_prev_btn">{{ translate('Prev') }}</button>
 						<button type="button" class="btn btn-sm btn-primary" id="uploader_next_btn">{{ translate('Next') }}</button>
 					</div>
+                    <div id="uploader-page-jump" class="d-none">@include('partials.page_jump', ['pageJumpButtonClass' => 'btn btn-primary btn-sm'])</div>
 				</div>
 				<button type="button" class="btn btn-sm btn-primary" data-toggle="aizUploaderAddSelected">{{ translate('Add Files') }}</button>
 			</div>

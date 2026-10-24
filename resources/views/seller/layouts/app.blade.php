@@ -28,6 +28,7 @@
     @endif
 	<link rel="stylesheet" href="{{ static_asset('assets/css/aiz-seller.css') }}">
     <link rel="stylesheet" href="{{ static_asset('assets/css/responsive-tables.css') }}">
+    <link rel="stylesheet" href="{{ static_asset('assets/css/custom-style.css') }}">
 
     <style>
         body {

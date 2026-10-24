@@ -66,7 +66,7 @@
                         <span class="text-muted" id="reputation-history-page"></span>
                         <button type="button" class="btn btn-outline-secondary btn-sm" id="reputation-history-next" disabled>{{ translate('Next') }}</button>
                     </div>
-                    <div id="reputation-history-jump" class="d-none">@include('partials.page_jump')</div>
+                    <div id="reputation-history-jump" class="d-none">@include('partials.page_jump', ['pageJumpButtonClass' => 'btn btn-outline-secondary btn-sm'])</div>
                 </div>
             </div>
         </section>

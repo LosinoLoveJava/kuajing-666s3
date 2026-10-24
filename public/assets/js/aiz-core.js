@@ -206,6 +206,9 @@ $.fn.toggleAttr = function (attr, attr1, attr2) {
             );
         },
         getAllUploads: function (url, search_key = null, sort_key = null) {
+            $('#uploader-page-jump').addClass('d-none');
+            search_key = search_key == null ? $('[name="aiz-uploader-search"]').val() : search_key;
+            sort_key = sort_key == null ? $('[name="aiz-uploader-sort"]').val() : sort_key;
             $(".aiz-uploader-all").html(
                 '<div class="align-items-center d-flex h-100 justify-content-center w-100"><div class="spinner-border" role="status"></div></div>'
             );
@@ -230,6 +233,16 @@ $.fn.toggleAttr = function (attr, attr1, attr2) {
                 AIZ.uploader.addHiddenValue();
                 //AIZ.uploader.resetFilter();
                 AIZ.uploader.updateUploaderFiles();
+                var jump = document.querySelector('#uploader-page-jump [data-page-jump]');
+                if (jump) {
+                    $('#uploader-page-jump').toggleClass('d-none', Number(data.last_page) <= 1);
+                    window.configurePageJump(jump, Number(data.current_page), Number(data.last_page), function (page) {
+                        var target = new URL(data.first_page_url, window.location.href);
+                        target.searchParams.set('page', page);
+                        $('[name="aiz-show-selected"]').prop('checked', false);
+                        AIZ.uploader.getAllUploads(target.href);
+                    });
+                }
                 if (data.next_page_url != null) {
                     AIZ.uploader.data.next_page_url = data.next_page_url;
                     $("#uploader_next_btn").removeAttr("disabled");

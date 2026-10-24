@@ -1,1 +1,32 @@
 /*your custom css goes here*/
+.aiz-pagination-nav {
+    gap: 12px;
+}
+.aiz-pagination-center .aiz-pagination-nav {
+    justify-content: center;
+}
+.aiz-pagination-right .aiz-pagination-nav {
+    justify-content: flex-end;
+}
+.page-jump {
+    gap: 8px;
+    white-space: nowrap;
+}
+.page-jump.d-none {
+    display: none !important;
+}
+.page-jump .page-jump-input {
+    width: 72px;
+    height: 30px;
+    padding: 3px 8px;
+}
+.aiz-pagination-jump .page-jump-input {
+    height: 36px;
+    border-radius: 18px;
+    text-align: center;
+    font-size: 0.875rem;
+}
+.aiz-pagination-jump [data-page-jump-button] {
+    padding: 0 12px;
+    border-radius: 18px !important;
+}

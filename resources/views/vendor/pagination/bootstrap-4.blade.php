@@ -1,6 +1,6 @@
 @if ($paginator->hasPages())
-    <nav class="d-flex flex-nowrap align-items-center mb-3" style="gap: 12px; overflow-x: auto;">
-        <ul class="pagination flex-nowrap flex-shrink-0 mb-0">
+    <nav class="aiz-pagination-nav d-flex flex-wrap align-items-center mb-3" aria-label="{{ __('pagination.page') }}">
+        <ul class="pagination flex-wrap mb-0">
             {{-- Previous Page Link --}}
             @if ($paginator->onFirstPage())
                 <li class="page-item disabled" aria-disabled="true" aria-label="@lang('pagination.previous')">
@@ -42,10 +42,8 @@
                 </li>
             @endif
         </ul>
-        @if (request()->is('admin', 'admin/*', 'seller', 'seller/*'))
-            <div data-pagination-jump-source data-current="{{ $paginator->currentPage() }}" data-last="{{ $paginator->lastPage() }}" data-page-name="{{ $paginator->getPageName() }}" data-url="{{ $paginator->url(1) }}">
-                @include('partials.page_jump')
-            </div>
-        @endif
+        <div class="aiz-pagination-jump" data-pagination-jump-source data-current="{{ $paginator->currentPage() }}" data-last="{{ $paginator->lastPage() }}" data-page-name="{{ $paginator->getPageName() }}" data-url="{{ $paginator->url(1) }}">
+            @include('partials.page_jump', ['pageJumpClass' => 'pagination', 'pageJumpButtonClass' => 'page-link'])
+        </div>
     </nav>
 @endif
