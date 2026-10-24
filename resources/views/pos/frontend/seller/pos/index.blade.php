@@ -35,9 +35,8 @@
                         <div class="d-flex flex-wrap justify-content-center" id="product-list">
 
                         </div>
-                        <div id="load-more" class="text-center">
-                            <div class="fs-14 d-inline-block fw-600 btn btn-soft-primary c-pointer" onclick="loadMoreProduct()">{{ translate('Loading..') }}</div>
-                        </div>
+                        @include('partials.pos_page_jump')
+
                     </div>
                 </div>
                 <div class="col-md-auto w-md-350px w-lg-400px w-xl-500px">
@@ -417,31 +416,11 @@
         }
 
         function filterProducts(){
-            var keyword = $('input[name=keyword]').val();
-            var category = $('select[name=poscategory]').val();
-            var brand = $('select[name=brand]').val();
-            $.get('{{ route('pos.search_product') }}',{
-                keyword : keyword,
-                category : category,
-                brand : brand
-            }, function(data){
-                products = data;
-                $('#product-list').html(null);
-                setProductList(data);
-            });
-        }
-
-        function loadMoreProduct(){
-            if(products != null && products.links.next != null){
-                $('#load-more').find('.btn').html('{{ translate('Loading..') }}');
-                $.get(products.links.next,{}, function(data){
-                    products = data;
-                    setProductList(data);
-                });
-            }
+            loadPosProductPage(1);
         }
 
         function setProductList(data){
+
             for (var i = 0; i < data.data.length; i++) {
                 $('#product-list').append(
                     `<div class="w-140px w-xl-180px w-xxl-210px mx-2">
@@ -475,12 +454,6 @@
                         </div>
                     </div>`
                 );
-            }
-            if (data.links.next != null) {
-                $('#load-more').find('.btn').html('{{ translate('Load More.') }}');
-            }
-            else {
-                $('#load-more').find('.btn').html('{{ translate('Nothing more found.') }}');
             }
         }
 

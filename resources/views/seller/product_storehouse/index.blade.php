@@ -42,7 +42,10 @@
                         </div>
                         <div class="d-flex flex-wrap align-items-center justify-content-between mt-3" style="gap:12px">
                             <div id="product-page-summary" role="status" aria-live="polite"></div>
-                            <nav aria-label="{{ translate('Pagination') }}"><div id="product-pagination" class="d-flex flex-wrap" style="gap:4px"></div></nav>
+                            <div class="d-flex flex-nowrap align-items-center" style="gap: 12px; overflow-x: auto;">
+                                <nav class="flex-shrink-0" aria-label="{{ translate('Pagination') }}"><div id="product-pagination" class="d-flex flex-nowrap" style="gap:4px"></div></nav>
+                                <div id="product-page-jump" class="d-none flex-shrink-0">@include('partials.page_jump')</div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-auto w-md-350px w-lg-400px w-xl-500px">
@@ -181,6 +184,7 @@
             var loadId = ++productLoadId;
             if (productRequest) productRequest.abort();
             productsLoading = true;
+            $('#product-page-jump').addClass('d-none');
             products = null;
             $('#add-all-btn').prop('disabled', true);
             $('#product-pagination').empty();
@@ -221,6 +225,10 @@
         }
 
         function renderProductPagination(lastPage) {
+            $('#product-page-jump').toggleClass('d-none', lastPage <= 1);
+            window.configurePageJump(document.querySelector('#product-page-jump [data-page-jump]'), productPage, lastPage, function (page) {
+                if (!productsLoading && !productsPosting) loadProductPage(page);
+            });
             var container = $('#product-pagination').empty();
             function button(page, label, disabled) {
                 $('<button>', {type: 'button', class: 'btn btn-sm ' + (page === productPage ? 'btn-primary' : 'btn-soft-primary'), text: label})

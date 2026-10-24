@@ -131,6 +131,7 @@
     async function loadHistory(page) {
         if (historyBusy) return;
         historyBusy = true;
+        el('reputation-history-jump').classList.add('d-none');
         text('reputation-history-status', messages.loading);
         el('reputation-history-prev').disabled = true;
         el('reputation-history-next').disabled = true;
@@ -139,6 +140,8 @@
             var response = await request(config.history + '?per_page=5&page=' + page);
             historyPage = response.meta.current_page;
             historyLastPage = response.meta.last_page;
+            el('reputation-history-jump').classList.toggle('d-none', historyLastPage <= 1);
+            window.configurePageJump(el('reputation-history-jump').querySelector('[data-page-jump]'), historyPage, historyLastPage, loadHistory);
             response.data.forEach(function (log) {
                 var item = node('li');
                 var heading = node('div', 'history-score');

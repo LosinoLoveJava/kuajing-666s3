@@ -87,6 +87,7 @@
 	<script src="{{ static_asset('assets/js/aiz-core.js') }}" ></script>
     <script src="{{ static_asset('assets/js/seller-notifications.js') }}"></script>
 
+    <script src="{{ static_asset('assets/js/page-jump.js') }}"></script>
     @yield('script')
 
     <script type="text/javascript">

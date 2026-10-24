@@ -99,7 +99,7 @@
                     @current-change="handleCurrentChange"
                     :current-page.sync="page"
                     :page-size="limit"
-                    layout="total, prev, pager, next"
+                    layout="total, prev, pager, next, jumper"
                     :total="count">
                 </el-pagination>
             </div>

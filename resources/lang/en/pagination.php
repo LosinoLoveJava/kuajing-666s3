@@ -15,5 +15,7 @@ return [
 
     'previous' => '« Previous',
     'next' => 'Next »',
+    'page' => 'Page',
+    'go' => 'Go',
 
 ];
