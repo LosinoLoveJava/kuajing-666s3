@@ -878,9 +878,18 @@ if (!function_exists('static_asset')) {
         if (!is_string($resource) || !preg_match('/\.(css|js)$/i', $resource)) {
             return $url;
         }
+        // Version by content, not a date/mtime: even same-size edits must invalidate caches.
+        $file = public_path(ltrim($resource, '/'));
+        if (!is_file($file) || !is_readable($file)) {
+            return $url;
+        }
+        $hash = hash_file('sha256', $file);
+        if ($hash === false) {
+            return $url;
+        }
         $parts = explode('#', $url, 2);
         $separator = strpos($parts[0], '?') === false ? '?' : '&';
-        return $parts[0] . $separator . 'v=' . rawurlencode((string) config('app.asset_version', '20261022'))
+        return $parts[0] . $separator . 'v=' . substr($hash, 0, 16)
             . (isset($parts[1]) ? '#' . $parts[1] : '');
     }
 }
