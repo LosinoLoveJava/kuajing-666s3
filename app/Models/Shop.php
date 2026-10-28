@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Shop extends Model
 {
+    protected $attributes = [
+        'view_inc_num' => \App\Services\ShopViewCounter::DEFAULT_DAILY_INCREMENT,
+    ];
 
     protected static function booted()
     {

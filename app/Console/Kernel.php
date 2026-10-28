@@ -25,6 +25,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+        $schedule->command('shops:sync-views')->everyMinute()->withoutOverlapping();
+
         $schedule->call(function () {
             $timestamp = now()->timestamp;
             Order::query()->whereNotNull('freeze_expired_at')->where('freeze_expired_at', '<=', $timestamp)

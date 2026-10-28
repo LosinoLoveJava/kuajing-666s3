@@ -69,25 +69,17 @@ class SellerController extends Controller
     }
     public function setviews(Request $request)
     {
-        $shop_id = $request->shop_id;
-        $inc_num = $request->inc_num;
-       
-        $base_num = $request->base_num;
-        if( $views < 0 )
-        {
-            # echo json_encode(['msg'=>translate("views Must Biger Than 0 ")]);
-            # exit;
-        }
-    
- 
-          $shop = shop::findOrFail($shop_id);
-          $shop->view_base_num = $base_num;
-          $shop->views = $base_num;
-          $shop->view_inc_num = $inc_num;
-          $shop->views_up_time = 0;
-          $shop->save();
-          echo json_encode(['msg'=>translate("Success")]);
-        
+        $data = $request->validate([
+            'shop_id' => 'required|integer|min:1|exists:shops,id',
+            'base_num' => 'required|integer|min:0|max:1000000000',
+            'inc_num' => 'required|integer|min:0|max:1000000000',
+        ]);
+
+        app(\App\Services\ShopViewCounter::class)->configure(
+            (int) $data['shop_id'], (int) $data['base_num'], (int) $data['inc_num']
+        );
+
+        return response()->json(['msg' => translate('Success')]);
     }
     
     public function index(Request $request)

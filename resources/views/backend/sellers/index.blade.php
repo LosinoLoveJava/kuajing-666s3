@@ -424,17 +424,18 @@
             +'<div class="col-sm-12">'
             +'<div class="input-group">'
             +'<span class="input-group-addon"> 基础访问量：</span>'
-            +'<input id="base_num" type="text" value="'+view_base_num+'" class="form-control" placeholder="基础访问量">'
+            +'<input id="base_num" type="number" min="0" max="1000000000" step="1" value="'+view_base_num+'" class="form-control" placeholder="基础访问量">'
             +'</div>'
             +'</div>'
 
                +'<div class="col-sm-12" style="margin-top:3px;">'
             +'<div class="input-group">'
             +'<span class="input-group-addon"> 每日递增量：</span>'
-            +'<input id="inc_num" type="text" value="'+view_inc_num+'" class="form-control" placeholder="每日递增">'
+            +'<input id="inc_num" type="number" min="0" max="1000000000" step="1" value="'+view_inc_num+'" class="form-control" placeholder="每日递增">'
             +'</div>'
             +'</div>'
 
+              +'<div class="col-sm-12 mt-2 text-muted">每日递增量按全天分配，每分钟自动更新；设为 0 关闭自动递增。保存后重置为基础值，下次更新补齐今日进度。</div>'
               +'</div>';
 
             layer.open({
@@ -454,7 +455,10 @@
                 layer.msg(data.msg,function(){
                     location.reload();
                 });
-                },'json');
+                },'json').fail(function (xhr) {
+                    var errors = xhr.responseJSON && xhr.responseJSON.errors;
+                    layer.msg(errors ? Object.values(errors)[0][0] : '保存失败，请重试');
+                });
 
         },
         btn2:function (index,layero) {

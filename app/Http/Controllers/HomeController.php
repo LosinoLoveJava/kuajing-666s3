@@ -39,36 +39,11 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function viewcron()
+    public function viewcron(\App\Services\ShopViewCounter $counter)
     {
-         $shops = Shop::all();
-         foreach($shops as $shop )
-         {
-             $shop = Shop::findOrFail($shop->id);
-             if( $shop->views_up_time < strtotime(date("Ymd")))
-             {
-                 $shop->views = $shop->view_base_num;
-                 $shop->view_today_num = 0;
-             }
-             $shop->views_up_time = time();
-             $shop->save();
+        $counter->sync();
 
-             if( $shop-> view_today_num < $shop->view_inc_num )
-             {
-
-                #$t = mt_rand(1,intval( 1440 / $shop->view_inc_num ) );
-                $t = mt_rand(1, 14  );
-
-                if( $t % 13 == 0 )
-                {
-                    $shop->view_today_num = $shop->view_today_num+1;
-                    $shop->views = $shop->views+1;
-                    $shop->save();
-                }
-             }
-
-         }
-         echo 'ok';
+        return response('ok');
     }
 
     public function index()
@@ -305,8 +280,7 @@ class HomeController extends Controller
             if ( Auth::id() !=  $detailedProduct->user->id){
                 if ($detailedProduct->user){
                     if ($detailedProduct->user->shop){
-                        $detailedProduct->user->shop->views += 1;
-                        $detailedProduct->user->shop->save();
+                        $detailedProduct->user->shop->increment('views');
                     }
                 }
             }
