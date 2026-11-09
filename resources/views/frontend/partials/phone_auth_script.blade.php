@@ -5,15 +5,18 @@
     var syncPhone = function () { return true; };
     if (form.elements.national_phone) {
         var input = form.elements.national_phone;
+        var country = form.elements.country.value;
+        var dialCode = country === 'SG' ? '65' : '971';
         syncPhone = function () {
             var number = input.value.replace(/[\s().-]+/g, '');
             if (number.indexOf('00') === 0) number = '+' + number.slice(2);
             if (number && number.charAt(0) !== '+') {
-                number = number.indexOf('971') === 0 ? '+' + number : '+971' + number.replace(/^0+/, '');
+                number = number.indexOf(dialCode) === 0 ? '+' + number : '+' + dialCode + (country === 'SG' ? number : number.replace(/^0+/, ''));
             }
-            form.elements.country.value = 'AE';
+            form.elements.country.value = country;
             form.elements.phone.value = number;
-            var valid = /^\+971[1-9][0-9]{7,8}$/.test(number) && intlTelInputUtils.isValidNumber(number, 'AE');
+            var pattern = country === 'SG' ? /^\+65[89][0-9]{7}$/ : /^\+971[1-9][0-9]{7,8}$/;
+            var valid = pattern.test(number) && intlTelInputUtils.isValidNumber(number, country);
             input.setCustomValidity(input.value && !valid ? @json(translate('Invalid phone number')) : '');
             return valid;
         };
@@ -21,12 +24,12 @@
         input.addEventListener('input', readPhone);
         input.addEventListener('change', readPhone);
         input.addEventListener('blur', function () {
-            if (syncPhone()) input.value = intlTelInputUtils.formatNumber(form.elements.phone.value, 'AE', intlTelInputUtils.numberFormat.NATIONAL);
+            if (syncPhone()) input.value = intlTelInputUtils.formatNumber(form.elements.phone.value, country, intlTelInputUtils.numberFormat.NATIONAL);
         });
         form.addEventListener('submit', function (event) {
             if (!syncPhone()) { event.preventDefault(); input.reportValidity(); }
         });
-        if (readPhone()) input.value = intlTelInputUtils.formatNumber(form.elements.phone.value, 'AE', intlTelInputUtils.numberFormat.NATIONAL);
+        if (readPhone()) input.value = intlTelInputUtils.formatNumber(form.elements.phone.value, country, intlTelInputUtils.numberFormat.NATIONAL);
     }
     if (button) button.addEventListener('click', async function () {
         if (!syncPhone()) { form.elements.national_phone.reportValidity(); return; }

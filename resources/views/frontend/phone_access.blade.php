@@ -20,7 +20,7 @@
     <p id="phone-feedback" role="status" class="small"></p>
     <form method="POST" action="{{ route(($isSellerPortal ?? false) ? 'seller.phone.submit' : 'phone.submit') }}" id="phone-auth-form">@csrf
         <input type="hidden" name="mode" value="{{ $mode }}">
-        @include('frontend.partials.phone_registration_fields', ['phoneFormId' => 'phone-auth-form'])
+        @include('frontend.partials.phone_registration_fields', ['phoneFormId' => 'phone-auth-form', 'phoneCountry' => 'SG'])
         @if($mode === 'register')<label class="d-block">{{ translate('Name') }}<input class="form-control" name="name" maxlength="191" value="{{ old('name') }}" required></label>@endif
         @if($mode !== 'login')
         <div id="phone-code-fields"><label class="d-block">{{ translate('Verification code') }}<input class="form-control" name="code" inputmode="numeric" pattern="[0-9]{5,6}" minlength="5" maxlength="6" autocomplete="one-time-code" required></label><button type="button" class="btn btn-outline-primary btn-sm mb-3" id="send-phone-code">{{ translate('Send code') }}</button></div>

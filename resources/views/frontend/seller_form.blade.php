@@ -29,7 +29,7 @@
                                     <input type="text" class="form-control{{ $errors->has('account_name') ? ' is-invalid' : '' }}" value="{{ old('account_name') }}" placeholder="{{  translate('Name') }}" name="account_name" maxlength="191" autocomplete="name" required>
                                 </div>
                                 <div class="form-group">
-                                    @include('frontend.partials.phone_registration_fields', ['phoneFormId' => 'shop'])
+                                    @include('frontend.partials.phone_registration_fields', ['phoneFormId' => 'shop', 'phoneCountry' => 'SG'])
                                 </div>
                                 <div class="form-group" id="phone-code-fields">
                                     <label class="d-block">{{ translate('Verification code') }}<input class="form-control" name="code" inputmode="numeric" pattern="[0-9]{5,6}" minlength="5" maxlength="6" autocomplete="one-time-code" required></label>

@@ -10,20 +10,6 @@
     </div>
 
     <div class="row gutters-10 justify-content-center">
-        @if (addon_is_activated('seller_subscription'))
-            <div class="col-md-4 mx-auto mb-3" >
-                <div class="bg-grad-1 text-white rounded-lg overflow-hidden">
-                  <span class="size-30px rounded-circle mx-auto bg-soft-primary d-flex align-items-center justify-content-center mt-3">
-                      <i class="las la-upload la-2x text-white"></i>
-                  </span>
-                  <div class="px-3 pt-3 pb-3">
-                      <div class="h4 fw-700 text-center">{{ max(0, (optional(app(\App\Services\AccountMembership::class)->sellerPackage())->product_upload_limit ?? 0) - auth()->user()->products()->count()) }}</div>
-                      <div class="opacity-50 text-center">{{  translate('Remaining Uploads') }}</div>
-                  </div>
-                </div>
-            </div>
-        @endif
-
 
         <div class="col-md-4 mx-auto mb-3" >
             <a href="{{ route('seller.digitalproducts.create')}}">

@@ -3804,6 +3804,7 @@ input[type="number"] {
     height: 31px;
 }
 .aiz-side-nav-logo-wrap {
+    display: flow-root;
     background-color: var(--soft-primary);
 }
 

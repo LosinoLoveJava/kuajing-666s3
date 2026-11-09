@@ -432,12 +432,12 @@ BANK
                                 <input type="hidden" name="w_type" value="4">
                                 <input class="form-control" id="p" value="BANK" readonly>
                             </div>
-                            @include('partials.iban_form', ['fixedBank' => true, 'manualReview' => true])
+                            @include('partials.iban_form', ['fixedBank' => true, 'manualReview' => true, 'bankOnly' => true])
                             <div class="form-group">
                                 <label for="withdraw-amount">{{ translate('Amount')}} (USD) <span class="text-danger">*</span></label>
                                 <input id="withdraw-amount" type="number" lang="en" dir="ltr" class="form-control" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01" placeholder="{{ translate('Amount') }}" required>
-                                <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr">1 USD = 3.67 AED</bdi></div>
-                                <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="withdraw-aed">0.00</span> AED</bdi></div>
+                                <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr" id="withdraw-rate">1 USD = 1.28 SGD</bdi></div>
+                                <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="withdraw-sgd">0.00</span> SGD</bdi></div>
                             </div>
 
                             <div class="form-group">
@@ -488,12 +488,17 @@ BANK
             var form = document.querySelector('#request_modal form');
             if (!form) return;
             var amount = form.elements.amount;
-            var output = document.getElementById('withdraw-aed');
+            var output = document.getElementById('withdraw-sgd');
+            var locales = {cn: 'zh-CN', hk: 'zh-HK', sa: 'ar-SA', bd: 'bn-BD', jp: 'ja-JP', kr: 'ko-KR', in: 'hi-IN', be: 'be-BY'};
+            var locale = @json(app()->getLocale());
+            var numberFormat = new Intl.NumberFormat(locales[locale] || locale.replace('_', '-'), {
+                minimumFractionDigits: 2, maximumFractionDigits: 2
+            });
+            var rate = Number(1.28);
+            document.getElementById('withdraw-rate').textContent = new Intl.NumberFormat(locales[locale] || locale.replace('_', '-')).format(1) + ' USD = ' + numberFormat.format(rate) + ' SGD';
             function updateAmount() {
                 var usd = Number(amount.value);
-                output.textContent = new Intl.NumberFormat(document.documentElement.lang || 'en', {
-                    minimumFractionDigits: 2, maximumFractionDigits: 2
-                }).format(Number.isFinite(usd) && usd > 0 ? Math.round(usd * 3.67 * 100) / 100 : 0);
+                output.textContent = numberFormat.format(Number.isFinite(usd) && usd > 0 ? Math.round(Math.round(usd * 100) * rate) / 100 : 0);
             }
             amount.addEventListener('input', updateAmount);
             updateAmount();

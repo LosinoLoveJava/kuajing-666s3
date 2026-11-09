@@ -4,6 +4,7 @@
     <div class="form-group"><label for="withdraw-bank">{{ translate('Bank Name') }} @unless($manualReview)<span class="text-danger">*</span>@endunless</label><input id="withdraw-bank" class="form-control" name="iban_bank" value="{{ old('iban_bank') }}" maxlength="{{ $manualReview ? 2000 : 200 }}" @unless($manualReview) data-bank-required @endunless></div>
     <div class="form-group"><label for="withdraw-account">{{ translate('Bank Account Number') }}</label><input id="withdraw-account" class="form-control" name="bank_account" value="{{ old('bank_account') }}" maxlength="{{ $manualReview ? 2000 : 100 }}" dir="ltr"></div>
 </div>
+@unless($bankOnly ?? false)
 <div class="iban-fields mb-3" @if(!($fixedBank ?? false)) hidden @endif>
     <div class="form-group"><label for="withdraw-iban-country">{{ translate('Account country') }} @unless($manualReview)<span class="text-danger">*</span>@endunless</label>
         @if($manualReview)
@@ -24,6 +25,7 @@
         @endif
     </div>
 </div>
+@endunless
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     @if(($fixedBank ?? false) && !$manualReview)

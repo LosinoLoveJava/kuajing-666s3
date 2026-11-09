@@ -1,7 +1,7 @@
 <div class="aiz-sidebar-wrap">
     <div class="aiz-sidebar left c-scrollbar">
         <div class="aiz-side-nav-logo-wrap">
-            <div class="d-block text-center my-3">
+            <div class="d-block text-center px-3 py-4">
                 @if (Auth::user()->shop->logo != null)
                     <img class="mw-100 mb-3" src="{{ uploaded_asset(Auth::user()->shop->logo) }}" class="brand-icon"
                         alt="{{ get_setting('site_name') }}">
@@ -9,8 +9,10 @@
                     <img class="mw-100 mb-3" src="{{ uploaded_asset(get_setting('header_logo')) }}" class="brand-icon"
                         alt="{{ get_setting('site_name') }}">
                 @endif
-                <h3 class="fs-16  m-0 text-primary">{{ Auth::user()->shop->name }}</h3>
-                <p class="text-primary">{{ Auth::user()->email }}</p>
+                <h3 class="fs-16 m-0 text-white text-break">{{ Auth::user()->shop->name }}</h3>
+                @if (Auth::user()->email)
+                    <p class="text-white text-break mt-2 mb-0">{{ Auth::user()->email }}</p>
+                @endif
             </div>
         </div>
         <div class="aiz-side-nav-wrap">
