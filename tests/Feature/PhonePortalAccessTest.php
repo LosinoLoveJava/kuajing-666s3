@@ -19,6 +19,9 @@ class PhonePortalAccessTest extends TestCase
         config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:',
             'cache.default' => 'array', 'session.driver' => 'array']);
         DB::purge('sqlite');
+        app('view')->getFinder()->prependLocation(base_path('tests/Fixtures/views'));
+        app('view')->getFinder()->flush();
+        \Illuminate\Support\Facades\Cache::put('business_settings', collect(), 60);
         $this->withoutMiddleware([
             \App\Http\Middleware\Language::class,
             \App\Http\Middleware\HttpsProtocol::class,
@@ -41,6 +44,7 @@ class PhonePortalAccessTest extends TestCase
             $table->string('code');
             $table->integer('status');
         });
+        Schema::create('translations', function (Blueprint $t) { $t->increments('id'); $t->string('lang'); $t->string('lang_key'); $t->text('lang_value'); $t->timestamps(); });
         DB::table('countries')->insert(['code' => 'AE', 'status' => 1]);
     }
 
@@ -101,7 +105,7 @@ class PhonePortalAccessTest extends TestCase
 
     public function testUserEntriesRedirectToPhoneForms()
     {
-        $this->get('/users/login')->assertRedirect(route('phone.access'));
+        $this->get('/users/login')->assertOk()->assertSee('>+65</span>', false);
         $this->get('/users/registration')->assertRedirect(route('phone.access', ['mode' => 'register']));
         $this->get('/register')->assertRedirect(route('phone.access', ['mode' => 'register']));
         $this->postJson('/register', ['email' => 'test@example.com'])->assertStatus(422)->assertJsonValidationErrors('email');

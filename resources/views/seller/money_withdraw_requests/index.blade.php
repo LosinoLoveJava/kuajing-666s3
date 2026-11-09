@@ -133,13 +133,13 @@
                     <th>{{ translate('Date') }}</th>
                     <th>{{ translate('Amount')}}</th>
                     <th>{{ translate('Type')}}</th>
-                    
+
                     <th data-breakpoints="lg">{{ translate('Status')}}</th>
                     <th>{{ translate('Withdraw Type')}}</th>
                     <th>{{ translate('Remarks')}}</th>
                     <th data-breakpoints="lg" width="40%">{{ translate('Message')}}</th>
-                    
-                    
+
+
                 </tr>
                 </thead>
                 <tbody>
@@ -150,14 +150,14 @@
                         <td>{{ single_price($seller_withdraw_request->amount) }}</td>
                         <td>
                             @if( $seller_withdraw_request->type == 1)
-                            
+
                             {{translate('User Balance')}}
                             @else
-                            
+
                               {{translate('Guarantee')}}
                             @endif
                         </td>
-                        <td> 
+                        <td>
                             @if ($seller_withdraw_request->status == 1)
                                 <span class=" badge badge-inline badge-success">{{ translate('Paid')}}</span>
                              @elseif ($seller_withdraw_request->status == 2)
@@ -167,12 +167,12 @@
                             @endif
                         </td>
                         <td>
-                            
+
                             @if( $seller_withdraw_request->w_type == 1)
-                            
+
                             {{translate('Cash')}}
                             @elseif( $seller_withdraw_request->w_type == 2)
-                            
+
                               {{translate('Bank')}}
                             @elseif( $seller_withdraw_request->w_type == 3)
                             {{translate('USDT')}}
@@ -187,7 +187,7 @@ BANK
                         <td>
                             {{ $seller_withdraw_request->message }}
                         </td>
-                   
+
                     </tr>
                 @empty
                     <tr><td colspan="8" class="text-center text-muted">{{ translate('Nothing found') }}</td></tr>
@@ -302,18 +302,18 @@ BANK
                                 <span class="badge badge-inline badge-danger">{{translate('No')}}</span>
                             @endif
                         </td>
-                        
+
                          <td>
                             @if( $list->type == 1)
-                            
+
                             {{translate('User Balance')}}
                             @else
-                            
+
                               {{translate('Guarantee')}}
                             @endif
                         </td>
-                        
-                        
+
+
                         <td>@if($list->reciept)<a href="{{ uploaded_asset($list->reciept) }}" target="_blank" rel="noopener">{{ translate('Receipt') }}</a>@endif</td>
                         <td>{{ date('d-m-Y', strtotime($list->created_at)) }}</td>
                     </tr>
@@ -328,10 +328,10 @@ BANK
             </div>
         </div>
     </div>
-    
-    
-    
-    
+
+
+
+
       <!-- 充值记录 -->
     <div class="card">
         <div class="card-header">
@@ -344,12 +344,12 @@ BANK
                 <tr>
                     <th>#</th>
                     <th data-breakpoints="md">{{ translate('Amount') }}</th>
-                
+
                     <th>{{ translate('Payment Details') }}</th>
-         
+
                     <th data-breakpoints="md">{{ translate('Payment method') }}</th>
-                    
-                  
+
+
                     <th>{{ translate('Date') }}</th>
                 </tr>
                 </thead>
@@ -358,17 +358,17 @@ BANK
                     <tr>
                         <td>{{ $paymentList->firstItem() + $key }}</td>
                         <td>{{ single_price($list->amount) }}</td>
-                    
+
                         <td>{{ $list->payment_details }}</td>
-                        
+
                         <td>
                             {{translate($list->payment_method)}}
                         </td>
-                        
-                      
-                        
-                        
-                      
+
+
+
+
+
                         <td>{{ date('d-m-Y', strtotime($list->created_at)) }}</td>
                     </tr>
                 @empty
@@ -382,8 +382,8 @@ BANK
             </div>
         </div>
     </div>
-    
-    
+
+
     </div>
 @endsection
 
@@ -423,8 +423,8 @@ BANK
                                     <div class="alert alert-success" role="alert">
                                         <h6>{{ translate('Your wallet balance :') }} ${{ $balance }}</h6>
                                     </div>
-                                    
-                                    
+
+
                                 </div>
                             </div>
                             <input type="hidden" name="type" value="1">
@@ -432,11 +432,12 @@ BANK
                                 <input type="hidden" name="w_type" value="4">
                                 <input class="form-control" id="p" value="BANK" readonly>
                             </div>
-                            @include('partials.iban_form', ['fixedBank' => true, 'manualReview' => true, 'bankOnly' => true])
+                            @include('partials.iban_form', ['fixedBank' => true, 'manualReview' => true])
+                            @php($sgdRate = app(\App\Services\ExchangeRate::class)->quote()['rate'])
                             <div class="form-group">
                                 <label for="withdraw-amount">{{ translate('Amount')}} (USD) <span class="text-danger">*</span></label>
                                 <input id="withdraw-amount" type="number" lang="en" dir="ltr" class="form-control" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01" placeholder="{{ translate('Amount') }}" required>
-                                <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr" id="withdraw-rate">1 USD = 1.28 SGD</bdi></div>
+                                <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr">1 USD = {{ rtrim(rtrim($sgdRate, '0'), '.') }} SGD</bdi></div>
                                 <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="withdraw-sgd">0.00</span> SGD</bdi></div>
                             </div>
 
@@ -489,16 +490,11 @@ BANK
             if (!form) return;
             var amount = form.elements.amount;
             var output = document.getElementById('withdraw-sgd');
-            var locales = {cn: 'zh-CN', hk: 'zh-HK', sa: 'ar-SA', bd: 'bn-BD', jp: 'ja-JP', kr: 'ko-KR', in: 'hi-IN', be: 'be-BY'};
-            var locale = @json(app()->getLocale());
-            var numberFormat = new Intl.NumberFormat(locales[locale] || locale.replace('_', '-'), {
-                minimumFractionDigits: 2, maximumFractionDigits: 2
-            });
-            var rate = Number(1.28);
-            document.getElementById('withdraw-rate').textContent = new Intl.NumberFormat(locales[locale] || locale.replace('_', '-')).format(1) + ' USD = ' + numberFormat.format(rate) + ' SGD';
             function updateAmount() {
                 var usd = Number(amount.value);
-                output.textContent = numberFormat.format(Number.isFinite(usd) && usd > 0 ? Math.round(Math.round(usd * 100) * rate) / 100 : 0);
+                output.textContent = new Intl.NumberFormat(document.documentElement.lang || 'en', {
+                    minimumFractionDigits: 2, maximumFractionDigits: 2
+                }).format(Number.isFinite(usd) && usd > 0 ? Math.round(usd * @json((float) ($sgdRate ?? 1.28)) * 100) / 100 : 0);
             }
             amount.addEventListener('input', updateAmount);
             updateAmount();

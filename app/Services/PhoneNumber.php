@@ -15,8 +15,8 @@ class PhoneNumber
 
     public function countries()
     {
-        return Country::where('status', 1)->whereRaw('UPPER(code) = ?', ['AE'])->get(['name'])->map(function ($country) {
-            return ['country' => 'AE', 'name' => $country->name, 'dial_code' => '+971'];
+        return Country::where('status', 1)->whereRaw('UPPER(code) = ?', ['SG'])->get(['name'])->map(function ($country) {
+            return ['country' => 'SG', 'name' => $country->name, 'dial_code' => '+65'];
         })->values()->all();
     }
 
@@ -25,16 +25,30 @@ class PhoneNumber
         $number = preg_replace('/[\s().-]+/', '', (string) $value);
         if (strpos($number, '00') === 0) { $number = '+'.substr($number, 2); }
         if ($number !== '' && strpos($number, '+') !== 0) {
-            $number = strpos($number, '971') === 0 ? '+'.$number : '+971'.ltrim($number, '0');
+            $number = strlen($number) === 10 && strpos($number, '65') === 0 ? '+'.$number : '+65'.$number;
         }
-        // All account phone entrypoints use the UAE calling code, including API/legacy clients.
-        if (($country && strtoupper($country) !== 'AE') || !preg_match('/^\+971[1-9][0-9]{7,8}$/D', $number)) {
+        // Public account entrypoints accept Singapore national or international numbers.
+        if (($country && strtoupper($country) !== 'SG') || !preg_match('/^\+65[3689][0-9]{7}$/D', $number)) {
             throw ValidationException::withMessages(['phone' => translate('Invalid phone number')]);
         }
-        if (!Country::where('status', 1)->whereRaw('UPPER(code) = ?', ['AE'])->exists()) {
+        if (!Country::where('status', 1)->whereRaw('UPPER(code) = ?', ['SG'])->exists()) {
             throw ValidationException::withMessages(['phone' => 'This phone country is not enabled.']);
         }
         return $number;
+    }
+
+    public function normalizeAdmin($value)
+    {
+        // Existing operator accounts may still have an explicitly entered UAE number.
+        $number = preg_replace('/[\s().-]+/', '', (string) $value);
+        if (strpos($number, '00') === 0) { $number = '+'.substr($number, 2); }
+        if (preg_match('/^\+?971[1-9][0-9]{7,8}$/D', $number)) {
+            if (!Country::where('status', 1)->whereRaw('UPPER(code) = ?', ['AE'])->exists()) {
+                throw ValidationException::withMessages(['phone' => 'This phone country is not enabled.']);
+            }
+            return '+'.ltrim($number, '+');
+        }
+        return $this->normalize($value);
     }
 
     public function user($phone)
