@@ -5,6 +5,7 @@
 !/tests/Feature/SellerDashboardPerformanceTest.php
 !/tests/Feature/ShopViewCounterTest.php
 !/tests/Feature/PortalSessionIsolationTest.php
+!/tests/Feature/PortalDomainAliasesTest.php
 !/tests/Feature/AdminSellerListingTest.php
 !/tests/Feature/AdminDisplayTest.php
 !/tests/Feature/PaginationJumpTest.php

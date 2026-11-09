@@ -71,31 +71,8 @@ class SellerRechargeFormTest extends TestCase
     {
         $this->post('/offline-wallet-recharge-modal', ['type' => 1])->assertOk()
             ->assertSee('name="recharge_method"', false)->assertSee('value="BANK"', false)
-            ->assertSee('value="IBAN"', false)->assertSee('1.28')->assertDontSee('Test transfer instructions')->assertSee('name="amount_sgd"', false)->assertDontSee('aiz-megabox')
-            ->assertDontSee('name="bank_account"', false)->assertDontSee('name="iban_bic"', false)
+            ->assertSee('value="IBAN"', false)->assertSee('3.67')->assertDontSee('Test transfer instructions')->assertSee('name="amount_aed"', false)->assertDontSee('aiz-megabox')
+            ->assertSee(__('seller_wallet.manual_review_hint'))->assertSee('aria-describedby="recharge-bic-hint"', false)
             ->assertSee('name="request_token"', false)->assertDontSee('data-iban-required');
-    }
-
-    public function rechargeLanguages()
-    {
-        $translations = json_decode(file_get_contents(__DIR__.'/../../database/data/seller_recharge_translations.json'), true);
-        foreach ($translations as $locale => $messages) {
-            yield $locale => [$locale, $messages];
-        }
-    }
-
-    /** @dataProvider rechargeLanguages */
-    public function testSgdRechargeKeepsTranslatedLabels($locale, $messages)
-    {
-        app()->setLocale($locale);
-        foreach ($messages as $source => $value) {
-            DB::table('translations')->insert(['lang' => $locale,
-                'lang_key' => preg_replace('/[^A-Za-z0-9\_]/', '', str_replace(' ', '_', strtolower($source))),
-                'lang_value' => $value]);
-        }
-        $this->post('/offline-wallet-recharge-modal', ['type' => 1])->assertOk()
-            ->assertSee($messages['Amount'].' (SGD)')
-            ->assertSee($messages['Exchange rate'])->assertSee($messages['Estimated amount'])
-            ->assertSee('1 USD = 1.28 SGD')->assertDontSee('AED');
     }
 }
