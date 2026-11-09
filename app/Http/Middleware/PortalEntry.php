@@ -12,19 +12,19 @@ class PortalEntry
             return $next($request);
         }
 
-        $domain = config('portals.domain');
+        $portal = \App\Services\PortalContext::host($request);
         $portals = [
-            'admin.' . $domain => ['admin', '/admin'],
-            'seller.' . $domain => ['seller', '/seller/dashboard'],
-            'sales.' . $domain => ['salesman', '/dashboard'],
-            'assig.' . $domain => ['delivery_boy', '/dashboard'],
+            'admin' => ['admin', '/admin'],
+            'seller' => ['seller', '/seller/dashboard'],
+            'sales' => ['salesman', '/dashboard'],
+            'delivery' => ['delivery_boy', '/dashboard'],
         ];
 
-        if (!isset($portals[$request->getHost()])) {
+        if (!isset($portals[$portal])) {
             return $next($request);
         }
 
-        list($role, $path) = $portals[$request->getHost()];
+        list($role, $path) = $portals[$portal];
         if ($role === 'delivery_boy' &&
             (!class_exists(\App\Http\Controllers\DeliveryBoyController::class) ||
              !view()->exists('delivery_boys.frontend.dashboard'))) {

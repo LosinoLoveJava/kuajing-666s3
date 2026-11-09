@@ -35,7 +35,7 @@ class PhoneAuth
     public function sendAdminCode(Request $request)
     {
         $data = $request->validate(['phone' => 'required|string|max:40', 'purpose' => 'required|in:login']);
-        $phone = app(PhoneNumber::class)->normalize($data['phone']);
+        $phone = app(PhoneNumber::class)->normalizeAdmin($data['phone']);
         $user = app(PhoneNumber::class)->user($phone);
         if (!$user || !in_array($user->user_type, ['admin', 'staff', 'salesman'], true) || $user->banned) {
             throw ValidationException::withMessages(['phone' => 'Account not found.']);
@@ -111,7 +111,7 @@ class PhoneAuth
             'password' => 'nullable|required_without:code|string|max:100',
             'code' => ['nullable', 'required_without:password', 'string', $this->verificationCodeRule()],
         ]);
-        $phone = app(PhoneNumber::class)->normalize($data['phone']);
+        $phone = app(PhoneNumber::class)->normalizeAdmin($data['phone']);
         $key = 'admin-phone-login:'.hash('sha256', $phone.'|'.$request->ip());
         if (RateLimiter::tooManyAttempts($key, 10)) { abort(429, 'Too many login attempts.'); }
         RateLimiter::hit($key, 900);

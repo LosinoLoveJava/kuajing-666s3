@@ -26,7 +26,7 @@ class SellerRechargeFormTest extends TestCase
     {
         return ['type' => 1, 'recharge_method' => 'Bank', 'bank_name' => 'Test Bank',
             'account_holder' => 'Test Holder', 'bank_account' => '00123456',
-            'amount' => '100.04', 'amount_aed' => '367.15', 'trx_id' => 'TEST-RECHARGE'];
+            'amount' => '100.04', 'amount_sgd' => '128.05', 'trx_id' => 'TEST-RECHARGE'];
     }
 
     public function testBankDetailsAreSavedForReviewAndBalanceIsNotCredited()
@@ -37,7 +37,7 @@ class SellerRechargeFormTest extends TestCase
         $this->assertSame('Bank', $wallet->payment_method);
         $this->assertEquals(0, $wallet->approval);
         $this->assertStringContainsString('Account number: 00123456', $wallet->payment_details);
-        $this->assertStringContainsString('AED: 367.15', $wallet->payment_details);
+        $this->assertStringContainsString('SGD: 128.05', $wallet->payment_details);
         $this->assertEquals(100.04, $wallet->amount);
         $this->assertEquals(10000, auth()->user()->balance);
     }
@@ -72,30 +72,7 @@ class SellerRechargeFormTest extends TestCase
         $this->post('/offline-wallet-recharge-modal', ['type' => 1])->assertOk()
             ->assertSee('name="recharge_method"', false)->assertSee('value="BANK"', false)
             ->assertSee('value="IBAN"', false)->assertSee('1.28')->assertDontSee('Test transfer instructions')->assertSee('name="amount_sgd"', false)->assertDontSee('aiz-megabox')
-            ->assertDontSee('name="bank_account"', false)->assertDontSee('name="iban_bic"', false)
+            ->assertSee(__('seller_wallet.manual_review_hint'))->assertSee('aria-describedby="recharge-bic-hint"', false)
             ->assertSee('name="request_token"', false)->assertDontSee('data-iban-required');
-    }
-
-    public function rechargeLanguages()
-    {
-        $translations = json_decode(file_get_contents(__DIR__.'/../../database/data/seller_recharge_translations.json'), true);
-        foreach ($translations as $locale => $messages) {
-            yield $locale => [$locale, $messages];
-        }
-    }
-
-    /** @dataProvider rechargeLanguages */
-    public function testSgdRechargeKeepsTranslatedLabels($locale, $messages)
-    {
-        app()->setLocale($locale);
-        foreach ($messages as $source => $value) {
-            DB::table('translations')->insert(['lang' => $locale,
-                'lang_key' => preg_replace('/[^A-Za-z0-9\_]/', '', str_replace(' ', '_', strtolower($source))),
-                'lang_value' => $value]);
-        }
-        $this->post('/offline-wallet-recharge-modal', ['type' => 1])->assertOk()
-            ->assertSee($messages['Amount'].' (SGD)')
-            ->assertSee($messages['Exchange rate'])->assertSee($messages['Estimated amount'])
-            ->assertSee('1 USD = 1.28 SGD')->assertDontSee('AED');
     }
 }

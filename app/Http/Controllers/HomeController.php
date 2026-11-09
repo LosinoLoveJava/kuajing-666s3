@@ -100,8 +100,8 @@ class HomeController extends Controller
 
     public function cart_login(Request $request)
     {
-        $request->validate(['email' => 'prohibited', 'phone' => 'required|string|max:40', 'country_code' => 'nullable|in:971']);
-        $request->merge(['phone' => app(\App\Services\PhoneNumber::class)->normalize($request->phone, $request->country), 'country' => 'AE']);
+        $request->validate(['email' => 'prohibited', 'phone' => 'required|string|max:40', 'country_code' => 'nullable|in:65']);
+        $request->merge(['phone' => app(\App\Services\PhoneNumber::class)->normalize($request->phone, $request->country), 'country' => 'SG']);
         $user = app(\App\Services\PhoneAuth::class)->login($request);
         app(\App\Services\PortalLogin::class)->login($user, $request, $request->boolean('remember'));
         return back();

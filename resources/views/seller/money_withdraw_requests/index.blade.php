@@ -133,13 +133,13 @@
                     <th>{{ translate('Date') }}</th>
                     <th>{{ translate('Amount')}}</th>
                     <th>{{ translate('Type')}}</th>
-
+                    
                     <th data-breakpoints="lg">{{ translate('Status')}}</th>
                     <th>{{ translate('Withdraw Type')}}</th>
                     <th>{{ translate('Remarks')}}</th>
                     <th data-breakpoints="lg" width="40%">{{ translate('Message')}}</th>
-
-
+                    
+                    
                 </tr>
                 </thead>
                 <tbody>
@@ -150,14 +150,14 @@
                         <td>{{ single_price($seller_withdraw_request->amount) }}</td>
                         <td>
                             @if( $seller_withdraw_request->type == 1)
-
+                            
                             {{translate('User Balance')}}
                             @else
-
+                            
                               {{translate('Guarantee')}}
                             @endif
                         </td>
-                        <td>
+                        <td> 
                             @if ($seller_withdraw_request->status == 1)
                                 <span class=" badge badge-inline badge-success">{{ translate('Paid')}}</span>
                              @elseif ($seller_withdraw_request->status == 2)
@@ -167,12 +167,12 @@
                             @endif
                         </td>
                         <td>
-
+                            
                             @if( $seller_withdraw_request->w_type == 1)
-
+                            
                             {{translate('Cash')}}
                             @elseif( $seller_withdraw_request->w_type == 2)
-
+                            
                               {{translate('Bank')}}
                             @elseif( $seller_withdraw_request->w_type == 3)
                             {{translate('USDT')}}
@@ -187,7 +187,7 @@ BANK
                         <td>
                             {{ $seller_withdraw_request->message }}
                         </td>
-
+                   
                     </tr>
                 @empty
                     <tr><td colspan="8" class="text-center text-muted">{{ translate('Nothing found') }}</td></tr>
@@ -302,18 +302,18 @@ BANK
                                 <span class="badge badge-inline badge-danger">{{translate('No')}}</span>
                             @endif
                         </td>
-
+                        
                          <td>
                             @if( $list->type == 1)
-
+                            
                             {{translate('User Balance')}}
                             @else
-
+                            
                               {{translate('Guarantee')}}
                             @endif
                         </td>
-
-
+                        
+                        
                         <td>@if($list->reciept)<a href="{{ uploaded_asset($list->reciept) }}" target="_blank" rel="noopener">{{ translate('Receipt') }}</a>@endif</td>
                         <td>{{ date('d-m-Y', strtotime($list->created_at)) }}</td>
                     </tr>
@@ -328,10 +328,10 @@ BANK
             </div>
         </div>
     </div>
-
-
-
-
+    
+    
+    
+    
       <!-- 充值记录 -->
     <div class="card">
         <div class="card-header">
@@ -344,12 +344,12 @@ BANK
                 <tr>
                     <th>#</th>
                     <th data-breakpoints="md">{{ translate('Amount') }}</th>
-
+                
                     <th>{{ translate('Payment Details') }}</th>
-
+         
                     <th data-breakpoints="md">{{ translate('Payment method') }}</th>
-
-
+                    
+                  
                     <th>{{ translate('Date') }}</th>
                 </tr>
                 </thead>
@@ -358,17 +358,17 @@ BANK
                     <tr>
                         <td>{{ $paymentList->firstItem() + $key }}</td>
                         <td>{{ single_price($list->amount) }}</td>
-
+                    
                         <td>{{ $list->payment_details }}</td>
-
+                        
                         <td>
                             {{translate($list->payment_method)}}
                         </td>
-
-
-
-
-
+                        
+                      
+                        
+                        
+                      
                         <td>{{ date('d-m-Y', strtotime($list->created_at)) }}</td>
                     </tr>
                 @empty
@@ -382,8 +382,8 @@ BANK
             </div>
         </div>
     </div>
-
-
+    
+    
     </div>
 @endsection
 
@@ -423,8 +423,8 @@ BANK
                                     <div class="alert alert-success" role="alert">
                                         <h6>{{ translate('Your wallet balance :') }} ${{ $balance }}</h6>
                                     </div>
-
-
+                                    
+                                    
                                 </div>
                             </div>
                             <input type="hidden" name="type" value="1">
