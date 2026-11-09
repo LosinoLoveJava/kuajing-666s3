@@ -15,9 +15,14 @@ class PortalContext
 
     public static function host(Request $request)
     {
-        $domain = strtolower(config('portals.domain'));
-        return ['seller.'.$domain => 'seller', 'admin.'.$domain => 'admin',
-            'sales.'.$domain => 'sales', 'assig.'.$domain => 'delivery'][strtolower($request->getHost())] ?? null;
+        foreach (array_merge([config('portals.domain')], config('portals.aliases', [])) as $domain) {
+            $domain = strtolower(trim((string) $domain));
+            if ($domain === '') { continue; }
+            $portal = ['seller.'.$domain => 'seller', 'admin.'.$domain => 'admin',
+                'sales.'.$domain => 'sales', 'assig.'.$domain => 'delivery'][strtolower($request->getHost())] ?? null;
+            if ($portal) { return $portal; }
+        }
+        return null;
     }
 
     public static function path($path)

@@ -105,10 +105,11 @@ class WalletService
                 'iban_number' => 'nullable|string|max:2000',
                 'iban_bic' => 'nullable|string|max:2000',
                 'request_token' => 'required_without:trx_id|nullable|uuid',
-                'amount_aed' => ['nullable', 'numeric', 'regex:/^[0-9]{1,10}(\.[0-9]{1,2})?$/D', 'min:0.02'],
+                'amount_aed' => 'prohibited',
+                'amount_sgd' => ['nullable', 'numeric', 'regex:/^[0-9]{1,10}(\.[0-9]{1,2})?$/D', 'min:0.01'],
             ];
             $rules['trx_id'] = 'nullable|string|max:200';
-            if ($request->filled('amount_aed')) $rules['amount'] = 'exclude';
+            if ($request->filled('amount_sgd')) $rules['amount'] = 'exclude';
         } else {
             $rules['payment_option'] = 'required|string|max:200';
         }
@@ -120,7 +121,7 @@ class WalletService
         if (!empty($data['photo']) && !Upload::whereKey($data['photo'])->where('user_id', $principal->id)->where('type', 'image')->exists()) {
             throw ValidationException::withMessages(['photo' => 'Please select an image uploaded by your account.']);
         }
-        $method = $data['recharge_method'] ?? $data['payment_option'];
+        $method = $principal->user_type === 'seller' ? $data['recharge_method'] : $data['payment_option'];
         $details = [];
         if ($principal->user_type === 'seller') {
             $details = ['Bank: '.($data['bank_name'] ?? ''), 'Account holder: '.($data['account_holder'] ?? ''),
@@ -130,13 +131,14 @@ class WalletService
                 $details[] = 'Country: '.($data['iban_country'] ?? '');
                 $details[] = 'SWIFT / BIC: '.($data['iban_bic'] ?? '');
             }
-            if (isset($data['amount_aed'])) {
-                // AED entry uses the same fixed rate as the existing seller form. Never trust its hidden USD amount.
-                $data['amount'] = bcadd(bcdiv($data['amount_aed'], '3.67', 8), '0.005', 2);
+            if (isset($data['amount_sgd'])) {
+                // Compute from the configured rate, never the client's hidden USD estimate.
+                $rate = app(ExchangeRate::class);
+                $data['amount'] = $rate->sgdToUsd($data['amount_sgd']);
                 if (bccomp($data['amount'], '0.01', 2) < 0) {
-                    throw ValidationException::withMessages(['amount_aed' => 'Amount is too small.']);
+                    throw ValidationException::withMessages(['amount_sgd' => 'Amount is too small.']);
                 }
-                $details[] = 'AED: '.$data['amount_aed'].' (1 USD = 3.67 AED)';
+                $details[] = 'SGD: '.$data['amount_sgd'].' (1 USD = '.$rate->rate().' SGD)';
             }
         } elseif (!$methods->contains('heading', $method)) {
             throw ValidationException::withMessages(['payment_option' => 'Please select a configured payment method.']);

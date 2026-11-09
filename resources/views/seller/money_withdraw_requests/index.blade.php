@@ -436,7 +436,7 @@ BANK
                             <div class="form-group">
                                 <label for="withdraw-amount">{{ translate('Amount')}} (USD) <span class="text-danger">*</span></label>
                                 <input id="withdraw-amount" type="number" lang="en" dir="ltr" class="form-control" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01" placeholder="{{ translate('Amount') }}" required>
-                                <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr" id="withdraw-rate">1 USD = 1.28 SGD</bdi></div>
+                                <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr" id="withdraw-rate">1 USD = {{ rtrim(rtrim(app(\App\Services\ExchangeRate::class)->rate(), '0'), '.') }} SGD</bdi></div>
                                 <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="withdraw-sgd">0.00</span> SGD</bdi></div>
                             </div>
 
@@ -494,7 +494,7 @@ BANK
             var numberFormat = new Intl.NumberFormat(locales[locale] || locale.replace('_', '-'), {
                 minimumFractionDigits: 2, maximumFractionDigits: 2
             });
-            var rate = Number(1.28);
+            var rate = Number(@json(app(\App\Services\ExchangeRate::class)->rate()));
             document.getElementById('withdraw-rate').textContent = new Intl.NumberFormat(locales[locale] || locale.replace('_', '-')).format(1) + ' USD = ' + numberFormat.format(rate) + ' SGD';
             function updateAmount() {
                 var usd = Number(amount.value);

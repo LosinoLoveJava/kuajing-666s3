@@ -11,11 +11,12 @@
             var number = input.value.replace(/[\s().-]+/g, '');
             if (number.indexOf('00') === 0) number = '+' + number.slice(2);
             if (number && number.charAt(0) !== '+') {
-                number = number.indexOf(dialCode) === 0 ? '+' + number : '+' + dialCode + (country === 'SG' ? number : number.replace(/^0+/, ''));
+                var hasDialCode = country === 'SG' ? number.length === 10 && number.indexOf(dialCode) === 0 : number.indexOf(dialCode) === 0;
+                number = hasDialCode ? '+' + number : '+' + dialCode + (country === 'SG' ? number : number.replace(/^0+/, ''));
             }
             form.elements.country.value = country;
             form.elements.phone.value = number;
-            var pattern = country === 'SG' ? /^\+65[89][0-9]{7}$/ : /^\+971[1-9][0-9]{7,8}$/;
+            var pattern = country === 'SG' ? /^\+65[3689][0-9]{7}$/ : /^\+971[1-9][0-9]{7,8}$/;
             var valid = pattern.test(number) && intlTelInputUtils.isValidNumber(number, country);
             input.setCustomValidity(input.value && !valid ? @json(translate('Invalid phone number')) : '');
             return valid;

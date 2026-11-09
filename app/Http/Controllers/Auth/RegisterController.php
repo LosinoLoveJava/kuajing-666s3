@@ -22,8 +22,8 @@ class RegisterController extends Controller
     {
         $request->validate(['email' => 'prohibited']);
         $phone = (string) $request->phone;
-        $request->validate(['country_code' => 'nullable|in:971']);
-        $request->merge(['mode' => 'register', 'phone' => app(\App\Services\PhoneNumber::class)->normalize($phone, $request->country), 'country' => 'AE']);
+        $request->validate(['country_code' => 'nullable|in:65']);
+        $request->merge(['mode' => 'register', 'phone' => app(\App\Services\PhoneNumber::class)->normalize($phone, $request->country), 'country' => 'SG']);
         return app(\App\Http\Controllers\PhoneAccessController::class)->submit($request);
     }
 }

@@ -1,5 +1,5 @@
 @php
-    $phoneCountry = $phoneCountry ?? 'AE';
+    $phoneCountry = $phoneCountry ?? 'SG';
     $phoneDialCode = $phoneCountry === 'SG' ? '+65' : '+971';
 @endphp
 <input type="hidden" name="country" value="{{ $phoneCountry }}">

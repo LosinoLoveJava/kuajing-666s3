@@ -43,11 +43,11 @@ class PortalSessionIsolationTest extends TestCase
             $t->increments('id'); $t->string('lang'); $t->string('lang_key'); $t->text('lang_value'); $t->timestamps();
         });
         Schema::create('countries', function (Blueprint $t) { $t->increments('id'); $t->string('code'); $t->integer('status'); });
-        DB::table('countries')->insert(['code' => 'AE', 'status' => 1]);
+        DB::table('countries')->insert(['code' => 'SG', 'status' => 1]);
         Schema::create('carts', function (Blueprint $t) { $t->increments('id'); $t->integer('user_id')->nullable(); });
         foreach (['customer', 'seller', 'admin', 'salesman'] as $index => $role) {
             $user = new User;
-            $user->forceFill(['name' => $role, 'email' => $role.'@example.test', 'phone' => '+97150123456'.$index,
+            $user->forceFill(['name' => $role, 'email' => $role.'@example.test', 'phone' => '+658123456'.$index,
                 'password' => Hash::make('fixture-password'), 'user_type' => $role, 'phone_verified_at' => now()])->save();
             $this->accounts[$role] = $user;
         }

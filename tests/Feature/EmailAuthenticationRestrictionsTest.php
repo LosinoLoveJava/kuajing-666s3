@@ -21,6 +21,9 @@ class EmailAuthenticationRestrictionsTest extends TestCase
         config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:',
             'cache.default' => 'array', 'session.driver' => 'array', 'portals.domain' => 'example.test']);
         DB::purge('sqlite');
+        app('view')->getFinder()->prependLocation(base_path('tests/Fixtures/views'));
+        app('view')->getFinder()->flush();
+        Schema::create('business_settings', function (Blueprint $t) { $t->increments('id'); $t->string('type'); $t->text('value')->nullable(); $t->string('lang')->nullable(); });
         Http::fake();
         Notification::fake();
         Schema::create('users', function (Blueprint $t) {
@@ -34,7 +37,7 @@ class EmailAuthenticationRestrictionsTest extends TestCase
         Schema::create('countries', function (Blueprint $t) {
             $t->increments('id'); $t->string('code'); $t->string('name'); $t->integer('status');
         });
-        DB::table('countries')->insert(['code' => 'AE', 'name' => 'United Arab Emirates', 'status' => 1]);
+        DB::table('countries')->insert(['code' => 'SG', 'name' => 'Singapore', 'status' => 1]);
         Schema::create('translations', function (Blueprint $t) {
             $t->increments('id'); $t->string('lang'); $t->string('lang_key'); $t->text('lang_value'); $t->timestamps();
         });
@@ -52,7 +55,7 @@ class EmailAuthenticationRestrictionsTest extends TestCase
     {
         $user = new User;
         $user->name = 'Fixture'; $user->email = $role.'@example.test';
-        $user->phone = '+971501234567'; $user->phone_normalized = $user->phone;
+        $user->phone = '+6581234567'; $user->phone_normalized = $user->phone;
         $user->phone_verified_at = now(); $user->email_verified_at = now();
         $user->password = Hash::make('password123'); $user->user_type = $role;
         $user->save();
@@ -65,10 +68,10 @@ class EmailAuthenticationRestrictionsTest extends TestCase
     }
 
     /** @dataProvider publicPortals */
-    public function testLegacyPublicLoginEntriesRedirectToPhone($portal)
+    public function testPublicLoginEntriesRenderCurrentPhoneForm($portal)
     {
         foreach (['/login', '/users/login'] as $path) {
-            $this->get('http://'.$portal.'.example.test'.$path)->assertRedirect('http://'.$portal.'.example.test/users/phone');
+            $this->get('http://'.$portal.'.example.test'.$path)->assertOk()->assertSee('name="national_phone"', false)->assertDontSee('type="email"', false);
         }
         foreach (['/register', '/users/registration'] as $path) {
             $this->get('http://'.$portal.'.example.test'.$path)
@@ -112,7 +115,7 @@ class EmailAuthenticationRestrictionsTest extends TestCase
     public function testPasswordOnlyWebLoginRejectsVerificationCodes()
     {
         foreach (['/users/phone', '/seller/phone', '/login'] as $path) {
-            $payload = ['mode' => 'login', 'phone' => '+971501234567', 'code' => '89001'];
+            $payload = ['mode' => 'login', 'phone' => '+6581234567', 'code' => '89001'];
             $this->postJson($path, $payload)->assertStatus(422)
                 ->assertJsonValidationErrors(['password', 'code']);
             $this->postJson($path, $payload + ['password' => 'password123'])->assertStatus(422)
@@ -124,7 +127,7 @@ class EmailAuthenticationRestrictionsTest extends TestCase
     public function testPasswordOnlyWebLoginCannotRequestLoginCodes()
     {
         foreach (['/users/phone/send-code', '/seller/phone/send-code'] as $path) {
-            $this->postJson($path, ['phone' => '+971501234567', 'purpose' => 'login'])
+            $this->postJson($path, ['phone' => '+6581234567', 'purpose' => 'login'])
                 ->assertStatus(422)->assertJsonValidationErrors('purpose');
         }
         Http::assertNothingSent();
@@ -156,7 +159,7 @@ class EmailAuthenticationRestrictionsTest extends TestCase
         $payload = ['name' => 'Fixture', 'email' => 'new@example.test',
             'password' => 'password123', 'password_confirmation' => 'password123'];
         $this->postJson('/register', $payload)->assertStatus(422)->assertJsonValidationErrors('email');
-        $this->postJson('/register', $payload + ['phone' => '+971501234567', 'code' => '89001'])
+        $this->postJson('/register', $payload + ['phone' => '+6581234567', 'code' => '89001'])
             ->assertStatus(422)->assertJsonValidationErrors('email');
         $this->postJson('/api/v2/auth/signup', ['register_by' => 'email', 'email_or_phone' => 'new@example.test'] + $payload)
             ->assertStatus(422)->assertJsonValidationErrors('register_by');
