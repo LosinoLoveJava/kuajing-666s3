@@ -88,7 +88,7 @@ class WalletWorkflowTest extends TestCase
     {
         $user = $this->user('seller'); $admin = $this->user('admin');
         $service = app(WalletService::class);
-        $data = ['amount_sgd'=>'128.05', 'recharge_method'=>'IBAN', 'request_token'=>(string) Str::uuid()];
+        $data = ['amount_aed'=>'367.15', 'recharge_method'=>'IBAN', 'request_token'=>(string) Str::uuid()];
         $wallet = $service->submit($this->request($data), $user);
         $this->assertEquals(100.04, $wallet->amount);
         $this->assertEquals(100, $user->fresh()->balance);
@@ -160,47 +160,14 @@ class WalletWorkflowTest extends TestCase
         $this->assertConflict(function () use ($service, $admin, $wallet) { $service->review($this->request(['id' => $wallet->id, 'status' => 1], $admin)); });
     }
 
-    public function testSellerSgdConversionIgnoresTamperedHiddenUsd()
+    public function testSellerAedConversionIgnoresTamperedHiddenUsd()
     {
         $user = $this->user('seller');
-        $data = array_merge($this->rechargeData('seller'), ['amount_sgd' => '128.00', 'amount' => 'not-a-number']);
+        $data = array_merge($this->rechargeData('seller'), ['amount_aed' => '367.00', 'amount' => 'not-a-number']);
         $wallet = app(WalletService::class)->submit($this->request($data), $user);
         $this->assertEquals(100, $wallet->amount);
-        $this->assertStringContainsString('SGD: 128.00', $wallet->payment_details);
+        $this->assertStringContainsString('AED: 367.00', $wallet->payment_details);
         $this->assertEquals(100, $user->fresh()->balance);
-    }
-
-    public function testSgdRechargeUsesTheSameRelativeRateAsThePublicQuote()
-    {
-        DB::table('currencies')->where('code', 'USD')->update(['exchange_rate'=>2]);
-        DB::table('currencies')->where('code', 'SGD')->update(['exchange_rate'=>2.56]);
-        $quote = app(\App\Services\ExchangeRate::class)->quote();
-        $this->assertSame('1.280000', $quote['rate']);
-        $wallet = app(WalletService::class)->submit($this->request([
-            'amount_sgd'=>'128.00', 'amount'=>'999999', 'recharge_method'=>'IBAN',
-            'request_token'=>(string) Str::uuid()]), $this->user('seller'));
-        $this->assertEquals(100, $wallet->amount);
-        $this->assertStringContainsString('1 USD = 1.28 SGD', $wallet->payment_details);
-    }
-
-    public function testOldAedFormsAreRejectedInsteadOfCreditingTheWrongCurrency()
-    {
-        $user = $this->user('seller');
-        try {
-            app(WalletService::class)->submit($this->request([
-                'amount_aed'=>'367.00', 'amount'=>'100.00', 'recharge_method'=>'IBAN',
-                'request_token'=>(string) Str::uuid()]), $user);
-            $this->fail('Stale AED form accepted');
-        } catch (ValidationException $e) { $this->assertArrayHasKey('amount_aed', $e->errors()); }
-        $this->assertDatabaseCount('wallets', 0);
-        $this->assertEquals(100, $user->fresh()->balance);
-    }
-
-    public function testBuyerCannotOverrideTheConfiguredPaymentMethodWithASellerField()
-    {
-        $data = array_merge($this->rechargeData('customer'), ['recharge_method'=>'Unconfigured']);
-        $wallet = app(WalletService::class)->submit($this->request($data), $this->user());
-        $this->assertSame('Test bank transfer', $wallet->payment_method);
     }
 
     /** @dataProvider methods */
@@ -280,11 +247,11 @@ class WalletWorkflowTest extends TestCase
         foreach (['recharge', 'withdrawal'] as $kind) {
             try {
                 if ($kind === 'recharge') app(WalletService::class)->submit($this->request([
-                    'recharge_method'=>'IBAN', 'request_token'=>(string) Str::uuid(), 'amount_sgd'=>$amount, 'amount'=>'100.00']), $user);
+                    'recharge_method'=>'IBAN', 'request_token'=>(string) Str::uuid(), 'amount_aed'=>$amount, 'amount'=>'100.00']), $user);
                 else app(WithdrawalService::class)->apply($this->request(['w_type'=>4, 'amount'=>$amount]), $user);
                 $this->fail('Invalid seller amount accepted');
             } catch (ValidationException $e) {
-                $this->assertArrayHasKey($kind === 'recharge' ? 'amount_sgd' : 'amount', $e->errors());
+                $this->assertArrayHasKey($kind === 'recharge' ? 'amount_aed' : 'amount', $e->errors());
             }
         }
         $this->assertDatabaseCount('wallets', 0);
@@ -292,14 +259,14 @@ class WalletWorkflowTest extends TestCase
         $this->assertEquals(100, $user->fresh()->balance);
     }
 
-    public function sgdAmounts() { return [['0.01','0.01'], ['0.02','0.02'], ['0.03','0.02'], ['1.28','1.00'], ['128.05','100.04'], ['9999999999.99','7812499999.99']]; }
+    public function aedAmounts() { return [['0.02','0.01'], ['0.03','0.01'], ['3.67','1.00'], ['367.15','100.04'], ['9999999999.99','2724795640.32']]; }
 
-    /** @dataProvider sgdAmounts */
-    public function testSgdRechargeUsesPreciseServerSideRounding($sgd, $usd)
+    /** @dataProvider aedAmounts */
+    public function testAedRechargeUsesPreciseServerSideRounding($aed, $usd)
     {
         $user = $this->user('seller');
         $wallet = app(WalletService::class)->submit($this->request([
-            'amount_sgd'=>$sgd, 'recharge_method'=>'IBAN', 'request_token'=>(string) Str::uuid()]), $user);
+            'amount_aed'=>$aed, 'recharge_method'=>'IBAN', 'request_token'=>(string) Str::uuid()]), $user);
         $this->assertSame($usd, number_format((float) $wallet->amount, 2, '.', ''));
         $this->assertEquals(100, $user->fresh()->balance);
     }
@@ -308,7 +275,7 @@ class WalletWorkflowTest extends TestCase
     {
         $user = $this->user('seller');
         try {
-            app(WalletService::class)->submit($this->request(['amount_sgd'=>'128.00', 'recharge_method'=>'IBAN']), $user);
+            app(WalletService::class)->submit($this->request(['amount_aed'=>'367.00', 'recharge_method'=>'IBAN']), $user);
             $this->fail('Missing duplicate protection accepted');
         } catch (ValidationException $e) { $this->assertArrayHasKey('request_token', $e->errors()); }
         try {

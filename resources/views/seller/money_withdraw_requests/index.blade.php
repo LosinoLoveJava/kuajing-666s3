@@ -433,12 +433,11 @@ BANK
                                 <input class="form-control" id="p" value="BANK" readonly>
                             </div>
                             @include('partials.iban_form', ['fixedBank' => true, 'manualReview' => true])
-                            @php($sgdRate = app(\App\Services\ExchangeRate::class)->quote()['rate'])
                             <div class="form-group">
                                 <label for="withdraw-amount">{{ translate('Amount')}} (USD) <span class="text-danger">*</span></label>
                                 <input id="withdraw-amount" type="number" lang="en" dir="ltr" class="form-control" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01" placeholder="{{ translate('Amount') }}" required>
-                                <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr">1 USD = {{ rtrim(rtrim($sgdRate, '0'), '.') }} SGD</bdi></div>
-                                <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="withdraw-sgd">0.00</span> SGD</bdi></div>
+                                <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr">1 USD = 3.67 AED</bdi></div>
+                                <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="withdraw-aed">0.00</span> AED</bdi></div>
                             </div>
 
                             <div class="form-group">
@@ -489,12 +488,12 @@ BANK
             var form = document.querySelector('#request_modal form');
             if (!form) return;
             var amount = form.elements.amount;
-            var output = document.getElementById('withdraw-sgd');
+            var output = document.getElementById('withdraw-aed');
             function updateAmount() {
                 var usd = Number(amount.value);
                 output.textContent = new Intl.NumberFormat(document.documentElement.lang || 'en', {
                     minimumFractionDigits: 2, maximumFractionDigits: 2
-                }).format(Number.isFinite(usd) && usd > 0 ? Math.round(usd * @json((float) ($sgdRate ?? 1.28)) * 100) / 100 : 0);
+                }).format(Number.isFinite(usd) && usd > 0 ? Math.round(usd * 3.67 * 100) / 100 : 0);
             }
             amount.addEventListener('input', updateAmount);
             updateAmount();

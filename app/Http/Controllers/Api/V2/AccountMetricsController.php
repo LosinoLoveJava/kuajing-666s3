@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\V2;
 
-use App\Services\ExchangeRate;
+use App\Models\Currency;
 use App\Services\CompletedOrders;
 use Illuminate\Http\Request;
 
@@ -10,13 +10,20 @@ class AccountMetricsController extends Controller
 {
     public function exchangeRate(Request $request)
     {
-        $request->validate(['from' => 'sometimes|in:USD', 'to' => 'sometimes|in:SGD']);
-        try {
-            return response()->json(['success' => true, 'data' => app(ExchangeRate::class)->quote()]);
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $error) {
-            if ($error->getStatusCode() !== 503) { throw $error; }
-            return response()->json(['success' => false, 'message' => $error->getMessage()], 503);
+        $request->validate(['from' => 'sometimes|in:USD', 'to' => 'sometimes|in:AED']);
+        $currencies = Currency::whereIn('code', ['USD', 'AED'])->get()->keyBy('code');
+        $usd = $currencies->get('USD');
+        $aed = $currencies->get('AED');
+        if (!$usd || !$aed || !is_numeric($usd->exchange_rate) || !is_numeric($aed->exchange_rate)
+            || $usd->exchange_rate <= 0 || $aed->exchange_rate <= 0) {
+            return response()->json(['success' => false, 'message' => 'USD/AED exchange rate is not configured.'], 503);
         }
+        return response()->json(['success' => true, 'data' => [
+            'from' => 'USD', 'to' => 'AED',
+            'rate' => bcdiv((string) $aed->exchange_rate, (string) $usd->exchange_rate, 6),
+            'source' => 'platform_configuration',
+            'updated_at' => collect([$usd->updated_at, $aed->updated_at])->filter()->sort()->last(),
+        ]]);
     }
 
     public function completedOrders(Request $request)

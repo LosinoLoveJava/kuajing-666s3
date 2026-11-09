@@ -9,11 +9,11 @@
             var number = input.value.replace(/[\s().-]+/g, '');
             if (number.indexOf('00') === 0) number = '+' + number.slice(2);
             if (number && number.charAt(0) !== '+') {
-                number = number.length === 10 && number.indexOf('65') === 0 ? '+' + number : '+65' + number;
+                number = number.indexOf('971') === 0 ? '+' + number : '+971' + number.replace(/^0+/, '');
             }
-            form.elements.country.value = 'SG';
+            form.elements.country.value = 'AE';
             form.elements.phone.value = number;
-            var valid = /^\+65[3689][0-9]{7}$/.test(number) && intlTelInputUtils.isValidNumber(number, 'SG');
+            var valid = /^\+971[1-9][0-9]{7,8}$/.test(number) && intlTelInputUtils.isValidNumber(number, 'AE');
             input.setCustomValidity(input.value && !valid ? @json(translate('Invalid phone number')) : '');
             return valid;
         };
@@ -21,18 +21,27 @@
         input.addEventListener('input', readPhone);
         input.addEventListener('change', readPhone);
         input.addEventListener('blur', function () {
-            if (syncPhone()) input.value = intlTelInputUtils.formatNumber(form.elements.phone.value, 'SG', intlTelInputUtils.numberFormat.NATIONAL);
+            if (syncPhone()) input.value = intlTelInputUtils.formatNumber(form.elements.phone.value, 'AE', intlTelInputUtils.numberFormat.NATIONAL);
         });
         form.addEventListener('submit', function (event) {
             if (!syncPhone()) { event.preventDefault(); input.reportValidity(); }
         });
-        if (readPhone()) input.value = intlTelInputUtils.formatNumber(form.elements.phone.value, 'SG', intlTelInputUtils.numberFormat.NATIONAL);
+        if (readPhone()) input.value = intlTelInputUtils.formatNumber(form.elements.phone.value, 'AE', intlTelInputUtils.numberFormat.NATIONAL);
     }
+    var method = document.getElementById('phone-login-method');
+    if (method) method.addEventListener('change', function () {
+        var useCode = method.value === 'code';
+        document.getElementById('phone-code-fields').hidden = !useCode;
+        document.getElementById('phone-password-fields').hidden = useCode;
+        form.elements.code.disabled = !useCode; form.elements.code.required = useCode;
+        form.elements.password.disabled = useCode; form.elements.password.required = !useCode;
+        form.elements.password.minLength = 1;
+    });
     if (button) button.addEventListener('click', async function () {
         if (!syncPhone()) { form.elements.national_phone.reportValidity(); return; }
         button.disabled = true; feedback.textContent = @json(translate('Sending...'));
         try {
-            var response = await fetch(@json(route($phoneSendRoute ?? 'phone.send')), {method:'POST', credentials:'same-origin', headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':form.elements._token.value}, body:JSON.stringify({phone:form.elements.phone.value,country:form.elements.country.value,purpose:form.elements.mode.value})});
+            var response = await fetch(@json(route('phone.send')), {method:'POST', credentials:'same-origin', headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':form.elements._token.value}, body:JSON.stringify({phone:form.elements.phone.value,country:form.elements.country.value,purpose:form.elements.mode.value})});
             var data = await response.json();
             if (!response.ok || !data.result) { throw new Error(data.errors ? Object.values(data.errors).flat().join(' ') : (data.message || 'SMS submission failed.')); }
             feedback.textContent = data.message;

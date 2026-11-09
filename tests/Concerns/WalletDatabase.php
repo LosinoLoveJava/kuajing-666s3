@@ -13,10 +13,6 @@ trait WalletDatabase
         config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:',
             'cache.default' => 'array', 'session.driver' => 'array']);
         DB::purge('sqlite');
-        Schema::create('currencies', function (Blueprint $t) {
-            $t->increments('id'); $t->string('code'); $t->decimal('exchange_rate', 20, 5); $t->timestamps();
-        });
-        DB::table('currencies')->insert([['code'=>'USD', 'exchange_rate'=>1], ['code'=>'SGD', 'exchange_rate'=>1.28]]);
         Schema::create('users', function (Blueprint $t) {
             $t->increments('id'); $t->string('name'); $t->string('user_type'); $t->decimal('balance',20,2)->default(100);
             $t->integer('reputation_score')->default(100); $t->boolean('banned')->default(false);

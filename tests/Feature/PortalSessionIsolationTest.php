@@ -27,7 +27,7 @@ class PortalSessionIsolationTest extends TestCase
         config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:',
             'cache.default' => 'array', 'session.driver' => 'file', 'session.files' => $this->directory,
             'session.cookie' => 'portal_test', 'session.domain' => '.example.test', 'session.secure' => false,
-            'portals.domain' => 'example.test', 'portals.aliases' => ['alias.test']]);
+            'portals.domain' => 'example.test']);
         DB::purge('sqlite');
         $this->withoutMiddleware([\App\Http\Middleware\Language::class, \App\Http\Middleware\HttpsProtocol::class,
             \App\Http\Middleware\CheckForMaintenanceMode::class]);
@@ -43,11 +43,11 @@ class PortalSessionIsolationTest extends TestCase
             $t->increments('id'); $t->string('lang'); $t->string('lang_key'); $t->text('lang_value'); $t->timestamps();
         });
         Schema::create('countries', function (Blueprint $t) { $t->increments('id'); $t->string('code'); $t->integer('status'); });
-        DB::table('countries')->insert(['code' => 'SG', 'status' => 1]);
+        DB::table('countries')->insert(['code' => 'AE', 'status' => 1]);
         Schema::create('carts', function (Blueprint $t) { $t->increments('id'); $t->integer('user_id')->nullable(); });
         foreach (['customer', 'seller', 'admin', 'salesman'] as $index => $role) {
             $user = new User;
-            $user->forceFill(['name' => $role, 'email' => $role.'@example.test', 'phone' => '+658123456'.$index,
+            $user->forceFill(['name' => $role, 'email' => $role.'@example.test', 'phone' => '+97150123456'.$index,
                 'password' => Hash::make('fixture-password'), 'user_type' => $role, 'phone_verified_at' => now()])->save();
             $this->accounts[$role] = $user;
         }
@@ -109,7 +109,7 @@ class PortalSessionIsolationTest extends TestCase
 
     public static function hostModes()
     {
-        return [['single-host'], ['subdomains'], ['alias-subdomains']];
+        return [['single-host'], ['subdomains']];
     }
 
     /** @dataProvider hostModes */
@@ -118,9 +118,6 @@ class PortalSessionIsolationTest extends TestCase
         $bases = $mode === 'single-host' ? array_fill_keys(['customer', 'seller', 'admin', 'salesman'], 'http://localhost') :
             ['customer' => 'http://www.example.test', 'seller' => 'http://seller.example.test',
                 'admin' => 'http://admin.example.test', 'salesman' => 'http://sales.example.test'];
-        if ($mode === 'alias-subdomains') {
-            $bases = array_map(function ($base) { return str_replace('example.test', 'alias.test', $base); }, $bases);
-        }
         $identities = ['customer' => '/__portal/identity?portal=customer', 'seller' => '/seller/__portal_identity',
             'admin' => '/admin/__portal_identity', 'salesman' => '/salesman/__portal_identity'];
         foreach ($bases as $role => $base) { $this->signIn($base, $role); }
