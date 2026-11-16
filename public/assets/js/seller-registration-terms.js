@@ -3,6 +3,7 @@
 
     // Frontend-only copy: [sentence with {terms} link, title, validation].
     var dictionary = {
+        tr: ['Aşağıdaki kutuyu işaretleyerek Satıcı, bu {terms} metnini okuduğunu ve anladığını onaylar.', 'Satıcı Kayıt Şartları ve Koşulları', 'Lütfen Satıcı Kayıt Şartları ve Koşullarını kabul edin.'],
         en: ['By checking the box below, the Seller confirms that: They have read and understood these {terms}.', 'Seller Registration Terms and Conditions', 'Please accept the Seller Registration Terms and Conditions.'],
         cn: ['勾选下方复选框，即表示卖家确认：已阅读并理解本{terms}。', '卖家注册条款与条件', '请同意卖家注册条款与条件。'],
         hk: ['勾選下方核取方塊，即表示賣家確認：已閱讀並理解本{terms}。', '賣家註冊條款與條件', '請同意賣家註冊條款與條件。'],

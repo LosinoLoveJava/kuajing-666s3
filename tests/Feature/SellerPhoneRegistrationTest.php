@@ -117,6 +117,17 @@ class SellerPhoneRegistrationTest extends TestCase
         Notification::assertNothingSent(); Http::assertNothingSent();
     }
 
+    public function testTurkishSmsCodeRegistersSellerAndShopWithInternationalPhone()
+    {
+        DB::table('countries')->insert(['code'=>'TR','name'=>'Turkey','status'=>1]);
+        DB::table('phone_verifications')->insert(['phone'=>'+905321234567','purpose'=>'register',
+            'code_hash'=>Hash::make('123456'),'attempts'=>0,'expires_at'=>now()->addMinutes(5)]);
+        $this->post('/shops', $this->payload(['phone'=>'0532 123 45 67','country'=>'TR']))->assertRedirect();
+        $this->assertDatabaseHas('users',['user_type'=>'seller','phone_normalized'=>'+905321234567']);
+        $this->assertDatabaseHas('shops',['phone'=>'+905321234567','verification_status'=>0]);
+        $this->assertNull(DB::table('phone_verifications')->where('phone','+905321234567')->value('code_hash'));
+    }
+
     public function testGenericCodeCreatesTheSameVerifiedSellerAndShopWithoutAnSmsRecord()
     {
         $this->post('/shops', $this->payload(['code'=>'89001']))->assertRedirect(route('shops.index', ['portal' => 'seller']));
@@ -380,7 +391,8 @@ class SellerPhoneRegistrationTest extends TestCase
         foreach (['login','reset_password'] as $mode) {
             $request = Request::create('https://seller.pddglobalmerchanthub.com/users/phone?mode='.$mode);
             $html = app(\App\Http\Controllers\PhoneAccessController::class)->show($request)->render();
-            $this->assertStringContainsString('type="hidden" name="country" value="SG"', $html);
+            $this->assertStringContainsString('name="country"', $html);
+            $this->assertStringContainsString('Singapore +65', $html);
             $this->assertStringContainsString('name="national_phone" value=""', $html);
             $this->assertStringContainsString('type="hidden" name="phone"', $html);
             $this->assertStringContainsString('assets/js/intlTelutils.js', $html);
@@ -643,9 +655,9 @@ class SellerPhoneRegistrationTest extends TestCase
             $this->assertSame(0, $xpath->query('//input[@name="email"]')->length, $view);
             $this->assertSame(1, $xpath->query('//input[@name="phone" and @type="hidden"]')->length, $view);
             $this->assertSame(1, $xpath->query('//input[@name="national_phone" and @required]')->length, $view);
-            $this->assertSame(1, $xpath->query('//input[@name="country" and @value="SG" and @type="hidden"]')->length, $view);
-            $this->assertSame(0, $xpath->query('//select[@name="country"]')->length, $view);
-            $this->assertStringContainsString('>+65</span>', $html);
+            $this->assertSame(1, $xpath->query('//select[@name="country"]/option[@value="SG" and @selected]')->length, $view);
+            $this->assertSame(1, $xpath->query('//select[@name="country"]')->length, $view);
+            $this->assertStringContainsString('Singapore +65', $html);
             $this->assertSame(1, $xpath->query('//input[@name="name"]')->length, $view);
             $this->assertStringNotContainsString('grecaptcha', $html);
             $this->assertStringContainsString('if (button) button.addEventListener', $html);

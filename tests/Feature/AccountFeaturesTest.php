@@ -89,15 +89,15 @@ class AccountFeaturesTest extends TestCase
         }
     }
 
-    public function testAllPublicPhoneModesHaveFixedSingaporePrefixWithoutCountrySelector()
+    public function testAllPublicPhoneModesOfferEnabledCountrySelector()
     {
         foreach (['register', 'login', 'reset_password'] as $mode) {
             $html = $this->renderPhonePage($mode);
-            $this->assertStringContainsString('type="hidden" name="country" value="SG"', $html);
-            $this->assertStringContainsString('>+65</span>', $html);
+            $this->assertStringContainsString('name="country"', $html);
+            $this->assertStringContainsString('Singapore +65', $html);
             $this->assertStringContainsString('name="national_phone" value=""', $html);
             $this->assertStringContainsString('autocomplete="tel-national"', $html);
-            $this->assertStringNotContainsString('<select class="form-control" name="country"', $html);
+            $this->assertStringContainsString('<select class="form-control', $html);
             $this->assertStringNotContainsString('International phone number', $html);
             $this->assertStringContainsString('assets/js/intlTelutils.js', $html);
         }
@@ -107,7 +107,7 @@ class AccountFeaturesTest extends TestCase
     {
         session()->flashInput(['country'=>'US', 'phone'=>'+12025550123', 'national_phone'=>'+12025550123']);
         $html = $this->renderPhonePage('register');
-        $this->assertStringContainsString('name="country" value="SG"', $html);
+        $this->assertStringContainsString('value="SG"  selected', $html);
         $this->assertStringNotContainsString('value="US"', $html);
         // Keep invalid old input visible for correction; never silently turn a foreign account into Singapore.
         $this->assertStringContainsString('name="national_phone" value="+12025550123"', $html);
@@ -156,6 +156,25 @@ class AccountFeaturesTest extends TestCase
         $this->assertDatabaseHas('users', ['phone'=>'+6581234567', 'phone_normalized'=>'+6581234567']);
         $this->postJson('/api/v2/auth/phone/login', ['phone'=>'81234567','password'=>'password123'])->assertOk();
         Http::assertNothingSent();
+    }
+
+    public function testTurkishSmsRegisterLoginAndResetUseNormalizedNumberAndSingleUseCode()
+    {
+        DB::table('countries')->insert(['code'=>'TR','name'=>'Turkey','status'=>1]);
+        $this->getJson('/api/v2/auth/phone/countries')->assertOk()->assertJsonCount(2,'data')->assertJsonFragment(['country'=>'TR','dial_code'=>'+90','name'=>'Turkey']);
+        $this->postJson('/api/v2/auth/phone/send-code',['phone'=>'0532 123 45 67','country'=>'TR','purpose'=>'register'])->assertOk();
+        Http::assertSent(function ($request) { return $request['phone'] === '905321234567'; });
+        $payload = ['phone'=>'5321234567','country'=>'TR','name'=>'Turkish Customer','code'=>$this->code,
+            'password'=>'password123','password_confirmation'=>'password123'];
+        $this->postJson('/api/v2/auth/phone/register',$payload)->assertOk();
+        $this->assertDatabaseHas('users',['phone'=>'+905321234567','phone_normalized'=>'+905321234567']);
+        $this->postJson('/api/v2/auth/phone/login',['phone'=>'+905321234567','password'=>'password123'])->assertOk();
+        $this->travel(61)->seconds();
+        $this->postJson('/api/v2/auth/phone/send-code',['phone'=>'+905321234567','purpose'=>'reset_password'])->assertOk();
+        $payload['code'] = $this->code; $payload['password'] = $payload['password_confirmation'] = 'newpassword123';
+        $this->postJson('/api/v2/auth/phone/reset-password',$payload)->assertOk();
+        $this->postJson('/api/v2/auth/phone/reset-password',$payload)->assertStatus(422)->assertJsonValidationErrors('code');
+        $this->postJson('/api/v2/auth/phone/login',['phone'=>'00905321234567','password'=>'newpassword123'])->assertOk();
     }
 
     public function testLegacyLoginAndCartDefaultToFixedSingaporeWithoutCountryCode()

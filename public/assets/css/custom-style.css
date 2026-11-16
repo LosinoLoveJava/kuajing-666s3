@@ -1,4 +1,27 @@
 /*your custom css goes here*/
+/* Keep the complete country/dial code visible, including when text is zoomed. */
+.phone-number-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.phone-number-fields .phone-number-country {
+    flex: 1 0 auto;
+    width: auto;
+    min-width: 0;
+    max-width: 100%;
+    padding-inline-end: 2.5rem;
+}
+.phone-number-fields .phone-number-input {
+    flex: 1 1 10rem;
+    width: 0;
+    min-width: 0;
+}
+.iban-account-details {
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+}
+
 .aiz-pagination-nav {
     gap: 12px;
 }

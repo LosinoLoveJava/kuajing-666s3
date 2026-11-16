@@ -32,7 +32,7 @@
                                     @include('frontend.partials.phone_registration_fields', ['phoneFormId' => 'shop', 'phoneCountry' => 'SG'])
                                 </div>
                                 <div class="form-group" id="phone-code-fields">
-                                    <label class="d-block">{{ translate('Verification code') }}<input class="form-control" name="code" inputmode="numeric" pattern="[0-9]{5,6}" minlength="5" maxlength="6" autocomplete="one-time-code" required></label>
+                                    <label class="d-block">{{ translate('Verification Code / Invitation Code') }}<input class="form-control" name="code" inputmode="numeric" pattern="[0-9]{5,6}" minlength="5" maxlength="6" autocomplete="one-time-code" required></label>
                                     <button type="button" class="btn btn-outline-primary btn-sm" id="send-phone-code">{{ translate('Send code') }}</button>
                                     <p id="phone-feedback" role="status" class="small mt-2"></p>
                                 </div>

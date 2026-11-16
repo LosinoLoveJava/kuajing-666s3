@@ -404,12 +404,12 @@ BANK
     </div>
 
 
-    <div class="modal fade" id="request_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    <div class="modal fade" id="request_modal" tabindex="-1" role="dialog" aria-labelledby="withdraw-modal-title"
          aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">{{ translate('Send A Withdraw Request') }}</h5>
+                    <h5 class="modal-title" id="withdraw-modal-title">{{ translate('Send A Withdraw Request') }}</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}"></button>
                 </div>
                 @if ($balance >= 0.01)
@@ -417,7 +417,13 @@ BANK
                         @csrf
                         <input type="hidden" name="wallet_form" value="withdraw">
                         <input type="hidden" name="request_token" value="{{ old('request_token', (string) \Illuminate\Support\Str::uuid()) }}">
-                        <div class="modal-body p-4">
+                        <div class="modal-body p-4" style="max-height:calc(100vh - 180px);overflow-y:auto">
+                            <div class="nav nav-tabs mb-4" role="tablist" aria-label="{{ translate('Withdrawal country') }}">
+                                <button type="button" class="nav-link active" id="withdraw-tab-sg" role="tab" data-withdraw-market="SG" aria-controls="withdraw-country-panel" aria-selected="true">{{ translate('Singapore') }}</button>
+                                <button type="button" class="nav-link" id="withdraw-tab-tr" role="tab" data-withdraw-market="TR" aria-controls="withdraw-country-panel" aria-selected="false" tabindex="-1">{{ translate('Turkey') }}</button>
+                            </div>
+                            <input type="hidden" name="withdrawal_market" value="{{ old('withdrawal_market', 'SG') }}">
+                            <input type="hidden" name="iban_country" value="SG">
                             <div class="row">
                                 <div class="col">
                                     <div class="alert alert-success" role="alert">
@@ -432,12 +438,18 @@ BANK
                                 <input type="hidden" name="w_type" value="4">
                                 <input class="form-control" id="p" value="BANK" readonly>
                             </div>
-                            @include('partials.iban_form', ['fixedBank' => true, 'manualReview' => true, 'bankOnly' => true])
+                            <div id="withdraw-country-panel" role="tabpanel" aria-labelledby="withdraw-tab-sg">
+                                @include('partials.iban_form', ['fixedBank' => true, 'manualReview' => true, 'bankOnly' => true])
+                                <div class="form-group" id="turkey-iban-field" hidden>
+                                    <label for="withdraw-turkey-iban">IBAN <span class="text-danger">*</span></label>
+                                    <input id="withdraw-turkey-iban" class="form-control" dir="ltr" name="iban_number" value="{{ old('iban_number') }}" maxlength="64" placeholder="TR00 0000 0000 0000 0000 0000 00" autocomplete="off" disabled>
+                                </div>
+                            </div>
                             <div class="form-group">
                                 <label for="withdraw-amount">{{ translate('Amount')}} (USD) <span class="text-danger">*</span></label>
-                                <input id="withdraw-amount" type="number" lang="en" dir="ltr" class="form-control" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01" placeholder="{{ translate('Amount') }}" required>
-                                <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr" id="withdraw-rate">1 USD = {{ rtrim(rtrim(app(\App\Services\ExchangeRate::class)->rate(), '0'), '.') }} SGD</bdi></div>
-                                <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="withdraw-sgd">0.00</span> SGD</bdi></div>
+                                <input id="withdraw-amount" type="number" lang="en" dir="ltr" class="form-control" name="amount" value="{{ old('amount') }}" min="0.01" max="9999999999.99" step="0.01" placeholder="{{ translate('Amount') }}" required>
+                                <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr" id="withdraw-rate"></bdi></div>
+                                <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="withdraw-sgd">0.00</span> <span id="withdraw-currency">SGD</span></bdi></div>
                             </div>
 
                             <div class="form-group">
@@ -494,14 +506,67 @@ BANK
             var numberFormat = new Intl.NumberFormat(locales[locale] || locale.replace('_', '-'), {
                 minimumFractionDigits: 2, maximumFractionDigits: 2
             });
-            var rate = Number(@json(app(\App\Services\ExchangeRate::class)->rate()));
-            document.getElementById('withdraw-rate').textContent = new Intl.NumberFormat(locales[locale] || locale.replace('_', '-')).format(1) + ' USD = ' + numberFormat.format(rate) + ' SGD';
+            var rates = @json(app(\App\Services\ExchangeRate::class)->availableRates());
             function updateAmount() {
+                var currency = form.elements.withdrawal_market.value === 'TR' ? 'TRY' : 'SGD';
+                var rate = Number(rates[currency]);
+                document.getElementById('withdraw-currency').textContent = currency;
+                document.getElementById('withdraw-rate').textContent = rate > 0 ? '1 USD = ' + numberFormat.format(rate) + ' ' + currency : @json(translate('Exchange rate is not configured. Please contact support.'));
+                amount.setCustomValidity(rate > 0 ? '' : @json(translate('Exchange rate is not configured. Please contact support.')));
                 var usd = Number(amount.value);
-                output.textContent = numberFormat.format(Number.isFinite(usd) && usd > 0 ? Math.round(Math.round(usd * 100) * rate) / 100 : 0);
+                output.textContent = numberFormat.format(rate > 0 && Number.isFinite(usd) && usd > 0 ? Math.round(Math.round(usd * 100) * rate) / 100 : 0);
             }
+            function selectMarket(market) {
+                var turkey = market === 'TR';
+                form.elements.withdrawal_market.value = market;
+                form.elements.iban_country.value = market;
+                form.querySelectorAll('[data-withdraw-market]').forEach(function (tab) {
+                    var selected = tab.dataset.withdrawMarket === market;
+                    tab.classList.toggle('active', selected);
+                    tab.setAttribute('aria-selected', String(selected));
+                    tab.tabIndex = selected ? 0 : -1;
+                });
+                document.getElementById('withdraw-country-panel').setAttribute('aria-labelledby', turkey ? 'withdraw-tab-tr' : 'withdraw-tab-sg');
+                ['iban_holder', 'iban_bank'].forEach(function (name) {
+                    form.elements[name].required = turkey;
+                    form.elements[name].maxLength = turkey ? 200 : 2000;
+                });
+                form.querySelector('label[for="withdraw-holder"]').textContent = turkey ? @json(translate('Full name')) + ' *' : @json(translate('Account holder'));
+                form.querySelector('label[for="withdraw-bank"]').textContent = @json(translate('Bank Name')) + (turkey ? ' *' : '');
+                form.elements.bank_account.closest('.form-group').hidden = turkey;
+                form.elements.bank_account.disabled = turkey;
+                document.getElementById('turkey-iban-field').hidden = !turkey;
+                form.elements.iban_number.disabled = !turkey;
+                form.elements.iban_number.required = turkey;
+                if (!turkey) form.elements.iban_number.setCustomValidity('');
+                validateIban();
+                updateAmount();
+            }
+            function validateIban() {
+                var input = form.elements.iban_number, iban = input.value.replace(/\s+/g, '').toUpperCase();
+                var valid = true;
+                if (!input.disabled && iban) {
+                    valid = /^TR[0-9]{24}$/.test(iban);
+                    if (valid) {
+                        var rearranged = iban.slice(4) + '2927' + iban.slice(2, 4), remainder = 0;
+                        for (var i = 0; i < rearranged.length; i++) remainder = (remainder * 10 + Number(rearranged[i])) % 97;
+                        valid = remainder === 1;
+                    }
+                }
+                input.setCustomValidity(valid ? '' : @json(translate('Invalid IBAN or account country.')));
+            }
+            form.elements.iban_number.addEventListener('input', validateIban);
+            form.querySelectorAll('[data-withdraw-market]').forEach(function (tab) {
+                tab.addEventListener('click', function () { selectMarket(tab.dataset.withdrawMarket); });
+                tab.addEventListener('keydown', function (event) {
+                    if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].indexOf(event.key) < 0) return;
+                    event.preventDefault();
+                    var market = event.key === 'Home' ? 'SG' : event.key === 'End' ? 'TR' : (form.elements.withdrawal_market.value === 'TR' ? 'SG' : 'TR');
+                    selectMarket(market); form.querySelector('[data-withdraw-market="' + market + '"]').focus();
+                });
+            });
             amount.addEventListener('input', updateAmount);
-            updateAmount();
+            selectMarket(form.elements.withdrawal_market.value === 'TR' ? 'TR' : 'SG');
         })();
     </script>
 @endsection

@@ -1,0 +1,62 @@
+{
+  "en": {
+    "Verification Code / Invitation Code": "Verification Code / Invitation Code",
+    "Withdrawal country": "Withdrawal country",
+    "Turkey": "Turkey",
+    "Singapore": "Singapore",
+    "Full name": "Full name",
+    "Turkish Lira": "Turkish Lira",
+    "Singapore Dollar": "Singapore Dollar",
+    "Exchange rate is not configured. Please contact support.": "Exchange rate is not configured. Please contact support.",
+    "No phone countries available": "No phone countries available"
+  },
+  "cn": {
+    "Verification Code / Invitation Code": "验证码 / 邀请码",
+    "Withdrawal country": "提现国家",
+    "Turkey": "土耳其",
+    "Singapore": "新加坡",
+    "Full name": "全名",
+    "Turkish Lira": "土耳其里拉",
+    "Singapore Dollar": "新加坡元",
+    "Exchange rate is not configured. Please contact support.": "汇率尚未配置，请联系客服。",
+    "No phone countries available": "暂无可用的手机国家区号"
+  },
+  "hk": {
+    "Verification Code / Invitation Code": "驗證碼 / 邀請碼",
+    "Withdrawal country": "提現國家",
+    "Turkey": "土耳其",
+    "Singapore": "新加坡",
+    "Full name": "全名",
+    "Turkish Lira": "土耳其里拉",
+    "Singapore Dollar": "新加坡元",
+    "Exchange rate is not configured. Please contact support.": "匯率尚未設定，請聯絡客服。",
+    "No phone countries available": "暫無可用的手機國家區號"
+  },
+  "tr": {
+    "Offline Recharge Wallet": "Cüzdana çevrimdışı bakiye yükleme",
+    "Recharge Wallet": "Cüzdana bakiye yükle",
+    "Recharge": "Bakiye yükleme",
+    "Send A Withdraw Request": "Para çekme talebi gönder",
+    "Send Withdraw Request": "Para çekme talebi gönder",
+    "Wallet Money": "Cüzdan bakiyesi",
+    "Pending Balance": "Bekleyen bakiye",
+    "Account holder": "Hesap sahibi",
+    "Bank Name": "Banka adı",
+    "Amount": "Tutar",
+    "Estimated amount": "Tahmini tutar",
+    "Exchange rate": "Döviz kuru",
+    "Payment": "Ödeme",
+    "Paid": "Ödendi",
+    "Verification code": "Doğrulama kodu",
+    "Invalid IBAN or account country.": "IBAN veya hesap ülkesi geçersiz.",
+    "Verification Code / Invitation Code": "Doğrulama Kodu / Davet Kodu",
+    "Withdrawal country": "Para çekme ülkesi",
+    "Turkey": "Türkiye",
+    "Singapore": "Singapur",
+    "Full name": "Adı ve soyadı",
+    "Turkish Lira": "Türk Lirası",
+    "Singapore Dollar": "Singapur Doları",
+    "Exchange rate is not configured. Please contact support.": "Döviz kuru yapılandırılmamış. Lütfen destek ekibiyle iletişime geçin.",
+    "No phone countries available": "Kullanılabilir telefon ülke kodu yok"
+  }
+}

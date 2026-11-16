@@ -10,9 +10,9 @@ class AccountMetricsController extends Controller
 {
     public function exchangeRate(Request $request)
     {
-        $request->validate(['from' => 'sometimes|in:USD', 'to' => 'sometimes|in:SGD']);
+        $request->validate(['from' => 'sometimes|in:USD', 'to' => 'sometimes|in:SGD,TRY']);
         try {
-            return response()->json(['success' => true, 'data' => app(ExchangeRate::class)->quote()]);
+            return response()->json(['success' => true, 'data' => app(ExchangeRate::class)->quote($request->input('to', 'SGD'))]);
         } catch (\RuntimeException $error) {
             return response()->json(['success' => false, 'message' => $error->getMessage()], 503);
         }

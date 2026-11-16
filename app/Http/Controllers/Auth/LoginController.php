@@ -64,8 +64,9 @@ class LoginController extends Controller
     {
         if ($request->filled('phone')) {
             $phone = (string) $request->phone;
-            $request->validate(['country_code' => 'nullable|in:65']);
-            $request->merge(['mode' => 'login', 'phone' => app(\App\Services\PhoneNumber::class)->normalize($phone, $request->country), 'country' => 'SG']);
+            $request->validate(['country_code' => 'nullable|in:65,90']);
+            $country = $request->country ?: ((string) $request->country_code === '90' ? 'TR' : null);
+            $request->merge(['mode' => 'login', 'phone' => app(\App\Services\PhoneNumber::class)->normalize($phone, $country)]);
             return app(\App\Http\Controllers\PhoneAccessController::class)->submit($request);
         }
         return $this->originalLogin($request);

@@ -15,8 +15,9 @@ class PhoneNumber
 
     public function countries()
     {
-        return Country::where('status', 1)->whereRaw('UPPER(code) = ?', ['SG'])->get(['name'])->map(function ($country) {
-            return ['country' => 'SG', 'name' => $country->name, 'dial_code' => '+65'];
+        return Country::where('status', 1)->whereIn('code', ['SG', 'TR'])->orderBy('code')->get(['code', 'name'])->map(function ($country) {
+            return ['country' => strtoupper($country->code), 'name' => $country->name,
+                'dial_code' => strtoupper($country->code) === 'TR' ? '+90' : '+65'];
         })->values()->all();
     }
 
@@ -24,14 +25,21 @@ class PhoneNumber
     {
         $number = preg_replace('/[\s().-]+/', '', (string) $value);
         if (strpos($number, '00') === 0) { $number = '+'.substr($number, 2); }
+        $country = $country ? strtoupper($country) : ((strpos($number, '+90') === 0 || (strlen($number) === 12 && strpos($number, '90') === 0)) ? 'TR' : 'SG');
         if ($number !== '' && strpos($number, '+') !== 0) {
-            // Eight-digit local numbers may themselves begin with 65.
-            $number = strlen($number) === 10 && strpos($number, '65') === 0 ? '+'.$number : '+65'.$number;
+            if ($country === 'TR') {
+                if (strlen($number) === 11 && $number[0] === '0') $number = substr($number, 1);
+                $number = strlen($number) === 12 && strpos($number, '90') === 0 ? '+'.$number : '+90'.$number;
+            } else {
+                // Eight-digit Singapore numbers may themselves begin with 65.
+                $number = strlen($number) === 10 && strpos($number, '65') === 0 ? '+'.$number : '+65'.$number;
+            }
         }
-        if (($country && strtoupper($country) !== 'SG') || !preg_match('/^\+65[3689][0-9]{7}$/D', $number)) {
+        $patterns = ['SG' => '/^\+65[3689][0-9]{7}$/D', 'TR' => '/^\+905[0-9]{9}$/D'];
+        if (!isset($patterns[$country]) || !preg_match($patterns[$country], $number)) {
             throw ValidationException::withMessages(['phone' => translate('Invalid phone number')]);
         }
-        if (!Country::where('status', 1)->whereRaw('UPPER(code) = ?', ['SG'])->exists()) {
+        if (!Country::where('status', 1)->whereRaw('UPPER(code) = ?', [$country])->exists()) {
             throw ValidationException::withMessages(['phone' => 'This phone country is not enabled.']);
         }
         return $number;

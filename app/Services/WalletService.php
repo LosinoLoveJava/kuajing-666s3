@@ -107,9 +107,14 @@ class WalletService
                 'request_token' => 'required_without:trx_id|nullable|uuid',
                 'amount_aed' => 'prohibited',
                 'amount_sgd' => ['nullable', 'numeric', 'regex:/^[0-9]{1,10}(\.[0-9]{1,2})?$/D', 'min:0.01'],
+                'currency' => 'required_with:amount_local|nullable|in:SGD,TRY',
+                'amount_local' => array_merge(['required_with:currency'], self::amountRules()),
             ];
+            if ($request->has('amount_sgd')) $rules['amount_sgd'] = self::amountRules();
+            if ($request->has('currency') || $request->has('amount_local')) $rules['amount_sgd'] = 'prohibited';
+            if (!$request->has('currency') && !$request->has('amount_local')) unset($rules['amount_local']);
             $rules['trx_id'] = 'nullable|string|max:200';
-            if ($request->filled('amount_sgd')) $rules['amount'] = 'exclude';
+            if ($request->has('amount_sgd') || $request->has('amount_local') || $request->has('currency')) $rules['amount'] = 'exclude';
         } else {
             $rules['payment_option'] = 'required|string|max:200';
         }
@@ -131,14 +136,21 @@ class WalletService
                 $details[] = 'Country: '.($data['iban_country'] ?? '');
                 $details[] = 'SWIFT / BIC: '.($data['iban_bic'] ?? '');
             }
-            if (isset($data['amount_sgd'])) {
+            if (isset($data['amount_sgd']) || isset($data['amount_local'])) {
                 // Compute from the configured rate, never the client's hidden USD estimate.
                 $rate = app(ExchangeRate::class);
-                $data['amount'] = $rate->sgdToUsd($data['amount_sgd']);
-                if (bccomp($data['amount'], '0.01', 2) < 0) {
-                    throw ValidationException::withMessages(['amount_sgd' => 'Amount is too small.']);
+                $currency = isset($data['amount_local']) ? $data['currency'] : 'SGD';
+                $amountField = isset($data['amount_local']) ? 'amount_local' : 'amount_sgd';
+                try {
+                    $quote = $rate->rate($currency);
+                    $data['amount'] = bcadd(bcdiv((string) $data[$amountField], $quote, 12), '0.005', 2);
+                } catch (\RuntimeException $error) {
+                    throw ValidationException::withMessages(['currency' => translate('Exchange rate is not configured. Please contact support.')]);
                 }
-                $details[] = 'SGD: '.$data['amount_sgd'].' (1 USD = '.$rate->rate().' SGD)';
+                if (bccomp($data['amount'], '0.01', 2) < 0) {
+                    throw ValidationException::withMessages([$amountField => 'Amount is too small.']);
+                }
+                $details[] = $currency.': '.$data[$amountField].' (1 USD = '.$quote.' '.$currency.')';
             }
         } elseif (!$methods->contains('heading', $method)) {
             throw ValidationException::withMessages(['payment_option' => 'Please select a configured payment method.']);

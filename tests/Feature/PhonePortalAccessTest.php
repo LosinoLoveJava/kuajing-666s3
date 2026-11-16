@@ -42,9 +42,10 @@ class PhonePortalAccessTest extends TestCase
         Schema::create('countries', function (Blueprint $table) {
             $table->increments('id');
             $table->string('code');
+            $table->string('name')->default('');
             $table->integer('status');
         });
-        DB::table('countries')->insert(['code' => 'AE', 'status' => 1]);
+        DB::table('countries')->insert([['code' => 'AE', 'name' => 'United Arab Emirates', 'status' => 1], ['code' => 'SG', 'name' => 'Singapore', 'status' => 1]]);
     }
 
     private function account($role, $banned = false)
@@ -104,7 +105,7 @@ class PhonePortalAccessTest extends TestCase
 
     public function testUserEntriesRedirectToPhoneForms()
     {
-        $this->get('/users/login')->assertOk()->assertSee('name="national_phone"', false)->assertSee('>+65</span>', false);
+        $this->get('/users/login')->assertOk()->assertSee('name="national_phone"', false)->assertSee('Singapore +65', false);
         $this->get('/users/registration')->assertRedirect(route('phone.access', ['mode' => 'register']));
         $this->get('/register')->assertRedirect(route('phone.access', ['mode' => 'register']));
         $this->postJson('/register', ['email' => 'test@example.com'])->assertStatus(422)->assertJsonValidationErrors('email');

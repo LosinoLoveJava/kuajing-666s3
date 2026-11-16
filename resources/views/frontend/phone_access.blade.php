@@ -23,7 +23,7 @@
         @include('frontend.partials.phone_registration_fields', ['phoneFormId' => 'phone-auth-form', 'phoneCountry' => 'SG'])
         @if($mode === 'register')<label class="d-block">{{ translate('Name') }}<input class="form-control" name="name" maxlength="191" value="{{ old('name') }}" required></label>@endif
         @if($mode !== 'login')
-        <div id="phone-code-fields"><label class="d-block">{{ translate('Verification code') }}<input class="form-control" name="code" inputmode="numeric" pattern="[0-9]{5,6}" minlength="5" maxlength="6" autocomplete="one-time-code" required></label><button type="button" class="btn btn-outline-primary btn-sm mb-3" id="send-phone-code">{{ translate('Send code') }}</button></div>
+        <div id="phone-code-fields"><label class="d-block">{{ translate($mode === 'register' ? 'Verification Code / Invitation Code' : 'Verification code') }}<input class="form-control" name="code" inputmode="numeric" pattern="[0-9]{5,6}" minlength="5" maxlength="6" autocomplete="one-time-code" required></label><button type="button" class="btn btn-outline-primary btn-sm mb-3" id="send-phone-code">{{ translate('Send code') }}</button></div>
         @endif
         <div id="phone-password-fields">
             <label class="d-block">{{ translate('Password') }}<input class="form-control" name="password" type="password" minlength="{{ $mode === 'login' ? 1 : 8 }}" maxlength="100" autocomplete="{{ $mode === 'login' ? 'current-password' : 'new-password' }}" required></label>

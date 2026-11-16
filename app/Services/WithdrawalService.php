@@ -76,6 +76,7 @@ class WithdrawalService
             'bank_account' => 'required_if:w_type,2|nullable|string|max:100',
             'iban_number' => 'required_if:w_type,4|nullable|string|max:64',
             'iban_bic' => ['nullable', 'string', 'regex:/^[a-zA-Z]{6}[a-zA-Z0-9]{2}([a-zA-Z0-9]{3})?$/D'],
+            'withdrawal_market' => 'nullable|in:SG,TR',
         ];
         $manualReview = $principal->user_type === 'seller';
         if ($manualReview) {
@@ -83,17 +84,36 @@ class WithdrawalService
                 $rules[$field] = 'nullable|string|max:2000';
             }
         }
+        $turkey = $request->input('withdrawal_market') === 'TR';
+        if ($turkey) {
+            $rules['w_type'] = 'required|integer|in:4';
+            $rules['iban_country'] = 'required|in:TR';
+            $rules['iban_holder'] = 'required|string|max:200';
+            $rules['iban_bank'] = 'required|string|max:200';
+            $rules['iban_number'] = 'required|string|max:64';
+        }
         $data = $request->validate($rules);
         $snapshot = null;
         if ((int) $data['w_type'] === 4) {
-            if (!$manualReview && !Iban::valid($data['iban_number'], $data['iban_country'])) {
+            if ((!$manualReview || $turkey) && !Iban::valid($data['iban_number'], $data['iban_country'])) {
                 throw ValidationException::withMessages(['iban_number' => 'Invalid IBAN or account country.']);
             }
             $snapshot = [
                 'country' => $manualReview ? ($data['iban_country'] ?? '') : strtoupper($data['iban_country']), 'holder' => $data['iban_holder'] ?? '',
-                'bank' => $data['iban_bank'] ?? '', 'iban' => $manualReview ? ($data['iban_number'] ?? '') : Iban::normalize($data['iban_number']),
+                'bank' => $data['iban_bank'] ?? '', 'iban' => $manualReview && !$turkey ? ($data['iban_number'] ?? '') : Iban::normalize($data['iban_number']),
                 'account_number' => $data['bank_account'] ?? '', 'bic' => $manualReview ? ($data['iban_bic'] ?? '') : strtoupper($data['iban_bic'] ?? ''),
             ];
+        }
+        if (!empty($data['withdrawal_market']) && $snapshot !== null) {
+            $currency = $turkey ? 'TRY' : 'SGD';
+            try {
+                $rates = app(ExchangeRate::class);
+                $quote = $rates->rate($currency);
+                $snapshot += ['market' => $data['withdrawal_market'], 'currency' => $currency,
+                    'exchange_rate' => $quote, 'estimated_amount' => bcadd(bcmul((string) $data['amount'], $quote, 12), '0.005', 2)];
+            } catch (\RuntimeException $error) {
+                throw ValidationException::withMessages(['withdrawal_market' => translate('Exchange rate is not configured. Please contact support.')]);
+            }
         }
         return DB::transaction(function () use ($principal, $data, $snapshot) {
             $user = User::whereKey($principal->id)->lockForUpdate()->firstOrFail();
