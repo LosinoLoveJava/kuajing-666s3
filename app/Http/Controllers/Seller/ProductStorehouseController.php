@@ -85,7 +85,18 @@ class ProductStorehouseController extends Controller
     public function addProduct(Request $request)
     {
         $userId = Auth::user()->id;
-        if (!$request->all && !$request->product_ids) return response()->json(['success' => 0, 'message' => translate('Please select a product')]);
+        $addAll = $request->boolean('all');
+        if ($addAll) {
+            $category = $request->input('category');
+            if (!is_string($category) || !preg_match('/^category-([1-9][0-9]*)$/D', $category, $matches)
+                || !DB::table('categories')->where('id', $matches[1])->exists()) {
+                return response()->json(['success' => 0, 'message' => translate('Please select a category first')]);
+            }
+            $categoryIds = CategoryUtility::children_ids($matches[1]);
+            $categoryIds[] = (int) $matches[1];
+        } elseif (!$request->product_ids) {
+            return response()->json(['success' => 0, 'message' => translate('Please select a product')]);
+        }
 
         // 排除已复制产品
         $alreadyCopyIds = Product::query()
@@ -94,10 +105,11 @@ class ProductStorehouseController extends Controller
             ->pluck('original_id')
             ->toArray();
 
-        if ($request->all) {
+        if ($addAll) {
             $productIds = Product::query()
                 ->where('added_by', 'admin')
                 ->where('in_storehouse', 1)
+                ->whereIn('category_id', $categoryIds)
                 ->pluck('id')
                 ->toArray();
 

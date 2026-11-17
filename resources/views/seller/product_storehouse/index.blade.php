@@ -12,7 +12,7 @@
                             <div class="col-md-6 mb-2 mb-md-0">
                                 <div class="form-group mb-0">
                                     <input class="form-control form-control-lg" type="text" name="keyword"
-                                           placeholder="Search by Product Name/Barcode" onkeyup="filterProducts()">
+                                           placeholder="{{ translate('Search by Product Name/Barcode') }}" onkeyup="filterProducts()">
                                 </div>
                             </div>
                             <div class="col-md-3 col-6">
@@ -219,7 +219,7 @@
                 if (loadId === productLoadId) {
                     productsLoading = false;
                     $('#product-list').attr('aria-busy', 'false');
-                    $('#add-all-btn').prop('disabled', productsPosting || !products || !products.data.length);
+                    $('#add-all-btn').prop('disabled', productsPosting);
                 }
             }
         }
@@ -294,27 +294,27 @@
                     addAllBtn.prop('disabled', true);
                     addSelectionBtn.prop('disabled', true);
                     addSelectionBtn.find('span.spinner-border').removeClass('d-none');
-                    doPost(selected_ids)
+                    doPost({all: 0, product_ids: selected_ids})
                 }
             } else {
-                var pageIds = Array.from(new Set((products ? products.data : []).map(function (product) { return product.id; })));
-                if (!pageIds.length) return;
+                var category = $('select[name=poscategory]').val();
+                if (!category) {
+                    AIZ.plugins.notify('warning', @json(translate('Please select a category first')));
+                    $('select[name=poscategory]').selectpicker('toggle');
+                    return;
+                }
                 productsPosting = true;
                 addAllBtn.prop('disabled', true);
                 addSelectionBtn.prop('disabled', true);
                 addAllBtn.find('span.spinner-border').removeClass('d-none');
-                doPost(pageIds)
+                doPost({all: 1, category: category})
             }
         }
 
-        function doPost(productIds) {
+        function doPost(payload) {
             let addAllBtn = $('#add-all-btn')
             let addSelectionBtn = $('#add-selection-btn')
-            $.post('{{ route('seller.product_storehouse.add') }}', {
-                _token: AIZ.data.csrf,
-                all: 0,
-                product_ids: productIds
-            }, function (data) {
+            $.post('{{ route('seller.product_storehouse.add') }}', Object.assign({_token: AIZ.data.csrf}, payload), function (data) {
                 if (data.success == 1) {
                     AIZ.plugins.notify('success', data.message ? data.message : '{{ translate('Product has been updated successfully') }}');
                     location.reload();
@@ -325,7 +325,7 @@
                 AIZ.plugins.notify('danger', '{{ translate('Something went wrong') }}');
             }).always(function () {
                 productsPosting = false;
-                addAllBtn.prop('disabled', productsLoading || !products || !products.data.length);
+                addAllBtn.prop('disabled', productsLoading);
                 addSelectionBtn.prop('disabled', false);
                 addAllBtn.find('span.spinner-border').addClass('d-none');
                 addSelectionBtn.find('span.spinner-border').addClass('d-none');
