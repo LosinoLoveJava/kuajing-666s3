@@ -3,7 +3,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalLabel">{{ translate('New Address') }}</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -28,7 +28,7 @@
                                     <select class="form-control aiz-selectpicker" data-live-search="true" data-placeholder="{{ translate('Select your country') }}" name="country_id" required>
                                         <option value="">{{ translate('Select your country') }}</option>
                                         @foreach (\App\Models\Country::where('status', 1)->get() as $key => $country)
-                                            <option value="{{ $country->id }}">{{ $country->name }}</option>
+                                            <option value="{{ $country->id }}">{{ frontend_text($country->name) }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -62,17 +62,17 @@
                                 <input id="searchInput" class="controls" type="text" placeholder="{{translate('Enter a location')}}">
                                 <div id="map"></div>
                                 <ul id="geoData">
-                                    <li style="display: none;">Full Address: <span id="location"></span></li>
-                                    <li style="display: none;">Postal Code: <span id="postal_code"></span></li>
-                                    <li style="display: none;">Country: <span id="country"></span></li>
-                                    <li style="display: none;">Latitude: <span id="lat"></span></li>
-                                    <li style="display: none;">Longitude: <span id="lon"></span></li>
+                                    <li style="display: none;">{{ translate('Full Address:') }} <span id="location"></span></li>
+                                    <li style="display: none;">{{ translate('Postal Code:') }} <span id="postal_code"></span></li>
+                                    <li style="display: none;">{{ translate('Country:') }} <span id="country"></span></li>
+                                    <li style="display: none;">{{ translate('Latitude:') }} <span id="lat"></span></li>
+                                    <li style="display: none;">{{ translate('Longitude:') }} <span id="lon"></span></li>
                                 </ul>
                             </div>
 
                             <div class="row">
                                 <div class="col-md-2" id="">
-                                    <label for="exampleInputuname">Longitude</label>
+                                    <label for="exampleInputuname">{{ translate('Longitude') }}</label>
                                 </div>
                                 <div class="col-md-10" id="">
                                     <input type="text" class="form-control mb-3" id="longitude" name="longitude" readonly="">
@@ -80,7 +80,7 @@
                             </div>
                             <div class="row">
                                 <div class="col-md-2" id="">
-                                    <label for="exampleInputuname">Latitude</label>
+                                    <label for="exampleInputuname">{{ translate('Latitude') }}</label>
                                 </div>
                                 <div class="col-md-10" id="">
                                     <input type="text" class="form-control mb-3" id="latitude" name="latitude" readonly="">
@@ -119,7 +119,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalLabel">{{ translate('New Address') }}</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>

@@ -44,7 +44,7 @@
             var place = autocomplete.getPlace();
 
             if (!place.geometry) {
-                window.alert("Autocomplete's returned place contains no geometry");
+                window.alert(@json(translate('The selected location has no coordinates. Please choose another location.')));
                 return;
             }
 

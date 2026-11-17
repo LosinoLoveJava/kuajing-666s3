@@ -70,7 +70,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">{{ translate('Payment For Storehouse') }}</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="order_id" value="{{encrypt($order->id)}}">
@@ -107,7 +107,7 @@
           <div class="modal-content">
               <div class="modal-header">
                   <h5 class="modal-title" id="exampleModalLabel">{{ translate('Select Payment Type') }}</h5>
-                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}"></button>
               </div>
               <div class="modal-body">
                   <input type="hidden" id="package_id" name="package_id" value="">
@@ -142,7 +142,7 @@
           <div class="modal-content">
               <div class="modal-header">
                   <h5 class="modal-title" id="exampleModalLabel">{{ translate('Purchase Your Package') }}</h5>
-                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}"></button>
               </div>
               <form class="" id="package_payment_form" action="{{ route('seller_packages.purchase') }}" method="post">
                   @csrf
@@ -230,7 +230,7 @@
           <div class="modal-content">
               <div class="modal-header">
                 <h5 class="modal-title strong-600 heading-5">{{ translate('Offline Package Payment')}}</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -312,4 +312,4 @@
 @endsection
 
 
- 
+

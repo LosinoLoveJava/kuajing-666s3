@@ -24,7 +24,7 @@
                 <div class="form-group row">
                     <label class="col-sm-2 col-from-label" for="name">{{translate('Name')}}</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" name="heading" value="" placeholder="Name" required>
+                        <input type="text" class="form-control" name="heading" value="" placeholder="{{ translate('Name') }}" required>
                     </div>
                 </div>
                 <div class="form-group row">

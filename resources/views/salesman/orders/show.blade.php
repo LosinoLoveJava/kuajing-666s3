@@ -333,34 +333,34 @@
             @php error_reporting(0); @endphp
             <div class="row gutters-5" id="wuliu">
                 <div class="col-md-12 ml-auto" style="margin-top:10px;">
-                    <label for="update_tracking_code">物流信息</label>
+                    <label for="update_tracking_code">{{ translate('Shipping Information') }}</label>
                 <!--<textarea class="form-control" id="update_shipping_info" rows="10">{{$order->shipping_info}}</textarea>  -->
                     <div style="border:1px solid #f2f3f8; border-radius:10px;;padding:10px;margin-bottom:10px;" id="expessdiv">
                         <form id="form1">
-                            <div class="dv">物流公司：<input type="text" class="form-control" name="express_name" value="{{ $express->express_name }}" />
+                            <div class="dv">{{ translate('Shipping Company') }}<input type="text" class="form-control" name="express_name" value="{{ $express->express_name }}" />
                                 <input type="hidden" name="order_id" value="{{ $order->id }}" />
                             </div>
-                            <div class="dv">物流单号：<input type="text" class="form-control" name="express_code" value="{{ $express->express_code }}" />
+                            <div class="dv">{{ translate('Tracking Number') }}<input type="text" class="form-control" name="express_code" value="{{ $express->express_code }}" />
                             </div>
                             <div class="dv">
                                 <br><br>
-                                物流信息：<br><br>
+                                {{ translate('Shipping Information') }}: <br><br>
                                 <div class="exp">
                                     @if( $express->express_info )
                                         @foreach ($express->express_info as $key => $ex )
 
-                                            信息：<input type="text" class="form-control" name="express_info[]"  value="{{ $ex }}"/> &nbsp;&nbsp;快递时间：<input class="form-control"  onclick="WdatePicker({dateFmt:'yyyy:MM:dd HH:mm:ss'})" readonly type="text" value="{{ $express->express_stime[$key] }}" name="express_stime[]" />&nbsp;&nbsp;显示时间：<input class="form-control" onclick="WdatePicker({dateFmt:'yyyy:MM:dd HH:mm:ss'})" readonly type="text" value="{{ $express->express_time[$key] }}" name="express_time[]" /><input type="button"  value="+" onclick="addinfo()" class="btn btn-primary btn-add" />
+                                            {{ translate('Information') }}: <input type="text" class="form-control" name="express_info[]"  value="{{ $ex }}"/> &nbsp;&nbsp;{{ translate('Shipping Time') }}: <input class="form-control"  onclick="WdatePicker({lang:document.documentElement.lang==='tr'?'tr':'en',dateFmt:'yyyy:MM:dd HH:mm:ss'})" readonly type="text" value="{{ $express->express_stime[$key] }}" name="express_stime[]" />&nbsp;&nbsp;{{ translate('Display Time') }}: <input class="form-control" onclick="WdatePicker({lang:document.documentElement.lang==='tr'?'tr':'en',dateFmt:'yyyy:MM:dd HH:mm:ss'})" readonly type="text" value="{{ $express->express_time[$key] }}" name="express_time[]" /><input type="button"  value="+" onclick="addinfo()" class="btn btn-primary btn-add" />
                                             <br><br>
                                         @endforeach
                                     @else
-                                        信息：<input type="text" class="form-control" name="express_info[]"  value="{{ $ex }}"/> &nbsp;&nbsp;&nbsp;&nbsp;显示时间：<input  onclick="WdatePicker({dateFmt:'yyyy:MM:dd HH:mm:ss'})" readonly type="text" class="form-control" value="{{ $express->express_stime[$key] }}" name="express_stime[]" />&nbsp;&nbsp;显示时间：<input  onclick="WdatePicker({dateFmt:'yyyy:MM:dd HH:mm:ss'})" readonly type="text" class="form-control" value="{{ $express->express_time[$key] }}" name="express_time[]" /><input type="button" value="+" onclick="addinfo()" class="btn btn-primary btn-add" />
+                                        {{ translate('Information') }}: <input type="text" class="form-control" name="express_info[]"  value="{{ $ex }}"/> &nbsp;&nbsp;&nbsp;&nbsp;{{ translate('Display Time') }}: <input  onclick="WdatePicker({lang:document.documentElement.lang==='tr'?'tr':'en',dateFmt:'yyyy:MM:dd HH:mm:ss'})" readonly type="text" class="form-control" value="{{ $express->express_stime[$key] }}" name="express_stime[]" />&nbsp;&nbsp;{{ translate('Display Time') }}: <input  onclick="WdatePicker({lang:document.documentElement.lang==='tr'?'tr':'en',dateFmt:'yyyy:MM:dd HH:mm:ss'})" readonly type="text" class="form-control" value="{{ $express->express_time[$key] }}" name="express_time[]" /><input type="button" value="+" onclick="addinfo()" class="btn btn-primary btn-add" />
                                         <br><br>
 
                                     @endif
                                 </div>
                             </div>
                             <br>
-                            <input type="button" value="保存物流信息" class="btn btn-info" onclick="save_express_info()" />
+                            <input type="button" value="{{ translate('Save Shipping Information') }}" class="btn btn-info" onclick="save_express_info()" />
                         </form>
                     </div>
                 </div>
@@ -395,7 +395,7 @@
 
         function addinfo()
         {
-            var html = '<div>信息：<input type="text" class="form-control" name="express_info[]" /> &nbsp;&nbsp;快递时间：<input class="form-control" type="text"  onclick="WdatePicker({dateFmt:\'yyyy:MM:dd HH:mm:ss\'})" name="express_stime[]" readonly />&nbsp;&nbsp;显示时间：<input class="form-control" onclick="WdatePicker({dateFmt:\'yyyy:MM:dd HH:mm:ss\'})" readonly type="text" value="{{ $express->express_time[$key] }}" name="express_time[]" /><input class="btn btn-primary btn-add" type="button" value="+" onclick="addinfo()" /></div>';
+            var html = '<div>{{ translate('Information') }}<input type="text" class="form-control" name="express_info[]" /> &nbsp;&nbsp;{{ translate('Shipping Time') }}: <input class="form-control" type="text"  onclick="WdatePicker({lang:document.documentElement.lang===\'tr\'?\'tr\':\'en\',dateFmt:\'yyyy:MM:dd HH:mm:ss\'})" name="express_stime[]" readonly />&nbsp;&nbsp;{{ translate('Display Time') }}: <input class="form-control" onclick="WdatePicker({lang:document.documentElement.lang===\'tr\'?\'tr\':\'en\',dateFmt:\'yyyy:MM:dd HH:mm:ss\'})" readonly type="text" value="{{ $express->express_time[$key] }}" name="express_time[]" /><input class="btn btn-primary btn-add" type="button" value="+" onclick="addinfo()" /></div>';
             $('.exp').append( html );
         }
 

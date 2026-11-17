@@ -133,7 +133,7 @@
             <div class="modal-content position-relative">
                 <div class="modal-header">
                     <h5 class="modal-title fw-600 h5">{{ translate('Any query about this seller') }}</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -172,30 +172,30 @@
           var content = ' <div class="row" style="width: 420px;  margin-left:7px; margin-top:10px;">'
             +'<div class="col-sm-12">'
             +'<div class="input-group">'
-            +'<span class="input-group-addon"> 基础访问量：</span>'
-            +'<input id="base_num" type="number" min="0" max="1000000000" step="1" value="'+view_base_num+'" class="form-control" placeholder="基础访问量">'
+            +'<span class="input-group-addon"> {{ translate('Base Views', null, true) }}</span>'
+            +'<input id="base_num" type="number" min="0" max="1000000000" step="1" value="'+view_base_num+'" class="form-control" placeholder="{{ translate('Base Views', null, true) }}">'
             +'</div>'
             +'</div>'
              
                +'<div class="col-sm-12" style="margin-top:3px;">'
             +'<div class="input-group">'
-            +'<span class="input-group-addon"> 每日递增量：</span>'
-            +'<input id="inc_num" type="number" min="0" max="1000000000" step="1" value="'+view_inc_num+'" class="form-control" placeholder="每日递增">'
+            +'<span class="input-group-addon"> {{ translate('Daily Increment', null, true) }}</span>'
+            +'<input id="inc_num" type="number" min="0" max="1000000000" step="1" value="'+view_inc_num+'" class="form-control" placeholder="{{ translate('Daily Increment', null, true) }}">'
             +'</div>'
             +'</div>'
            
-              +'<div class="col-sm-12 mt-2 text-muted">每日递增量按全天分配，每分钟自动更新；设为 0 关闭自动递增。保存后重置为基础值，下次更新补齐今日进度。</div>'
+              +'<div class="col-sm-12 mt-2 text-muted">{{ translate('Daily Increment', null, true) }}量按全天分配，每分钟自动更新；设为 0 关闭自动递增。保存后重置为基础值，下次更新补齐今日进度。</div>'
               +'</div>';  
             
             layer.open({
       
         type: 1,
-        title:'访问量',
+        title:@json(translate('Visits')),
         skin:'layui-layer-rim',
         area:['450px', 'auto'],
         
         content: content,
-        btn:['保存','取消'],
+        btn:[@json(translate('Save')),@json(translate('Cancel'))],
         btn1: function (index,layero) {
             var inc_num = $("#inc_num").val();
             var base_num = $("#base_num").val();
@@ -206,7 +206,7 @@
                 });
                 },'json').fail(function (xhr) {
                     var errors = xhr.responseJSON && xhr.responseJSON.errors;
-                    layer.msg(errors ? Object.values(errors)[0][0] : '保存失败，请重试');
+                    layer.msg(errors ? Object.values(errors)[0][0] : @json(translate('Unable to save. Please try again.')));
                 });
             
         },

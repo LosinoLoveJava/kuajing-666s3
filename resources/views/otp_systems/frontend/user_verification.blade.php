@@ -10,7 +10,7 @@
                             <h1 class="h2 fw-600">
                                 {{translate('Phone Verification')}}
                             </h1>
-                            <p>Verification code has been sent. Please wait a few minutes.</p>
+                            <p>{{ translate('Verification code has been sent. Please wait a few minutes.') }}</p>
                             <a href="{{ route('verification.phone.resend') }}" class="btn btn-link">{{translate('Resend Code')}}</a>
                         </div>
                         <div class="px-5 py-lg-5">

@@ -15,6 +15,7 @@
 !/tests/Feature/SellerOrderDeliveryPermissionTest.php
 !/tests/Feature/WalletWorkflowTest.php
 !/tests/Feature/TurkeyMarketTest.php
+!/tests/Feature/TurkishFrontendTest.php
 !/tests/Concerns/
 !/tests/Concerns/InteractsWithPortalSessions.php
 !/tests/Fixtures/

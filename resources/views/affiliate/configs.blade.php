@@ -21,7 +21,7 @@
 									        <label class="control-label">{{ ucfirst($element->type) }}</label>
 									    </div>
 									    <div class="col-lg-7">
-									        <input class="form-control" type="text" name="label[]" value="{{ $element->label }}" placeholder="Label">
+                                            <input class="form-control" type="text" name="label[]" value="{{ $element->label }}" placeholder="{{ translate('Label') }}">
 									    </div>
 									    <div class="col-lg-2"><span class="btn btn-icon btn-circle" onclick="delete_choice_clearfix(this)"><i class="las la-times"></i></span></div>
 									</div>
@@ -33,7 +33,7 @@
 									        <label class="control-label">{{ ucfirst(str_replace('_', ' ', $element->type)) }}</label>
 									    </div>
 									    <div class="col-lg-7">
-									        <input class="form-control" type="text" name="label[]" value="{{ $element->label }}" placeholder="Select Label" style="margin-bottom:10px">
+                                            <input class="form-control" type="text" name="label[]" value="{{ $element->label }}" placeholder="{{ translate('Select Label') }}" style="margin-bottom:10px">
 									        <div class="customer_choice_options_types_wrap_child">
 												@if (is_array(json_decode($element->options)))
 													@foreach (json_decode($element->options) as $value)
@@ -46,7 +46,7 @@
 													@endforeach
 												@endif
 											</div>
-									        <button class="btn btn-success pull-right" type="button" onclick="add_customer_choice_options(this)"><i class="glyphicon glyphicon-plus"></i> Add option</button>
+                                            <button class="btn btn-success pull-right" type="button" onclick="add_customer_choice_options(this)"><i class="glyphicon glyphicon-plus"></i> {{ translate('Add option') }}</button>
 									    </div>
 									    <div class="col-lg-2"><span class="btn btn-icon btn-circle" onclick="delete_choice_clearfix(this)"><i class="las la-times"></i></span></div>
 									</div>
@@ -104,7 +104,7 @@
 									+'<label class="control-label">Text</label>'
 								+'</div>'
 								+'<div class="col-lg-7">'
-									+'<input class="form-control" type="text" name="label[]" placeholder="Label">'
+                                    +'<input class="form-control" type="text" name="label[]" placeholder="{{ translate('Label') }}">'
 								+'</div>'
 								+'<div class="col-lg-2">'
 									+'<span class="btn btn-icon btn-circle" onclick="delete_choice_clearfix(this)"><i class="las la-times"></i></span>'
@@ -120,11 +120,11 @@
 									+'<label class="control-label">Select</label>'
 								+'</div>'
 								+'<div class="col-lg-7">'
-									+'<input class="form-control" type="text" name="label[]" placeholder="Select Label" style="margin-bottom:10px">'
+                                    +'<input class="form-control" type="text" name="label[]" placeholder="{{ translate('Select Label') }}" style="margin-bottom:10px">'
 									+'<div class="customer_choice_options_types_wrap_child">'
 
 									+'</div>'
-									+'<button class="btn btn-success pull-right" type="button" onclick="add_customer_choice_options(this)"><i class="glyphicon glyphicon-plus"></i> Add option</button>'
+                                    +'<button class="btn btn-success pull-right" type="button" onclick="add_customer_choice_options(this)"><i class="glyphicon glyphicon-plus"></i> {{ translate('Add option') }}</button>'
 								+'</div>'
 								+'<div class="col-lg-2">'
 									+'<span class="btn btn-icon btn-circle icon-lg fa fa-times" onclick="delete_choice_clearfix(this)"><i class="las la-times"></i></span>'
@@ -144,7 +144,7 @@
 									+'<div class="customer_choice_options_types_wrap_child">'
 
 									+'</div>'
-									+'<button class="btn btn-success pull-right" type="button" onclick="add_customer_choice_options(this)"><i class="glyphicon glyphicon-plus"></i> Add option</button>'
+                                    +'<button class="btn btn-success pull-right" type="button" onclick="add_customer_choice_options(this)"><i class="glyphicon glyphicon-plus"></i> {{ translate('Add option') }}</button>'
 								+'</div>'
 								+'<div class="col-lg-2">'
 									+'<span class="btn btn-icon btn-circle" onclick="delete_choice_clearfix(this)"><i class="las la-times"></i></span>'
@@ -164,7 +164,7 @@
 									+'<div class="customer_choice_options_types_wrap_child">'
 
 									+'</div>'
-									+'<button class="btn btn-success pull-right" type="button" onclick="add_customer_choice_options(this)"><i class="glyphicon glyphicon-plus"></i> Add option</button>'
+                                    +'<button class="btn btn-success pull-right" type="button" onclick="add_customer_choice_options(this)"><i class="glyphicon glyphicon-plus"></i> {{ translate('Add option') }}</button>'
 								+'</div>'
 								+'<div class="col-lg-2">'
 									+'<span class="btn btn-icon btn-circle" onclick="delete_choice_clearfix(this)"><i class="las la-times"></i></span>'
@@ -179,7 +179,7 @@
 									+'<label class="control-label">File</label>'
 								+'</div>'
 								+'<div class="col-lg-7">'
-									+'<input class="form-control" type="text" name="label[]" placeholder="Label">'
+                                    +'<input class="form-control" type="text" name="label[]" placeholder="{{ translate('Label') }}">'
 								+'</div>'
 								+'<div class="col-lg-2">'
 									+'<span class="btn btn-icon btn-circle" onclick="delete_choice_clearfix(this)"><i class="las la-times"></i></span>'

@@ -11,7 +11,7 @@
                     <div class="row gutters-5 mb-3">
                         <div class="col-md-6 mb-2 mb-md-0">
                             <div class="form-group mb-0">
-                                <input class="form-control form-control-lg" type="text" name="keyword" placeholder="Search by Product Name/Barcode" onkeyup="filterProducts()">
+                                <input class="form-control form-control-lg" type="text" name="keyword" placeholder="{{ translate('Search by Product Name/Barcode') }}" onkeyup="filterProducts()">
                             </div>
                         </div>
                         <div class="col-md-3 col-6">
@@ -150,7 +150,7 @@
                                     </button>
                                     <div class="dropdown-menu p-3 dropdown-menu-lg">
                                         <div class="input-group">
-                                            <input type="number" min="0" placeholder="Amount" name="shipping" class="form-control" value="{{ Session::get('pos.shipping', 0) }}" required onchange="setShipping()">
+                                            <input type="number" min="0" placeholder="{{ translate('Amount') }}" name="shipping" class="form-control" value="{{ Session::get('pos.shipping', 0) }}" required onchange="setShipping()">
                                             <div class="input-group-append">
                                                 <span class="input-group-text">{{ translate('Flat') }}</span>
                                             </div>
@@ -163,7 +163,7 @@
                                     </button>
                                     <div class="dropdown-menu p-3 dropdown-menu-lg">
                                         <div class="input-group">
-                                            <input type="number" min="0" placeholder="Amount" name="discount" class="form-control" value="{{ Session::get('pos.discount', 0) }}" required onchange="setDiscount()">
+                                            <input type="number" min="0" placeholder="{{ translate('Amount') }}" name="discount" class="form-control" value="{{ Session::get('pos.discount', 0) }}" required onchange="setDiscount()">
                                             <div class="input-group-append">
                                                 <span class="input-group-text">{{ translate('Flat') }}</span>
                                             </div>
@@ -234,7 +234,7 @@
                                     <select class="form-control aiz-selectpicker" data-live-search="true" data-placeholder="{{ translate('Select your country') }}" name="country_id" required>
                                         <option value="">{{ translate('Select your country') }}</option>
                                         @foreach (\App\Models\Country::where('status', 1)->get() as $key => $country)
-                                            <option value="{{ $country->id }}">{{ $country->name }}</option>
+                                            <option value="{{ $country->id }}">{{ frontend_text($country->name) }}</option>
                                         @endforeach
                                     </select>
                                 </div>

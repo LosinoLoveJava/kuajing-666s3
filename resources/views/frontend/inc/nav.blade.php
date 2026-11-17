@@ -52,12 +52,12 @@
                             }
                         @endphp
                         <a href="javascript:void(0)" class="dropdown-toggle text-reset py-2 opacity-60" data-toggle="dropdown" data-display="static">
-                            {{ \App\Models\Currency::where('code', $currency_code)->first()->name }} {{ (\App\Models\Currency::where('code', $currency_code)->first()->symbol) }}
+                            {{ frontend_text(\App\Models\Currency::where('code', $currency_code)->first()->name) }} {{ (\App\Models\Currency::where('code', $currency_code)->first()->symbol) }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-right dropdown-menu-lg-left">
                             @foreach (\App\Models\Currency::where('status', 1)->get() as $key => $currency)
                                 <li>
-                                    <a class="dropdown-item @if($currency_code == $currency->code) active @endif" href="javascript:void(0)" data-currency="{{ $currency->code }}">{{ $currency->name }} ({{ $currency->symbol }})</a>
+                                    <a class="dropdown-item @if($currency_code == $currency->code) active @endif" href="javascript:void(0)" data-currency="{{ $currency->code }}">{{ frontend_text($currency->name) }} ({{ $currency->symbol }})</a>
                                 </li>
                             @endforeach
                         </ul>
@@ -107,13 +107,13 @@
                                                         @if(Auth::user()->user_type == 'customer')
                                                         <a href="{{route('purchase_history.details', encrypt($notification->data['order_id']))}}" class="text-reset">
                                                             <span class="ml-2">
-                                                                {{translate('Order code: ')}} {{$notification->data['order_code']}} {{ translate('has been '. ucfirst(str_replace('_', ' ', $notification->data['status'])))}}
+                                                                {{translate('Order code: ')}} {{$notification->data['order_code']}} {{ frontend_order_status($notification->data['status'])}}
                                                             </span>
                                                         </a>
                                                         @elseif (Auth::user()->user_type == 'seller')
                                                             <a href="{{ route('seller.orders.show', encrypt($notification->data['order_id'])) }}" class="text-reset">
                                                                 <span class="ml-2">
-                                                                    {{translate('Order code: ')}} {{$notification->data['order_code']}} {{ translate('has been '. ucfirst(str_replace('_', ' ', $notification->data['status'])))}}
+                                                                    {{translate('Order code: ')}} {{$notification->data['order_code']}} {{ frontend_order_status($notification->data['status'])}}
                                                                 </span>
                                                             </a>
                                                         @endif
@@ -274,7 +274,7 @@
                     @foreach (json_decode( get_setting('header_menu_labels'), true) as $key => $value)
                     <li class="list-inline-item mr-0">
                         <a href="{{ json_decode( get_setting('header_menu_links'), true)[$key] }}" class="opacity-60 fs-14 px-3 py-2 d-inline-block fw-600 hov-opacity-100 text-reset">
-                            {{ translate($value) }}
+                            {{ app()->getLocale() === 'tr' ? frontend_text($value) : translate($value) }}
                         </a>
                     </li>
                     @endforeach

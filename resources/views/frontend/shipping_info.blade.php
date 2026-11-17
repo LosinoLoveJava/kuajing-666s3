@@ -79,7 +79,7 @@
                                                     </div>
                                                     <div>
                                                         <span class="opacity-60">{{ translate('Country') }}:</span>
-                                                        <span class="fw-600 ml-2">{{ optional($address->country)->name }}</span>
+                                                        <span class="fw-600 ml-2">{{ frontend_text(optional($address->country)->name) }}</span>
                                                     </div>
                                                     <div>
                                                         <span class="opacity-60">{{ translate('Phone') }}:</span>

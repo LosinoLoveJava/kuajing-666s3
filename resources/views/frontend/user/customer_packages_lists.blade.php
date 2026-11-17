@@ -66,7 +66,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">{{ translate('Select Payment Type') }}</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="package_id" name="package_id" value="">
@@ -100,7 +100,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">{{ translate('Purchase Your Package') }}</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}"></button>
                 </div>
                 <form class="" id="package_payment_form" action="{{ route('customer_packages.purchase') }}" method="post">
                     @csrf
@@ -188,7 +188,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">{{ translate('Offline Package Purchase ') }}</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}"></button>
                 </div>
                 <div id="offline_customer_package_purchase_modal_body"></div>
             </div>

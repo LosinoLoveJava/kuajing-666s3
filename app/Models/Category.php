@@ -12,7 +12,8 @@ class Category extends Model
     public function getTranslation($field = '', $lang = false){
         $lang = $lang == false ? App::getLocale() : $lang;
         $category_translation = $this->category_translations->where('lang', $lang)->first();
-        return $category_translation != null ? $category_translation->$field : $this->$field;
+        $value = $category_translation != null && $category_translation->$field !== null && $category_translation->$field !== '' ? $category_translation->$field : $this->$field;
+        return \App\Support\TurkishCopy::text($value, $lang);
     }
 
     public function category_translations(){

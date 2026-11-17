@@ -62,10 +62,10 @@
                                 <div class="col-md-5 col-xl-4">
                                     <div class="input-group mb-0">
                                         <select class="form-control aiz-selectpicker" name="type" data-live-search="true">
-                                            <option value="">Choose</option>
-                                            <option value="Today" @if($type == 'Today') selected @endif>Today</option>
-                                            <option value="7" @if($type == '7') selected @endif>Last 7 Days</option>
-                                            <option value="30" @if($type == '30') selected @endif>Last 30 Days</option>
+                                            <option value="">{{ translate('Choose') }}</option>
+                                            <option value="Today" @if($type == 'Today') selected @endif>{{ translate('Today') }}</option>
+                                            <option value="7" @if($type == '7') selected @endif>{{ translate('Last 7 Days') }}</option>
+                                            <option value="30" @if($type == '30') selected @endif>{{ translate('Last 30 Days') }}</option>
                                         </select>
                                         <button class="btn btn-primary input-group-append" type="submit">{{ translate('Filter') }}</button>
                                     </div>
@@ -226,7 +226,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">{{ translate('Affiliate Withdraw Request') }}</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}"></button>
                 </div>
 
                 <form class="" action="{{ route('affiliate.withdraw_request.store') }}" method="post">

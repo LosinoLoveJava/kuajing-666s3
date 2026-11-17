@@ -121,7 +121,7 @@
                     @if ($shop->sliders != null)
                         @foreach (explode(',',$shop->sliders) as $key => $slide)
                             <div class="carousel-box">
-                                <img class="d-block w-100 lazyload rounded" src="{{ static_asset('assets/img/placeholder-rect.jpg') }}" data-src="{{ uploaded_asset($slide) }}" alt="{{ $key }} offer" style="height: auto; object-fit: contain;">
+                                <img class="d-block w-100 lazyload rounded" src="{{ static_asset('assets/img/placeholder-rect.jpg') }}" data-src="{{ uploaded_asset($slide) }}" alt="{{ $key }} {{ translate('Offer') }}" style="height: auto; object-fit: contain;">
                             </div>
                         @endforeach
                     @endif

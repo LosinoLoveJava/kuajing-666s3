@@ -742,8 +742,13 @@ function translate($key, $lang = null, $addslashes = false)
     $translation_locale = Cache::rememberForever("translations-{$lang}", function () use ($lang) {
         return Translation::where('lang', $lang)->pluck('lang_value', 'lang_key')->toArray();
     });
-    if (isset($translation_locale[$lang_key])) {
+    if (isset($translation_locale[$lang_key]) && ($lang !== 'tr' || trim($translation_locale[$lang_key]) !== '')) {
         return $addslashes ? addslashes(trim($translation_locale[$lang_key])) : trim($translation_locale[$lang_key]);
+    }
+
+    // Turkish has a complete, versioned fallback even before database cache warm-up.
+    if ($lang === 'tr' && ($turkish = \App\Support\TurkishCopy::message($lang_key)) !== null) {
+        return $addslashes ? addslashes(trim($turkish)) : trim($turkish);
     }
 
     // return default lang if session lang not found
@@ -759,6 +764,38 @@ function translate($key, $lang = null, $addslashes = false)
         return trim($key);
     }
     return $addslashes ? addslashes(trim($translations_en[$lang_key])) : trim($translations_en[$lang_key]);
+}
+
+function frontend_text($source)
+{
+    return \App\Support\TurkishCopy::text($source);
+}
+
+function frontend_html($source)
+{
+    return \App\Support\TurkishCopy::html($source);
+}
+
+function frontend_datetime($value)
+{
+    return App::getLocale() === 'tr'
+        ? \Carbon\Carbon::parse($value)->locale('tr')->translatedFormat('j F Y, H:i')
+        : date('F j Y, g:i a', strtotime($value));
+}
+
+function frontend_product_meta($product, $field)
+{
+    if (App::getLocale() !== 'tr') return $product->$field;
+    if ($field === 'meta_title') return $product->getTranslation('name');
+    $description = \App\Support\TurkishCopy::normalize(strip_tags((string) $product->getTranslation('description')));
+    return \Illuminate\Support\Str::limit($description ?: $product->getTranslation('name'), 160, '');
+}
+
+function frontend_order_status($status, $leading = false)
+{
+    $label = ucfirst(str_replace('_', ' ', $status));
+    return App::getLocale() === 'tr' ? translate('Status').': '.translate($label)
+        : translate(($leading ? ' has been ' : 'has been ').$label);
 }
 
 function remove_invalid_charcaters($str)
@@ -952,13 +989,21 @@ if (!function_exists('get_setting')) {
             return BusinessSetting::all();
         });
 
+        if ($lang == false && App::getLocale() === 'tr' && in_array($key, \App\Support\TurkishCopy::settingKeys(), true)) {
+            $lang = 'tr';
+        }
         if ($lang == false) {
             $setting = $settings->where('type', $key)->first();
         } else {
             $setting = $settings->where('type', $key)->where('lang', $lang)->first();
+            if ($lang === 'tr' && in_array($key, \App\Support\TurkishCopy::settingKeys(), true) && (!$setting || trim((string) $setting->value) === '')) {
+                $setting = $settings->where('type', $key)->where('lang', 'en')->first()
+                    ?: $settings->where('type', $key)->where('lang', null)->first();
+            }
             $setting = !$setting ? $settings->where('type', $key)->first() : $setting;
         }
-        return $setting == null ? $default : $setting->value;
+        $value = $setting == null ? $default : $setting->value;
+        return ($lang === 'tr' || $lang === false) ? \App\Support\TurkishCopy::setting($key, $value) : $value;
     }
 }
 

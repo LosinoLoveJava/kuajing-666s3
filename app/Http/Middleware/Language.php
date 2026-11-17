@@ -18,6 +18,10 @@ class Language
      */
     public function handle($request, Closure $next)
     {
+        if ($request->has('lang') && is_string($request->query('lang')) &&
+            \App\Models\Language::where('code', $request->query('lang'))->where('status', 1)->exists()) {
+            Session::put('locale', $request->query('lang'));
+        }
         if(Session::has('locale')){
             $locale = Session::get('locale');
         }
@@ -26,6 +30,7 @@ class Language
         }
 
         App::setLocale($locale);
+        \Carbon\Carbon::setLocale($locale);
         $request->session()->put('locale', $locale);
 
         return $next($request);

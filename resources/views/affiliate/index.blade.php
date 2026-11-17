@@ -26,7 +26,7 @@
                                 $percentage = null;
                             }
                             @endphp
-                            <input type="number" min="0" step="0.01" max="100" class="form-control" name="percentage" value="{{ $percentage }}" placeholder="Percentage of Order Amount" required>
+                            <input type="number" min="0" step="0.01" max="100" class="form-control" name="percentage" value="{{ $percentage }}" placeholder="{{ translate('Percentage of Order Amount') }}" required>
                         </div>
                         <div class="col-lg-2">
                             <label class="control-label">%</label>
@@ -76,7 +76,7 @@
                                 $commission_type_product_sharing = null;
                             }
                             @endphp
-                            <input type="number" min="0" step="0.01" max="100" class="form-control" name="amount" value="{{ $commission_product_sharing }}" placeholder="Percentage of Order Amount" required>
+                            <input type="number" min="0" step="0.01" max="100" class="form-control" name="amount" value="{{ $commission_product_sharing }}" placeholder="{{ translate('Percentage of Order Amount') }}" required>
                         </div>
                         <div class="col-md-3">
                             <select class="form-control aiz-selectpicker" name="amount_type">
@@ -129,7 +129,7 @@
                         </div>
                     </div>--}}
                     <div class="form-group row">
-                        <label class="col-lg-4">一级佣金比例</label>
+                        <label class="col-lg-4">{{ translate('Level 1 Commission Rate') }}</label>
                         <div class="col-lg-6">
                             <input type="hidden" name="types[]" value="commission_ratio_level_1">
                             <input type="number" min="0" max="100" step="0.01" name="commission_ratio_level_1" class="form-control" value="{{ get_setting('commission_ratio_level_1') }}">
@@ -139,7 +139,7 @@
                         </div>
                     </div>
                     <div class="form-group row">
-                        <label class="col-lg-4">二级佣金比例</label>
+                        <label class="col-lg-4">{{ translate('Level 2 Commission Rate') }}</label>
                         <div class="col-lg-6">
                             <input type="hidden" name="types[]" value="commission_ratio_level_2">
                             <input type="number" min="0" max="100" step="0.01" name="commission_ratio_level_2" class="form-control" value="{{ get_setting('commission_ratio_level_2') }}">
@@ -149,7 +149,7 @@
                         </div>
                     </div>
                     <div class="form-group row">
-                        <label class="col-lg-4">三级佣金比例</label>
+                        <label class="col-lg-4">{{ translate('Level 3 Commission Rate') }}</label>
                         <div class="col-lg-6">
                             <input type="hidden" name="types[]" value="commission_ratio_level_3">
                             <input type="number" min="0" max="100" step="0.01" name="commission_ratio_level_3" class="form-control" value="{{ get_setting('commission_ratio_level_3') }}">

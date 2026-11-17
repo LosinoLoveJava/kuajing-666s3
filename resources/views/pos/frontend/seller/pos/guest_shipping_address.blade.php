@@ -29,7 +29,7 @@
             <select class="form-control aiz-selectpicker" data-live-search="true" data-placeholder="{{ translate('Select your country') }}" name="country_id" required>
                 <option value="">{{ translate('Select your country') }}</option>
                 @foreach (\App\Models\Country::where('status', 1)->get() as $key => $country)
-                    <option value="{{ $country->id }}">{{ $country->name }}</option>
+                    <option value="{{ $country->id }}">{{ frontend_text($country->name) }}</option>
                 @endforeach
             </select>
         </div>

@@ -4,7 +4,7 @@
         <h3>{{ translate('Item added to your cart!')}}</h3>
     </div>
     <div class="media mb-4">
-        <img src="{{ static_asset('assets/img/placeholder.jpg') }}" data-src="{{ uploaded_asset($product->thumbnail_img) }}" class="mr-3 lazyload size-100px img-fit rounded" alt="Product Image">
+        <img src="{{ static_asset('assets/img/placeholder.jpg') }}" data-src="{{ uploaded_asset($product->thumbnail_img) }}" class="mr-3 lazyload size-100px img-fit rounded" alt="{{ translate('Product Image') }}">
         <div class="media-body pt-3 text-left">
             <h6 class="fw-600">
                 {{  $product->getTranslation('name')  }}

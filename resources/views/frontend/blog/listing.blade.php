@@ -35,23 +35,23 @@
                         <img
                             src="{{ static_asset('assets/img/placeholder-rect.jpg') }}"
                             data-src="{{ uploaded_asset($blog->banner) }}"
-                            alt="{{ $blog->title }}"
+                            alt="{{ frontend_text($blog->title) }}"
                             class="img-fluid lazyload "
                         >
                     </a>
                     <div class="p-4">
                         <h2 class="fs-18 fw-600 mb-1">
                             <a href="{{ url("blog").'/'. $blog->slug }}" class="text-reset">
-                                {{ $blog->title }}
+                                {{ frontend_text($blog->title) }}
                             </a>
                         </h2>
                         @if($blog->category != null)
                         <div class="mb-2 opacity-50">
-                            <i>{{ $blog->category->category_name }}</i>
+                            <i>{{ frontend_text($blog->category->category_name) }}</i>
                         </div>
                         @endif
                         <p class="opacity-70 mb-4">
-                            {{ $blog->short_description }}
+                            {{ frontend_text($blog->short_description) }}
                         </p>
                         <a href="{{ url("blog").'/'. $blog->slug }}" class="btn btn-soft-primary">
                             {{ translate('View More') }}

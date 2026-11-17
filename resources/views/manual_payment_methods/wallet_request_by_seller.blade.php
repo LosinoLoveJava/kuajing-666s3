@@ -4,7 +4,7 @@
 
 <div class="card">
     <div class="card-header">
-        <button type="button" onclick="history.go(-1);" class="btn btn-styled btn-base-3" style="color: #0e76e6">返回</button>
+        <button type="button" onclick="history.go(-1);" class="btn btn-styled btn-base-3" style="color: #0e76e6">{{ translate('Back') }}</button>
         <h5 class="mb-0 h6">{{translate('Offline Wallet Recharge Requests')}}</h5>
     </div>
     <div class="card-body">

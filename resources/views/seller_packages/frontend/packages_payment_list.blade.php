@@ -30,7 +30,7 @@
                     @foreach ($seller_packages_payment as $key => $payment)
                         <tr>
                             <td>{{ ($key+1) + ($seller_packages_payment->currentPage() - 1) * $seller_packages_payment->perPage() }}</td>
-                            <td>{{ $payment->seller_package->name }}</td>
+                            <td>{{ frontend_text($payment->seller_package->name) }}</td>
                             <td>{{ $payment->seller_package->amount }}</td>
                             <td>
                                 <!-- @if($payment->offline_payment == 1)

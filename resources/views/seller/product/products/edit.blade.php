@@ -239,7 +239,7 @@
                         data-selected-text-format="count" name="colors[]" id="colors" multiple>
                         @foreach (\App\Models\Color::orderBy('name', 'asc')->get() as $key => $color)
                         <option value="{{ $color->code }}"
-                            data-content="<span><span class='size-15px d-inline-block mr-2 rounded border' style='background:{{ $color->code }}'></span><span>{{ $color->name }}</span></span>"
+                            data-content="<span><span class='size-15px d-inline-block mr-2 rounded border' style='background:{{ $color->code }}'></span><span>{{ frontend_text($color->name) }}</span></span>"
                             <?php if(in_array($color->code, json_decode($product->colors))) echo 'selected'?>></option>
                         @endforeach
                     </select>
@@ -633,7 +633,7 @@
             <div class="card-body">
                 @foreach(\App\Models\Tax::where('tax_status', 1)->get() as $tax)
                 <label for="name">
-                    {{$tax->name}}
+                    {{ frontend_text($tax->name) }}
                     <input type="hidden" value="{{$tax->id}}" name="tax_id[]">
                 </label>
 

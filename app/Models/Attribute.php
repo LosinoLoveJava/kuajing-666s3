@@ -12,7 +12,8 @@ class Attribute extends Model
     public function getTranslation($field = '', $lang = false){
       $lang = $lang == false ? App::getLocale() : $lang;
       $attribute_translation = $this->attribute_translations->where('lang', $lang)->first();
-      return $attribute_translation != null ? $attribute_translation->$field : $this->$field;
+      $value = $attribute_translation != null && $attribute_translation->$field !== null && $attribute_translation->$field !== '' ? $attribute_translation->$field : $this->$field;
+      return \App\Support\TurkishCopy::text($value, $lang);
     }
 
     public function attribute_translations(){

@@ -16,7 +16,7 @@
                 <div class="container">
                     @if(session('success_msg'))
                     <div class="alert alert-success fade in alert-dismissible show">                
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="{{ translate('Close') }}">
                          <span aria-hidden="true" style="font-size:20px">×</span>
                         </button>
                         {{ session('success_msg') }}
@@ -24,7 +24,7 @@
                     @endif
                     @if(session('error_msg'))
                     <div class="alert alert-danger fade in alert-dismissible show">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="{{ translate('Close') }}">
                           <span aria-hidden="true" style="font-size:20px">×</span>
                         </button>    
                         {{ session('error_msg') }}
@@ -32,7 +32,7 @@
                     @endif
                     <div class="row">
                         <div class="col-md-6">
-                            <h1>Payment</h1>
+                            <h1>{{ translate('Payment') }}</h1>
                         </div>                       
                     </div>    
                     <div class="row">                        
@@ -44,21 +44,21 @@
                                             @csrf
                                             <div class="row">
                                                 <div class="form-group owner col-md-8">
-                                                    <label for="owner">Owner</label>
+                                                    <label for="owner">{{ translate('Owner') }}</label>
                                                     <input type="text" class="form-control" id="owner" name="owner" value="{{ old('owner') }}" required>
-                                                    <span id="owner-error" class="error text-red">Please enter Owner Card name</span>
+                                                    <span id="owner-error" class="error text-red">{{ translate('Please enter Owner Card name') }}</span>
                                                 </div>
                                                 <div class="form-group CVV col-md-4">
-                                                    <label for="cvv">CVV</label>
+                                                    <label for="cvv">{{ translate('CVV') }}</label>
                                                     <input type="number" class="form-control" id="cvv" name="cvv" value="{{ old('cvv') }}" required>
-                                                    <span id="cvv-error" class="error text-red">Please enter cvv</span>
+                                                    <span id="cvv-error" class="error text-red">{{ translate('Please enter cvv') }}</span>
                                                 </div>
                                             </div>    
                                             <div class="row">
                                                 <div class="form-group col-md-8" id="card-number-field">
-                                                    <label for="cardNumber">Card Number</label>
+                                                    <label for="cardNumber">{{ translate('Card Number') }}</label>
                                                     <input type="text" class="form-control" id="cardNumber" name="cardNumber" value="{{ old('cardNumber') }}" required>
-                                                    <span id="card-error" class="error text-red">Please enter valid card number</span>
+                                                    <span id="card-error" class="error text-red">{{ translate('Please enter valid card number') }}</span>
                                                 </div>
                                                 <!--<div class="form-group col-md-4" >-->
                                                 <!--    <label for="amount">Amount</label>-->
@@ -68,10 +68,10 @@
                                             </div>    
                                             <div class="row">
                                                 <div class="form-group col-md-6" id="expiration-date">
-                                                    <label>Expiration Date</label><br/>
+                                                    <label>{{ translate('Expiration Date') }}</label><br/>
                                                     <select class="form-control" id="expiration-month" name="expiration-month" style="float: left; width: 100px; margin-right: 10px;">
                                                         @foreach($months as $k=>$v)
-                                                            <option value="{{ $k }}" {{ old('expiration-month') == $k ? 'selected' : '' }}>{{ $v }}</option>                                                        
+                                                            <option value="{{ $k }}" {{ old('expiration-month') == $k ? 'selected' : '' }}>{{ frontend_text($v) }}</option>
                                                         @endforeach
                                                     </select>  
                                                     <select class="form-control" id="expiration-year" name="expiration-year"  style="float: left; width: 100px;">
@@ -90,7 +90,7 @@
                                             
                                             <br/>
                                             <div class="form-group" id="pay-now">
-                                                <button type="submit" class="btn btn-success themeButton" id="confirm-purchase">Confirm Payment</button>
+                                                <button type="submit" class="btn btn-success themeButton" id="confirm-purchase">{{ translate('Confirm Payment') }}</button>
                                             </div>
                                         </form>
                                     </div>

@@ -107,7 +107,7 @@
                     <div class="form-group mb-4 d-flex align-items-start">
                         <input type="checkbox" id="seller-terms" style="flex: 0 0 14px; width: 14px; height: 14px; margin: 3px 0 0; margin-inline-end: 8px;" checked required aria-describedby="seller-terms-copy">
                         <div style="min-width: 0; line-height: 20px;">
-                            <span id="seller-terms-copy" data-seller-terms-copy>By checking the box below, the Seller confirms that: They have read and understood these <a id="seller-terms-link" href="{{ static_asset('seller-registration-terms.html') }}?lang={{ app()->getLocale() }}" target="_blank" rel="noopener"><strong>Seller Registration Terms and Conditions</strong></a>.</span>
+                            <span id="seller-terms-copy" data-seller-terms-copy>{{ translate('By checking the box below, the Seller confirms that: They have read and understood these') }} <a id="seller-terms-link" href="{{ static_asset('seller-registration-terms.html') }}?lang={{ app()->getLocale() }}" target="_blank" rel="noopener"><strong>{{ translate('Seller Registration Terms and Conditions') }}</strong></a>.</span>
                         </div>
                     </div>
 
@@ -145,7 +145,7 @@
             if(response.length == 0)
             {
             //reCaptcha not verified
-                alert("please verify you are humann!");
+                alert(@json(translate('Please verify that you are human.')));
                 evt.preventDefault();
                 return false;
             }

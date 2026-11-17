@@ -12,7 +12,8 @@ class SellerSpreadPackage extends Model
     public function getTranslation($field = '', $lang = false){
         $lang = $lang == false ? App::getLocale() : $lang;
         $seller_spread_package_translation = $this->hasMany(SellerSpreadPackageTranslation::class)->where('lang', $lang)->first();
-        return $seller_spread_package_translation != null ? $seller_spread_package_translation->$field : $this->$field;
+        $value = $seller_spread_package_translation != null && $seller_spread_package_translation->$field !== null && $seller_spread_package_translation->$field !== '' ? $seller_spread_package_translation->$field : $this->$field;
+        return \App\Support\TurkishCopy::text($value, $lang);
     }
 
     public function seller_spread_package_translations(){

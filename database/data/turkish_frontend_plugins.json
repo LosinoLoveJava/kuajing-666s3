@@ -1,0 +1,283 @@
+{
+  "summernote": {
+    "font": {
+      "bold": "Kalın",
+      "italic": "İtalik",
+      "underline": "Altı çizili",
+      "clear": "Yazı Tipi Stilini Kaldır",
+      "height": "Hat Yüksekliği",
+      "name": "Yazı Tipi Ailesi",
+      "strikethrough": "Strikethrough",
+      "subscript": "Subscript",
+      "superscript": "Superscript",
+      "size": "Yazı Tipi Boyutu",
+      "sizeunit": "Yazı Tipi Boyutu Birimi"
+    },
+    "image": {
+      "image": "Resim",
+      "insert": "Resim Ekle",
+      "resizeFull": "Tam Boyutlandır",
+      "resizeHalf": "Yarısını yeniden boyutlandır",
+      "resizeQuarter": "Çeyreği Yeniden Boyutlandır",
+      "resizeNone": "Orijinal boyut",
+      "floatLeft": "Float Sol",
+      "floatRight": "Yüzer Sağ",
+      "floatNone": "Şamandırayı kaldır",
+      "shapeRounded": "Şekil: Yuvarlak",
+      "shapeCircle": "Şekil: Çember",
+      "shapeThumbnail": "Şekil: Küçük resim",
+      "shapeNone": "Şekil: Hiçbiri",
+      "dragImageHere": "Resmi veya metni buraya sürükleyin",
+      "dropImage": "Resmi veya metni bırak",
+      "selectFromFiles": "Dosyalardan seç",
+      "maximumFileSize": "En fazla dosya boyutu",
+      "maximumFileSizeError": "Maksimum dosya boyutu aşıldı.",
+      "url": "Resim URL'si",
+      "remove": "Resmi Kaldır",
+      "original": "Orijinal"
+    },
+    "video": {
+      "video": "video",
+      "videoLink": "Video Link",
+      "insert": "Video Ekle",
+      "url": "Video URL'si",
+      "providers": "(YouTube, Vimeo, Vine, Instagram, DailyMotion veya Youku)"
+    },
+    "link": {
+      "link": "Bağlantı",
+      "insert": "Bağlantı Ekle",
+      "unlink": "Unlink",
+      "edit": "Düzenle",
+      "textToDisplay": "Gösterilecek metin",
+      "url": "Bu bağlantı hangi URL'ye gitmeli?",
+      "openInNewWindow": "Yeni pencerede aç",
+      "useProtocol": "Varsayılan protokolü kullan"
+    },
+    "table": {
+      "table": "Tablo",
+      "addRowAbove": "Yukarıdaki satırı ekle",
+      "addRowBelow": "Aşağıdaki satırı ekle",
+      "addColLeft": "Sola sütun ekle",
+      "addColRight": "Sütunu sağa ekle",
+      "delRow": "Satırı sil",
+      "delCol": "Sütunu sil",
+      "delTable": "Tabloyu sil"
+    },
+    "hr": {
+      "insert": "Yatay Kural Ekle"
+    },
+    "style": {
+      "style": "Stil",
+      "p": "Normal",
+      "blockquote": "Alıntı",
+      "pre": "Kod",
+      "h1": "Başlık 1",
+      "h2": "Başlık 2",
+      "h3": "Başlık 3",
+      "h4": "Başlık 4",
+      "h5": "Başlık 5",
+      "h6": "Başlık 6"
+    },
+    "lists": {
+      "unordered": "Sırasız liste",
+      "ordered": "Sipariş edilen liste"
+    },
+    "options": {
+      "help": "Yardım",
+      "fullscreen": "Tam Ekran",
+      "codeview": "Kod Görünümü"
+    },
+    "paragraph": {
+      "paragraph": "Paragraf",
+      "outdent": "Outdent",
+      "indent": "Girinti",
+      "left": "Hiza sola",
+      "center": "Align merkez",
+      "right": "Sağa hizala",
+      "justify": "Tam olarak haklı çıkar"
+    },
+    "color": {
+      "recent": "Son Renk",
+      "more": "Daha fazla renk",
+      "background": "Arka Plan Rengi",
+      "foreground": "Metin Rengi",
+      "transparent": "Şeffaf",
+      "setTransparent": "Şeffaf ayarla",
+      "reset": "Sıfırla",
+      "resetToDefault": "Varsayılana sıfırla",
+      "cpSelect": "Seç"
+    },
+    "shortcut": {
+      "shortcuts": "Klavye kısayolları",
+      "close": "Kapat",
+      "textFormatting": "Metin biçimlendirme",
+      "action": "Eylem",
+      "paragraphFormatting": "Paragraf biçimlendirme",
+      "documentStyle": "Belge Biçimi",
+      "extraKeys": "Ekstra anahtarlar"
+    },
+    "help": {
+      "insertParagraph": "Paragraf Ekle",
+      "undo": "Son komutu kaldırır",
+      "redo": "Son komutu tekrarla",
+      "tab": "Sekme",
+      "untab": "Untab",
+      "bold": "Cesur bir stil ayarla",
+      "italic": "İtalik bir stil ayarla",
+      "underline": "Alt çizgi stilini ayarla",
+      "strikethrough": "Bir vuruş stili belirle",
+      "removeFormat": "Bir stili temizle",
+      "justifyLeft": "Sol hizayı ayarla",
+      "justifyCenter": "Orta hizayı ayarla",
+      "justifyRight": "Sağ hizayı ayarla",
+      "justifyFull": "Tam hizayı ayarla",
+      "insertUnorderedList": "Sırasız listeyi aç/kapat",
+      "insertOrderedList": "Sipariş edilen listeyi aç/kapat",
+      "outdent": "Mevcut paragrafta dışlanmışlık",
+      "indent": "Mevcut paragrafta girinti",
+      "formatPara": "Geçerli bloğun biçimini paragraf olarak değiştir(P etiketi)",
+      "formatH1": "Geçerli bloğun biçimini H1 olarak değiştir",
+      "formatH2": "Geçerli bloğun biçimini H2 olarak değiştir",
+      "formatH3": "Geçerli bloğun biçimini H3 olarak değiştir",
+      "formatH4": "Geçerli bloğun biçimini H4 olarak değiştir",
+      "formatH5": "Geçerli bloğun biçimini H5 olarak değiştir",
+      "formatH6": "Geçerli bloğun biçimini H6 olarak değiştir",
+      "insertHorizontalRule": "Yatay kural ekle",
+      "linkDialog.show": "Bağlantı Diyalogunu Göster"
+    },
+    "history": {
+      "undo": "Geri Al",
+      "redo": "Redo"
+    },
+    "specialChar": {
+      "specialChar": "ÖZEL KARAKTERLER",
+      "select": "Özel karakterler seçin"
+    },
+    "output": {
+      "noSelection": "Seçim yapılmadı!"
+    }
+  },
+  "uppy": {
+    "youCanOnlyUploadX": {
+      "0": "En fazla %{smart_count} dosya yükleyebilirsiniz",
+      "1": "En fazla %{smart_count} dosya yükleyebilirsiniz",
+      "2": "En fazla %{smart_count} dosya yükleyebilirsiniz"
+    },
+    "youHaveToAtLeastSelectX": {
+      "0": "En az %{smart_count} dosya seçmelisiniz",
+      "1": "En az %{smart_count} dosya seçmelisiniz",
+      "2": "En az %{smart_count} dosya seçmelisiniz"
+    },
+    "exceedsSize": "Bu dosya izin verilen maksimum boyutu aşar",
+    "youCanOnlyUploadFileTypes": "Yalnızca şu dosya türlerini yükleyebilirsiniz: %{types}",
+    "companionError": "Companion ile bağlantı başarısız oldu",
+    "companionAuthError": "Yetkilendirme gerekli",
+    "companionUnauthorizeHint": "%{provider} hesabınızın yetkisini kaldırmak için %{url} adresine gidin",
+    "failedToUpload": "%{file} yüklenemedi",
+    "noInternetConnection": "İnternet bağlantısı yok",
+    "connectedToInternet": "İnternete bağlı",
+    "noFilesFound": "Burada dosya veya klasör yok",
+    "selectX": {
+      "0": "%{smart_count} seç",
+      "1": "%{smart_count} seç",
+      "2": "%{smart_count} seç"
+    },
+    "selectAllFilesFromFolderNamed": "%{name} klasöründeki tüm dosyaları seç",
+    "unselectAllFilesFromFolderNamed": "%{name} klasöründeki tüm dosyaların seçimini kaldır",
+    "selectFileNamed": "%{name} dosyasını seç",
+    "unselectFileNamed": "%{name} dosyasının seçimini kaldır",
+    "openFolderNamed": "%{name} klasörünü aç",
+    "cancel": "İptal",
+    "logOut": "Çıkış yap",
+    "filter": "Filtre",
+    "resetFilter": "Filtreyi sıfırla",
+    "loading": "Yükleniyor..",
+    "authenticateWithTitle": "Dosya seçmek için lütfen %{pluginName} ile kimliğinizi doğrulayın",
+    "authenticateWith": "%{pluginName} ile bağlan",
+    "emptyFolderAdded": "Boş klasörden hiçbir dosya eklenmedi",
+    "folderAdded": {
+      "0": "%{folder} klasöründen %{smart_count} dosya eklendi",
+      "1": "%{folder} klasöründen %{smart_count} dosya eklendi",
+      "2": "%{folder} klasöründen %{smart_count} dosya eklendi"
+    },
+    "uploading": "Yükleniyor",
+    "upload": "Yükle",
+    "complete": "Tamamlandı",
+    "uploadFailed": "Yükleme başarısız oldu",
+    "paused": "Duraklatıldı",
+    "retry": "Yeniden dene",
+    "pause": "Duraklat",
+    "resume": "Devam Et",
+    "filesUploadedOfTotal": {
+      "0": "%{smart_count} dosyadan %{complete} tanesi yüklendi",
+      "1": "%{smart_count} dosyadan %{complete} tanesi yüklendi",
+      "2": "%{smart_count} dosyadan %{complete} tanesi yüklendi"
+    },
+    "dataUploadedOfTotal": "%{total} / %{complete}",
+    "xTimeLeft": "%{time} kaldı",
+    "uploadXFiles": {
+      "0": "%{smart_count} dosya yükle",
+      "1": "%{smart_count} dosya yükle",
+      "2": "%{smart_count} dosya yükle"
+    },
+    "uploadXNewFiles": {
+      "0": "+%{smart_count} dosya yükle",
+      "1": "+%{smart_count} dosya yükle",
+      "2": "+%{smart_count} dosya yükle"
+    },
+    "xMoreFilesAdded": {
+      "0": "%{smart_count} dosya daha eklendi",
+      "1": "%{smart_count} dosya daha eklendi",
+      "2": "%{smart_count} dosya daha eklendi"
+    },
+    "closeModal": "Modal'ı Kapat",
+    "importFrom": "%{name} kaynağından içe aktar",
+    "addingMoreFiles": "Daha fazla dosya ekleme",
+    "addMoreFiles": "Daha fazla dosya ekle",
+    "dashboardWindowTitle": "Dosya Yükleyici Penceresi (Kapatmak için basın kaçışı)",
+    "dashboardTitle": "Dosya yükleyici",
+    "copyLinkToClipboardSuccess": "Bağlantı panoya kopyalandı",
+    "copyLinkToClipboardFallback": "Aşağıdaki URL'yi kopyala",
+    "copyLink": "Bağlantıyı kopyala",
+    "link": "Bağlantı",
+    "fileSource": "Dosya kaynağı: %{name}",
+    "done": "Bitti",
+    "back": "Geri",
+    "addMore": "Daha fazla ekle",
+    "removeFile": "Dosyayı kaldır",
+    "editFile": "Dosyayı düzenle",
+    "editing": "%{file} düzenleniyor",
+    "edit": "Düzenle",
+    "finishEditingFile": "Düzenleme dosyasını bitir",
+    "saveChanges": "Değişiklikleri kaydet",
+    "myDevice": "Cihazım",
+    "dropPasteImport": "Dosyaları buraya bırakın, yapıştırın, %{browse} veya şuradan içe aktarın",
+    "dropPaste": "Dosyaları buraya bırakın, yapıştırın veya %{browse}",
+    "dropHint": "Dosyalarınızı buraya bırakın",
+    "browse": "göz at",
+    "uploadComplete": "Yükleme tamamlandı",
+    "uploadPaused": "Yükleme duraklatıldı",
+    "resumeUpload": "Yüklemeye devam et",
+    "pauseUpload": "Yüklemeyi duraklat",
+    "retryUpload": "Yüklemeyi yeniden dene",
+    "cancelUpload": "Yüklemeyi iptal et",
+    "xFilesSelected": {
+      "0": "%{smart_count} dosya seçildi",
+      "1": "%{smart_count} dosya seçildi",
+      "2": "%{smart_count} dosya seçildi"
+    },
+    "uploadingXFiles": {
+      "0": "%{smart_count} dosya yükleniyor",
+      "1": "%{smart_count} dosya yükleniyor",
+      "2": "%{smart_count} dosya yükleniyor"
+    },
+    "processingXFiles": {
+      "0": "%{smart_count} dosya işleniyor",
+      "1": "%{smart_count} dosya işleniyor",
+      "2": "%{smart_count} dosya işleniyor"
+    },
+    "poweredBy": "tarafından desteklenmektedir",
+    "dropHereOr": "Dosyaları buraya bırakın veya %{browse}",
+    "chooseFiles": "Dosyaları seç"
+  }
+}

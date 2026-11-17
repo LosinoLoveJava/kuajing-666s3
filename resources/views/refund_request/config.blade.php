@@ -18,7 +18,7 @@
                             <input type="number" min="0" step="1" value="{{ get_setting('refund_request_time') }}" placeholder="" name="value" class="form-control">
                         </div>
                         <div class="col-lg-3">
-                            <option class="form-control">days</option>
+                            <option class="form-control">{{ translate('days') }}</option>
                         </div>
                     </div>
                     <div class="form-group mb-0 text-right">

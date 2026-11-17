@@ -184,21 +184,21 @@
                     <div class="form-group row" style="display:none;">
                         <div class="col-lg-2">{{translate('Referrel User')}}</div>
                         <div class="col-lg-6">
-                           <input type="number" class="form-control" name="referred_by" value="@php echo Auth::user()->id;@endphp" placeholder="Referrel User" required>
+                           <input type="number" class="form-control" name="referred_by" value="@php echo Auth::user()->id;@endphp" placeholder="{{ translate('Referrel User') }}" required>
                         </div>
                     </div>
                     
                     <div class="form-group row">
                         <div class="col-lg-2">{{translate('Quantity')}}</div>
                         <div class="col-lg-6">
-                           <input type="number" min="1" step="1" max="100" class="form-control" name="quantity" value="1" placeholder="Quantity of generate" required>
+                           <input type="number" min="1" step="1" max="100" class="form-control" name="quantity" value="1" placeholder="{{ translate('Quantity of generate') }}" required>
                         </div>
                     </div>
                     
                     <div class="form-group row">
                         <div class="col-lg-2">{{translate('Initial Balance')}}</div>
                         <div class="col-lg-6">
-                           <input type="number" min="0" class="form-control" name="balance" value="0.00" placeholder="Initial Balance of Accounts" required>
+                           <input type="number" min="0" class="form-control" name="balance" value="0.00" placeholder="{{ translate('Initial Balance of Accounts') }}" required>
                         </div>
                     </div>
                      <div class="form-group row">

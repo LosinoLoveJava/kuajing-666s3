@@ -171,7 +171,7 @@
                             </div>
                             <div>
                                 <span class="w-50 fw-600">{{ translate('Country') }}:</span>
-                                <span class="ml-2">{{ optional($address->country)->name }}</span>
+                                <span class="ml-2">{{ frontend_text(optional($address->country)->name) }}</span>
                             </div>
                             <div>
                                 <span class="w-50 fw-600">{{ translate('Phone') }}:</span>
@@ -251,7 +251,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">{{ translate('New Address') }}</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -276,7 +276,7 @@
                                         <select class="form-control aiz-selectpicker" data-live-search="true" data-placeholder="{{ translate('Select your country') }}" name="country_id" required>
                                             <option value="">{{ translate('Select your country') }}</option>
                                             @foreach (\App\Models\Country::where('status', 1)->get() as $key => $country)
-                                                <option value="{{ $country->id }}">{{ $country->name }}</option>
+                                                <option value="{{ $country->id }}">{{ frontend_text($country->name) }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -368,7 +368,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">{{ translate('New Address') }}</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>

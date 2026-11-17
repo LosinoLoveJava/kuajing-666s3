@@ -180,13 +180,13 @@ class TurkeyMarketTest extends TestCase
             'recharge_method'=>'IBAN','request_token'=>(string) Str::uuid()]),$this->seller());
     }
 
-    public function testTranslatedProductNameRetainsOriginalDescriptionAndUnit()
+    public function testTranslatedProductNameAndUnitRetainOriginalDescriptionFallback()
     {
         $product = new Product(['name'=>'Original','description'=>'<p>Details</p>','unit'=>'piece']);
         $product->setRelation('product_translations',collect([(object)['lang'=>'tr','name'=>'Ürün','description'=>null,'unit'=>null]]));
         $this->assertSame('Ürün',$product->getTranslation('name','tr'));
         $this->assertSame('<p>Details</p>',$product->getTranslation('description','tr'));
-        $this->assertSame('piece',$product->getTranslation('unit','tr'));
+        $this->assertSame('Adet',$product->getTranslation('unit','tr'));
     }
 
     public function testLanguageMigrationTranslatesCatalogAndPreservesLaterAdministratorEdits()

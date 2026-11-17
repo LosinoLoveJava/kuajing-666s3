@@ -12,7 +12,8 @@ class FlashDeal extends Model
     public function getTranslation($field = '', $lang = false){
         $lang = $lang == false ? App::getLocale() : $lang;
         $flash_deal_translation = $this->flash_deal_translations->where('lang', $lang)->first();
-        return $flash_deal_translation != null ? $flash_deal_translation->$field : $this->$field;
+        $value = $flash_deal_translation != null && $flash_deal_translation->$field !== null && $flash_deal_translation->$field !== '' ? $flash_deal_translation->$field : $this->$field;
+        return \App\Support\TurkishCopy::text($value, $lang);
     }
 
     public function flash_deal_translations(){

@@ -10,7 +10,7 @@
                 data-amount={{round($combined_order->grand_total) * 100}}
                 data-buttontext=""
                 data-name="{{ env('APP_NAME') }}"
-                data-description="Cart Payment"
+                data-description="{{ translate('Cart Payment') }}"
                 data-image="{{ uploaded_asset(get_setting('header_logo')) }}"
                 data-prefill.name="{{ Auth::user()->name}}"
                 data-prefill.email="{{ Auth::user()->email ?? ''}}"

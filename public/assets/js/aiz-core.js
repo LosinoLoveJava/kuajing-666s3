@@ -475,7 +475,7 @@ $.fn.toggleAttr = function (attr, attr1, attr2) {
                     }
                 } else {
                     $(".aiz-uploader-all").html(
-                        '<div class="align-items-center d-flex h-100 justify-content-center w-100 nav-tabs"><div class="text-center"><h3>No files found</h3></div></div>'
+                        '<div class="align-items-center d-flex h-100 justify-content-center w-100 nav-tabs"><div class="text-center"><h3>' + (AIZ.local.no_files_found || 'No files found') + '</h3></div></div>'
                     );
                 }
                 AIZ.uploader.uploadSelect();
@@ -878,6 +878,7 @@ $.fn.toggleAttr = function (attr, attr1, attr2) {
                 $this.tagify({
                     maxTags: maxTags,
                     whitelist: whitelist,
+                    ...(AIZ.local.tagify ? { texts: AIZ.local.tagify } : {}),
                     dropdown: {
                         enabled: 1,
                     },
@@ -922,6 +923,7 @@ $.fn.toggleAttr = function (attr, attr1, attr2) {
 
                 $this.summernote({
                     toolbar: buttons,
+                    lang: AIZ.local.summernote_language || 'en-US',
                     placeholder: placeholder,
                     height: minHeight,
                     callbacks: {
@@ -976,6 +978,13 @@ $.fn.toggleAttr = function (attr, attr1, attr2) {
                     ],
                 };
 
+                if (AIZ.local.date_ranges) {
+                    ranges = Object.keys(ranges).reduce(function (translated, key) {
+                        translated[AIZ.local.date_ranges[key] || key] = ranges[key];
+                        return translated;
+                    }, {});
+                }
+
                 var single = $this.data("single");
                 var monthYearDrop = $this.data("show-dropdown");
                 var format = $this.data("format");
@@ -1004,12 +1013,12 @@ $.fn.toggleAttr = function (attr, attr1, attr2) {
                     timePickerIncrement: timePickerIncrement,
                     autoUpdateInput: false,
                     ranges: ranges,
-                    locale: {
+                    locale: $.extend({
                         format: format,
                         separator: separator,
                         applyLabel: "Select",
                         cancelLabel: "Clear",
-                    },
+                    }, AIZ.local.calendar || {}),
                 });
                 if (single) {
                     $this.on("apply.daterangepicker", function (ev, picker) {
@@ -1113,6 +1122,7 @@ $.fn.toggleAttr = function (attr, attr1, attr2) {
             if ($("#aiz-upload-files").length > 0) {
                 var uppy = Uppy.Core({
                     autoProceed: true,
+                    locale: AIZ.local.uppy ? {strings: AIZ.local.uppy} : undefined,
                 });
                 uppy.use(Uppy.Dashboard, {
                     target: "#aiz-upload-files",
@@ -1124,7 +1134,7 @@ $.fn.toggleAttr = function (attr, attr1, attr2) {
                     hideUploadButton: true,
                     proudlyDisplayPoweredByUppy: false,
                     locale: {
-                        strings: {
+                        strings: $.extend({}, AIZ.local.uppy || {}, {
                             addMoreFiles: AIZ.local.add_more_files,
                             addingMoreFiles: AIZ.local.adding_more_files,
                             dropPaste: AIZ.local.drop_files_here_paste_or+' %{browse}',
@@ -1149,7 +1159,7 @@ $.fn.toggleAttr = function (attr, attr1, attr2) {
                             },
                             uploading: AIZ.local.uploading,
                             complete: AIZ.local.complete,
-                        }
+                        })
                     }
                 });
                 uppy.use(Uppy.XHRUpload, {
@@ -1164,7 +1174,7 @@ $.fn.toggleAttr = function (attr, attr1, attr2) {
                         try { return JSON.parse(responseText); } catch (error) { return {}; }
                     },
                     getResponseError: function (responseText) {
-                        var message = 'File upload failed. Please try again or contact the administrator.';
+                        var message = AIZ.local.upload_failed || 'File upload failed. Please try again or contact the administrator.';
                         try {
                             var response = JSON.parse(responseText);
                             if (response.message) message = response.message;
@@ -1768,13 +1778,13 @@ $.fn.toggleAttr = function (attr, attr1, attr2) {
                 if (valueCurrent >= minValue) {
                     $(this).siblings("[data-type='minus']").removeAttr("disabled");
                 } else {
-                    alert("Sorry, the minimum limit has been reached");
+                    alert(AIZ.local.minimum_limit_reached || "Sorry, the minimum limit has been reached");
                     $(this).val(minValue);
                 }
                 if (valueCurrent <= maxValue) {
                     $(this).siblings("[data-type='plus']").removeAttr("disabled");
                 } else {
-                    alert("Sorry, the maximum limit has been reached");
+                    alert(AIZ.local.maximum_limit_reached || "Sorry, the maximum limit has been reached");
                     $(this).val(maxValue);
                 }
 

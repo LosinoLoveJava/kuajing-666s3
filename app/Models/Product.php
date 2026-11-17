@@ -16,8 +16,10 @@ class Product extends Model
     {
         $lang = $lang == false ? App::getLocale() : $lang;
         $product_translations = $this->product_translations->where('lang', $lang)->first();
-        return $product_translations != null && $product_translations->$field !== null && $product_translations->$field !== ''
+        $value = $product_translations != null && $product_translations->$field !== null && $product_translations->$field !== ''
             ? $product_translations->$field : $this->$field;
+        // Description translations are materialized by the frontend language migration.
+        return $field === 'description' ? $value : \App\Support\TurkishCopy::text($value, $lang);
     }
 
     public function product_translations()

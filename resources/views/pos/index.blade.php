@@ -169,7 +169,7 @@
                                 </button>
                                 <div class="dropdown-menu p-3 dropdown-menu-lg">
                                     <div class="input-group">
-                                        <input type="number" min="0" placeholder="Amount" name="shipping" class="form-control" value="{{ Session::get('pos.shipping', 0) }}" required onchange="setShipping()">
+                                        <input type="number" min="0" placeholder="{{ translate('Amount') }}" name="shipping" class="form-control" value="{{ Session::get('pos.shipping', 0) }}" required onchange="setShipping()">
                                         <div class="input-group-append">
                                             <span class="input-group-text">{{ translate('Flat') }}</span>
                                         </div>
@@ -182,7 +182,7 @@
                                 </button>
                                 <div class="dropdown-menu p-3 dropdown-menu-lg">
                                     <div class="input-group">
-                                        <input type="number" min="0" placeholder="Amount" name="discount" class="form-control" value="{{ Session::get('pos.discount', 0) }}" required onchange="setDiscount()">
+                                        <input type="number" min="0" placeholder="{{ translate('Amount') }}" name="discount" class="form-control" value="{{ Session::get('pos.discount', 0) }}" required onchange="setDiscount()">
                                         <div class="input-group-append">
                                             <span class="input-group-text">{{ translate('Flat') }}</span>
                                         </div>
@@ -252,7 +252,7 @@
                                     <select class="form-control aiz-selectpicker" data-live-search="true" data-placeholder="{{ translate('Select your country') }}" name="country_id" required>
                                         <option value="">{{ translate('Select your country') }}</option>
                                         @foreach (\App\Models\Country::where('status', 1)->get() as $key => $country)
-                                            <option value="{{ $country->id }}">{{ $country->name }}</option>
+                                            <option value="{{ $country->id }}">{{ frontend_text($country->name) }}</option>
                                         @endforeach
                                     </select>
                                 </div>

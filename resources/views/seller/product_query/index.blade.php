@@ -21,11 +21,11 @@
                 <tbody>
                     @foreach ($queries as $key => $query)
                         <tr>
-                            <td>{{ translate($key + 1) }}</td>
-                            <td>{{ translate($query->user->name) }}</td>
-                            <td>{{ translate($query->product->name) }}</td>
-                            <td>{{ translate(Str::limit($query->question, 100)) }}</td>
-                            <td>{{ translate(Str::limit($query->reply, 100)) }}</td>
+                            <td>{{ $key + 1 }}</td>
+                            <td>{{ $query->user->name }}</td>
+                            <td>{{ $query->product->getTranslation('name') }}</td>
+                            <td>{{ Str::limit($query->question, 100) }}</td>
+                            <td>{{ Str::limit($query->reply, 100) }}</td>
                             <td>
                                 <span
                                     class="badge badge-inline {{ $query->reply == null ? 'badge-warning' : 'badge-success' }}">

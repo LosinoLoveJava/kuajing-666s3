@@ -43,7 +43,7 @@
                                             <div class="form-group row">
                                                 <label class="col-md-2 col-form-label">{{translate('SMS Body')}}</label>
                                                 <div class="col-md-10">
-                                                    <textarea name="body" class="form-control" placeholder="Type.." rows="6" required>{{ $sms_template->sms_body }}</textarea>
+                                                    <textarea name="body" class="form-control" placeholder="{{ translate('Type..') }}" rows="6" required>{{ $sms_template->sms_body }}</textarea>
                                                     <small class="form-text text-danger">{{ ('**N.B : Do Not Change The Variables Like [[ ____ ]].**') }}</small>
                                                     @error('body')
                                                         <small class="form-text text-danger">{{ $message }}</small>

@@ -1,2 +1,5 @@
 <?php
-return ['previous' => '&laquo; Önceki', 'next' => 'Sonraki &raquo;'];
+return ['previous' => '« Önceki',
+'next' => 'Sonraki »',
+'page' => 'Sayfa',
+'go' => 'Git.'];

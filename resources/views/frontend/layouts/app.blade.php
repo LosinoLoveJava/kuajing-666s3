@@ -208,7 +208,7 @@
                 <div class="c-preloader text-center p-3">
                     <i class="las la-spinner la-spin la-3x"></i>
                 </div>
-                <button type="button" class="close absolute-top-right btn-icon close z-1" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close absolute-top-right btn-icon close z-1" data-dismiss="modal" aria-label="{{ translate('Close') }}">
                     <span aria-hidden="true" class="la-2x">&times;</span>
                 </button>
                 <div id="addToCart-modal-body">
@@ -222,6 +222,10 @@
 
     <!-- SCRIPTS -->
     <script src="{{ static_asset('assets/js/vendors.js') }}"></script>
+    @if(app()->getLocale() === 'tr')
+        <script src="{{ static_asset('assets/js/frontend-tr-plugins.js') }}"></script>
+        <script src="{{ static_asset('assets/js/frontend-tr.js') }}"></script>
+    @endif
     <script src="{{ static_asset('assets/js/responsive-tables.js') }}"></script>
     <script src="{{ static_asset('assets/js/aiz-core.js') }}"></script>
     <script src="{{ static_asset('assets/js/page-jump.js') }}"></script>

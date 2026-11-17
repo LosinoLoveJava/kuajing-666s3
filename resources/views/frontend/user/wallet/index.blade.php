@@ -185,7 +185,7 @@ IBAN
           <div class="modal-content">
               <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalLabel">{{ translate('Recharge Wallet') }}</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}"></button>
               </div>
               <form class="" action="{{ route('wallet.recharge') }}" method="post">
                   @csrf
@@ -228,7 +228,7 @@ IBAN
           <div class="modal-content">
               <div class="modal-header">
                   <h5 class="modal-title" id="exampleModalLabel">{{ translate('Offline Recharge Wallet') }}</h5>
-                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}"></button>
               </div>
               <div id="offline_wallet_recharge_modal_body"></div>
           </div>
@@ -244,7 +244,7 @@ IBAN
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">{{ translate('Send A Withdraw Request') }}</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}"></button>
                 </div>
                 @if ($balance >= 0.01)
                     <form class="" action="{{ route('wallet.do_money_withdraw_request') }}" method="post">

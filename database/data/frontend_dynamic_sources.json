@@ -1,0 +1,4 @@
+[
+  "Pending", "Confirmed", "On delivery", "Delivered", "Cancelled", "Canceled", "Picked up", "On the way",
+  "Unpaid", "Paid", "Partially paid", "Refunded", "Failed", "Processing", "Cash on delivery", "Wallet", "Bank", "Credit card"
+]

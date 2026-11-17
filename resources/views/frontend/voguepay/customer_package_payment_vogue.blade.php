@@ -2,7 +2,7 @@
 
 <script>
     closedFunction=function() {
-        alert('window closed');
+        alert(@json(translate('window closed')));
         location.href = '{{ env('APP_URL') }}'
     }
 
@@ -32,9 +32,9 @@
          Voguepay.init({
              v_merchant_id: document.getElementById("merchant_id").value,
              total: '{{ $customer_package->amount }}',
-             cur: '{{\App\Models\Currency::findOrFail(get_setting('system_default_currency'))->first()->value)->code}}',
+             cur: '{{ \App\Models\Currency::findOrFail(get_setting('system_default_currency'))->code }}',
              merchant_ref: 'ref123',
-             loadText:'Custom load text',
+             loadText:@json(translate('Custom load text')),
              customer: {
                 name: '{{ Auth::user()->name }}',
 

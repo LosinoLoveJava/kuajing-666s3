@@ -13,7 +13,7 @@
         <div class="form-group">
             <label for="recharge-method">{{ translate('Payment method') }} <span class="text-danger">*</span></label>
             <input type="hidden" name="recharge_method" value="IBAN">
-            <input id="recharge-method" class="form-control" value="BANK" readonly>
+            <input id="recharge-method" class="form-control" value="{{ translate('Bank') }}" readonly>
         </div>
         <div class="form-group">
             <label for="recharge-currency">{{ translate('Currency') }} <span class="text-danger">*</span></label>

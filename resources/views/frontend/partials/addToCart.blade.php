@@ -160,7 +160,7 @@
                                                     @if($key == 0) checked @endif
                                                 >
                                                 <span class="aiz-megabox-elem rounded d-flex align-items-center justify-content-center py-2 px-3 mb-2">
-                                                    {{ $value }}
+                                                    {{ frontend_text($value) }}
                                                 </span>
                                             </label>
                                             @endforeach
@@ -179,7 +179,7 @@
                                 <div class="col-10">
                                     <div class="aiz-radio-inline">
                                         @foreach (json_decode($product->colors) as $key => $color)
-                                        <label class="aiz-megabox pl-0 mr-2" data-toggle="tooltip" data-title="{{ \App\Models\Color::where('code', $color)->first()->name }}">
+                                        <label class="aiz-megabox pl-0 mr-2" data-toggle="tooltip" data-title="{{ frontend_text(\App\Models\Color::where('code', $color)->first()->name) }}">
                                             <input
                                                 type="radio"
                                                 name="color"

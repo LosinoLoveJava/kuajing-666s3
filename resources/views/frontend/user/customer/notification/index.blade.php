@@ -21,10 +21,10 @@
                                         <a href="{{route('purchase_history.details', encrypt($notification->data['order_id']))}}">
                                             {{$notification->data['order_code']}}
                                         </a>
-                                        {{translate(' has been '. ucfirst(str_replace('_', ' ', $notification->data['status'])))}}
+                                        {{frontend_order_status($notification->data['status'], true)}}
                                     </p>
                                     <small class="text-muted">
-                                        {{ date("F j Y, g:i a", strtotime($notification->created_at)) }}
+                                        {{ frontend_datetime($notification->created_at) }}
                                     </small>
                                 </div>
                             </div>

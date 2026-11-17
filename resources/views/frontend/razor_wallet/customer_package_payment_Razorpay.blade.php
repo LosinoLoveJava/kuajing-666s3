@@ -12,7 +12,7 @@
                 data-amount={{$customer_package->amount*100}}
                 data-buttontext=""
                 data-name="{{ env('APP_NAME') }}"
-                data-description="Classified Package Payment"
+                data-description="{{ translate('Classified Package Payment') }}"
                 data-image="{{ uploaded_asset(get_setting('header_logo')) }}"
                 data-prefill.name="{{ Auth::user()->name}}"
                 data-prefill.email="{{ Auth::user()->email ?? ''}}"

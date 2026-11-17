@@ -19,7 +19,7 @@
                         <option value="">{{ translate('Select your country') }}</option>
                         @foreach (\App\Models\Country::where('status', 1)->get() as $key => $country)
                         <option value="{{ $country->id }}" @if($address_data->country_id == $country->id) selected @endif>
-                            {{ $country->name }}
+                            {{ frontend_text($country->name) }}
                         </option>
                         @endforeach
                     </select>
@@ -59,20 +59,20 @@
         
         @if (get_setting('google_map') == 1)
             <div class="row">
-                <input id="edit_searchInput" class="controls" type="text" placeholder="Enter a location">
+                <input id="edit_searchInput" class="controls" type="text" placeholder="{{ translate('Enter a location') }}">
                 <div id="edit_map"></div>
                 <ul id="geoData">
-                    <li style="display: none;">Full Address: <span id="location"></span></li>
-                    <li style="display: none;">Postal Code: <span id="postal_code"></span></li>
-                    <li style="display: none;">Country: <span id="country"></span></li>
-                    <li style="display: none;">Latitude: <span id="lat"></span></li>
-                    <li style="display: none;">Longitude: <span id="lon"></span></li>
+                    <li style="display: none;">{{ translate('Full Address:') }} <span id="location"></span></li>
+                    <li style="display: none;">{{ translate('Postal Code:') }} <span id="postal_code"></span></li>
+                    <li style="display: none;">{{ translate('Country:') }} <span id="country"></span></li>
+                    <li style="display: none;">{{ translate('Latitude:') }} <span id="lat"></span></li>
+                    <li style="display: none;">{{ translate('Longitude:') }} <span id="lon"></span></li>
                 </ul>
             </div>
 
             <div class="row">
                 <div class="col-md-2" id="">
-                    <label for="exampleInputuname">Longitude</label>
+                    <label for="exampleInputuname">{{ translate('Longitude') }}</label>
                 </div>
                 <div class="col-md-10" id="">
                     <input type="text" class="form-control mb-3" id="edit_longitude" name="longitude" value="{{ $address_data->longitude }}" readonly="">
@@ -80,7 +80,7 @@
             </div>
             <div class="row">
                 <div class="col-md-2" id="">
-                    <label for="exampleInputuname">Latitude</label>
+                    <label for="exampleInputuname">{{ translate('Latitude') }}</label>
                 </div>
                 <div class="col-md-10" id="">
                     <input type="text" class="form-control mb-3" id="edit_latitude" name="latitude" value="{{ $address_data->latitude }}" readonly="">

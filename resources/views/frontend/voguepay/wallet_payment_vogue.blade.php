@@ -2,7 +2,7 @@
 
 <script>
     closedFunction=function() {
-        alert('window closed');
+        alert(@json(translate('window closed')));
         location.href = '{{ env('APP_URL') }}'
     }
 
@@ -31,7 +31,7 @@
              total: '{{ Session::get('payment_data')['amount'] }}',
              cur: '{{\App\Models\Currency::findOrFail(get_setting('system_default_currency'))->code}}',
              merchant_ref: 'ref123',
-             loadText:'Custom load text',
+             loadText:@json(translate('Custom load text')),
              customer: {
                 name: '{{ Auth::user()->name }}',
 

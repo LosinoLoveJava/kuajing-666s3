@@ -4,6 +4,7 @@
  */
 var $dp,WdatePicker;(function(){var Config={
 	$langList:[{name:'en',charset:'UTF-8'},
+    {name:'tr',charset:'UTF-8'},
 	{name:'zh-cn',charset:'gb2312'},
 	{name:'zh-tw',charset:'GBK'}],
 	$skinList:[

@@ -23,14 +23,14 @@
                                 <td>{{ ($key+1) + ($products->currentPage() - 1)*$products->perPage() }}</td>
                                 <td>
                                     <a href="{{ route('product', $product->slug) }}" target="_blank">
-                      								<div class="form-group row">
-                      									<div class="col-auto">
-                      										<img src="{{ uploaded_asset($product->thumbnail_img)}}" alt="Image" class="size-50px">
-                      									</div>
-                      									<div class="col">
-                      										<span class="text-muted text-truncate-2">{{ $product->getTranslation('name') }}</span>
-                      									</div>
+                                                <div class="form-group row">
+                                                    <div class="col-auto">
+                                                        <img src="{{ uploaded_asset($product->thumbnail_img)}}" alt="{{ translate('Image') }}" class="size-50px">
                       								</div>
+                                                    <div class="col">
+                                                        <span class="text-muted text-truncate-2">{{ $product->getTranslation('name') }}</span>
+                                                    </div>
+                                                </div>
                     							  </a>
                                 </td>
                                 <td>

@@ -1,6 +1,6 @@
 <div class="modal-header">
     <h5 class="modal-title strong-600 heading-5">{{translate('Seller Message')}}</h5>
-    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+    <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}">
         <span aria-hidden="true">&times;</span>
     </button>
 </div>

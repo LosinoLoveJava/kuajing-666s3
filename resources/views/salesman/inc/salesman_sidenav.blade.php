@@ -33,7 +33,7 @@
                                 <i class="las la-tasks aiz-side-nav-icon"></i>
                                 <span class="aiz-side-nav-text">{{translate('POS System')}}</span>
                                 @if (env("DEMO_MODE") == "On")
-                                    <span class="badge badge-inline badge-danger">Addon</span>
+                                    <span class="badge badge-inline badge-danger">{{ translate('Addon') }}</span>
                                 @endif
                                 <span class="aiz-side-nav-arrow"></span>
                             </a>
@@ -74,7 +74,7 @@
                                         <a href="{{ route('salesman.offline_seller_package_payment_request.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['salesman.offline_seller_package_payment_request.index'])}}">
                                             <span class="aiz-side-nav-text">{{translate('Offline Seller Package Payments')}}</span>
                                             @if (env("DEMO_MODE") == "On")
-                                                <span class="badge badge-inline badge-danger">Addon</span>
+                                                <span class="badge badge-inline badge-danger">{{ translate('Addon') }}</span>
                                             @endif
                                         </a>
                                     </li>

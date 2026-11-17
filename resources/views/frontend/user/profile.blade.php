@@ -191,7 +191,7 @@
                             </div>
                             <div>
                                 <span class="w-50 fw-600">{{ translate('Country') }}:</span>
-                                <span class="ml-2">{{ optional($address->country)->name }}</span>
+                                <span class="ml-2">{{ frontend_text(optional($address->country)->name) }}</span>
                             </div>
                             <div>
                                 <span class="w-50 fw-600">{{ translate('Phone') }}:</span>

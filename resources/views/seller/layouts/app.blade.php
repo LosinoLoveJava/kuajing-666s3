@@ -84,6 +84,10 @@
 
 
 	<script src="{{ static_asset('assets/js/vendors.js') }}" ></script>
+    @if(app()->getLocale() === 'tr')
+        <script src="{{ static_asset('assets/js/frontend-tr-plugins.js') }}"></script>
+        <script src="{{ static_asset('assets/js/frontend-tr.js') }}"></script>
+    @endif
     <script src="{{ static_asset('assets/js/responsive-tables.js') }}"></script>
 	<script src="{{ static_asset('assets/js/aiz-core.js') }}" ></script>
     <script src="{{ static_asset('assets/js/seller-notifications.js') }}"></script>

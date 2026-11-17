@@ -1,33 +1,33 @@
 @extends('frontend.layouts.app')
 
-@section('meta_title'){{ $detailedProduct->meta_title }}@stop
+@section('meta_title'){{ frontend_product_meta($detailedProduct, 'meta_title') }}@stop
 
-@section('meta_description'){{ $detailedProduct->meta_description }}@stop
+@section('meta_description'){{ frontend_product_meta($detailedProduct, 'meta_description') }}@stop
 
 @section('meta_keywords'){{ $detailedProduct->tags }}@stop
 
 @section('meta')
     <!-- Schema.org markup for Google+ -->
-    <meta itemprop="name" content="{{ $detailedProduct->meta_title }}">
-    <meta itemprop="description" content="{{ $detailedProduct->meta_description }}">
+    <meta itemprop="name" content="{{ frontend_product_meta($detailedProduct, 'meta_title') }}">
+    <meta itemprop="description" content="{{ frontend_product_meta($detailedProduct, 'meta_description') }}">
     <meta itemprop="image" content="{{ uploaded_asset($detailedProduct->meta_img) }}">
 
     <!-- Twitter Card data -->
     <meta name="twitter:card" content="product">
     <meta name="twitter:site" content="@publisher_handle">
-    <meta name="twitter:title" content="{{ $detailedProduct->meta_title }}">
-    <meta name="twitter:description" content="{{ $detailedProduct->meta_description }}">
+    <meta name="twitter:title" content="{{ frontend_product_meta($detailedProduct, 'meta_title') }}">
+    <meta name="twitter:description" content="{{ frontend_product_meta($detailedProduct, 'meta_description') }}">
     <meta name="twitter:creator" content="@author_handle">
     <meta name="twitter:image" content="{{ uploaded_asset($detailedProduct->meta_img) }}">
     <meta name="twitter:data1" content="{{ single_price($detailedProduct->unit_price) }}">
     <meta name="twitter:label1" content="Price">
 
     <!-- Open Graph data -->
-    <meta property="og:title" content="{{ $detailedProduct->meta_title }}" />
+    <meta property="og:title" content="{{ frontend_product_meta($detailedProduct, 'meta_title') }}" />
     <meta property="og:type" content="og:product" />
     <meta property="og:url" content="{{ route('product', $detailedProduct->slug) }}" />
     <meta property="og:image" content="{{ uploaded_asset($detailedProduct->meta_img) }}" />
-    <meta property="og:description" content="{{ $detailedProduct->meta_description }}" />
+    <meta property="og:description" content="{{ frontend_product_meta($detailedProduct, 'meta_description') }}" />
     <meta property="og:site_name" content="{{ get_setting('meta_title') }}" />
     <meta property="og:price:amount" content="{{ single_price($detailedProduct->unit_price) }}" />
     <meta property="product:price:currency"
@@ -272,7 +272,7 @@
                                                                 @if ($key == 0) checked @endif>
                                                             <span
                                                                 class="aiz-megabox-elem rounded d-flex align-items-center justify-content-center py-2 px-3 mb-2">
-                                                                {{ $value }}
+                                                                {{ frontend_text($value) }}
                                                             </span>
                                                         </label>
                                                     @endforeach
@@ -291,7 +291,7 @@
                                             <div class="aiz-radio-inline">
                                                 @foreach (json_decode($detailedProduct->colors) as $key => $color)
                                                     <label class="aiz-megabox pl-0 mr-2" data-toggle="tooltip"
-                                                        data-title="{{ \App\Models\Color::where('code', $color)->first()->name }}">
+                                                        data-title="{{ frontend_text(\App\Models\Color::where('code', $color)->first()->name) }}">
                                                         <input type="radio" name="color"
                                                             value="{{ \App\Models\Color::where('code', $color)->first()->name }}"
                                                             @if ($key == 0) checked @endif>
@@ -750,7 +750,7 @@
                             </div>
                             @guest
                                 <p class="fs-14 fw-400 mb-0 ml-3 mt-2"><a
-                                        href="{{ route('user.login') }}">{{ translate('Login') }}</a> or <a class="mr-1"
+                                        href="{{ route('user.login') }}">{{ translate('Login') }}</a> {{ translate('or') }} <a class="mr-1"
                                         href="{{ route('user.registration') }}">{{ translate('Register ') }}</a>{{ translate(' to submit your questions to seller') }}
                                 </p>
                             @endguest
@@ -771,10 +771,10 @@
                                         <input type="hidden" name="product" value="{{ $detailedProduct->id }}">
                                         <div class="form-group">
                                             <textarea class="form-control" rows="3" cols="40" name="question"
-                                                placeholder="Write your question here..." style="resize: none;"></textarea>
+                                                placeholder="{{ translate('Write your question here...') }}" style="resize: none;"></textarea>
 
                                         </div>
-                                        <button type="submit" class="btn btn-primary">Submit</button>
+                                        <button type="submit" class="btn btn-primary">{{ translate('Submit') }}</button>
                                     </form>
                                 </div>
                                 @php
@@ -857,7 +857,7 @@
             <div class="modal-content position-relative">
                 <div class="modal-header">
                     <h5 class="modal-title fw-600 h5">{{ translate('Any query about this product') }}</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -1032,7 +1032,7 @@
                 window.initializePageJumps(document.querySelector('.pagination-area'), getQuestions);
                 history.replaceState(null, '', '#' + page);
             }).fail(function() {
-                alert('Something went worng! Questions could not be loaded.');
+                alert(@json(translate('Something went wrong! Questions could not be loaded.')));
             });
         }
         // Pagination end

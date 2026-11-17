@@ -33,7 +33,7 @@
                             </div>
                         </div>
                         <div class="card-footer">
-                            <a href="#" class="link link--style-3" data-toggle="tooltip" data-placement="top" title="Remove from wishlist" onclick="removeFromWishlist({{ $wishlist->id }})">
+                            <a href="#" class="link link--style-3" data-toggle="tooltip" data-placement="top" title="{{ translate('Remove from wishlist') }}" onclick="removeFromWishlist({{ $wishlist->id }})">
                                 <i class="la la-trash la-2x"></i>
                             </a>
                             <button type="button" class="btn btn-sm btn-block btn-primary ml-3" onclick="showAddToCartModal({{ $wishlist->product->id }})">
@@ -46,7 +46,7 @@
         @empty
             <div class="col">
                 <div class="text-center bg-white p-4 rounded shadow">
-                    <img class="mw-100 h-200px" src="{{ static_asset('assets/img/nothing.svg') }}" alt="Image">
+                    <img class="mw-100 h-200px" src="{{ static_asset('assets/img/nothing.svg') }}" alt="{{ translate('Image') }}">
                     <h5 class="mb-0 h5 mt-3">{{ translate("There isn't anything added yet")}}</h5>
                 </div>
             </div>
@@ -65,7 +65,7 @@
             <div class="c-preloader">
                 <i class="fa fa-spin fa-spinner"></i>
             </div>
-            <button type="button" class="close absolute-close-btn" data-dismiss="modal" aria-label="Close">
+            <button type="button" class="close absolute-close-btn" data-dismiss="modal" aria-label="{{ translate('Close') }}">
                 <span aria-hidden="true">&times;</span>
             </button>
             <div id="addToCart-modal-body">

@@ -50,10 +50,10 @@
     var title = document.querySelector('[data-seller-terms-title]');
     if (title) {
         var isChinese = locale === 'cn' || locale === 'hk';
-        var bodyLocale = isChinese ? 'cn' : 'en';
+        var bodyLocale = isChinese ? 'cn' : (locale === 'tr' ? 'tr' : 'en');
         title.textContent = dictionary[bodyLocale][1];
         document.title = title.textContent;
-        document.documentElement.lang = isChinese ? 'zh-CN' : 'en';
+        document.documentElement.lang = isChinese ? 'zh-CN' : bodyLocale;
         document.querySelectorAll('[data-seller-terms-body]').forEach(function (article) {
             article.hidden = article.getAttribute('data-seller-terms-body') !== bodyLocale;
         });

@@ -2,7 +2,7 @@
 
 @section('content')
 
-    <button id="bKash_button" class="d-none">Pay With bKash</button>
+    <button id="bKash_button" class="d-none">{{ translate('Pay With bKash') }}</button>
 
 @endsection
 

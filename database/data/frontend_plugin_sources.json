@@ -1,0 +1,283 @@
+{
+  "summernote": {
+    "font": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "clear": "Remove Font Style",
+      "height": "Line Height",
+      "name": "Font Family",
+      "strikethrough": "Strikethrough",
+      "subscript": "Subscript",
+      "superscript": "Superscript",
+      "size": "Font Size",
+      "sizeunit": "Font Size Unit"
+    },
+    "image": {
+      "image": "Picture",
+      "insert": "Insert Image",
+      "resizeFull": "Resize full",
+      "resizeHalf": "Resize half",
+      "resizeQuarter": "Resize quarter",
+      "resizeNone": "Original size",
+      "floatLeft": "Float Left",
+      "floatRight": "Float Right",
+      "floatNone": "Remove float",
+      "shapeRounded": "Shape: Rounded",
+      "shapeCircle": "Shape: Circle",
+      "shapeThumbnail": "Shape: Thumbnail",
+      "shapeNone": "Shape: None",
+      "dragImageHere": "Drag image or text here",
+      "dropImage": "Drop image or Text",
+      "selectFromFiles": "Select from files",
+      "maximumFileSize": "Maximum file size",
+      "maximumFileSizeError": "Maximum file size exceeded.",
+      "url": "Image URL",
+      "remove": "Remove Image",
+      "original": "Original"
+    },
+    "video": {
+      "video": "Video",
+      "videoLink": "Video Link",
+      "insert": "Insert Video",
+      "url": "Video URL",
+      "providers": "(YouTube, Vimeo, Vine, Instagram, DailyMotion or Youku)"
+    },
+    "link": {
+      "link": "Link",
+      "insert": "Insert Link",
+      "unlink": "Unlink",
+      "edit": "Edit",
+      "textToDisplay": "Text to display",
+      "url": "To what URL should this link go?",
+      "openInNewWindow": "Open in new window",
+      "useProtocol": "Use default protocol"
+    },
+    "table": {
+      "table": "Table",
+      "addRowAbove": "Add row above",
+      "addRowBelow": "Add row below",
+      "addColLeft": "Add column left",
+      "addColRight": "Add column right",
+      "delRow": "Delete row",
+      "delCol": "Delete column",
+      "delTable": "Delete table"
+    },
+    "hr": {
+      "insert": "Insert Horizontal Rule"
+    },
+    "style": {
+      "style": "Style",
+      "p": "Normal",
+      "blockquote": "Quote",
+      "pre": "Code",
+      "h1": "Header 1",
+      "h2": "Header 2",
+      "h3": "Header 3",
+      "h4": "Header 4",
+      "h5": "Header 5",
+      "h6": "Header 6"
+    },
+    "lists": {
+      "unordered": "Unordered list",
+      "ordered": "Ordered list"
+    },
+    "options": {
+      "help": "Help",
+      "fullscreen": "Full Screen",
+      "codeview": "Code View"
+    },
+    "paragraph": {
+      "paragraph": "Paragraph",
+      "outdent": "Outdent",
+      "indent": "Indent",
+      "left": "Align left",
+      "center": "Align center",
+      "right": "Align right",
+      "justify": "Justify full"
+    },
+    "color": {
+      "recent": "Recent Color",
+      "more": "More Color",
+      "background": "Background Color",
+      "foreground": "Text Color",
+      "transparent": "Transparent",
+      "setTransparent": "Set transparent",
+      "reset": "Reset",
+      "resetToDefault": "Reset to default",
+      "cpSelect": "Select"
+    },
+    "shortcut": {
+      "shortcuts": "Keyboard shortcuts",
+      "close": "Close",
+      "textFormatting": "Text formatting",
+      "action": "Action",
+      "paragraphFormatting": "Paragraph formatting",
+      "documentStyle": "Document Style",
+      "extraKeys": "Extra keys"
+    },
+    "help": {
+      "insertParagraph": "Insert Paragraph",
+      "undo": "Undoes the last command",
+      "redo": "Redoes the last command",
+      "tab": "Tab",
+      "untab": "Untab",
+      "bold": "Set a bold style",
+      "italic": "Set a italic style",
+      "underline": "Set a underline style",
+      "strikethrough": "Set a strikethrough style",
+      "removeFormat": "Clean a style",
+      "justifyLeft": "Set left align",
+      "justifyCenter": "Set center align",
+      "justifyRight": "Set right align",
+      "justifyFull": "Set full align",
+      "insertUnorderedList": "Toggle unordered list",
+      "insertOrderedList": "Toggle ordered list",
+      "outdent": "Outdent on current paragraph",
+      "indent": "Indent on current paragraph",
+      "formatPara": "Change current block's format as a paragraph(P tag)",
+      "formatH1": "Change current block's format as H1",
+      "formatH2": "Change current block's format as H2",
+      "formatH3": "Change current block's format as H3",
+      "formatH4": "Change current block's format as H4",
+      "formatH5": "Change current block's format as H5",
+      "formatH6": "Change current block's format as H6",
+      "insertHorizontalRule": "Insert horizontal rule",
+      "linkDialog.show": "Show Link Dialog"
+    },
+    "history": {
+      "undo": "Undo",
+      "redo": "Redo"
+    },
+    "specialChar": {
+      "specialChar": "SPECIAL CHARACTERS",
+      "select": "Select Special characters"
+    },
+    "output": {
+      "noSelection": "No Selection Made!"
+    }
+  },
+  "uppy": {
+    "youCanOnlyUploadX": {
+      "0": "You can only upload %{smart_count} file",
+      "1": "You can only upload %{smart_count} files",
+      "2": "You can only upload %{smart_count} files"
+    },
+    "youHaveToAtLeastSelectX": {
+      "0": "You have to select at least %{smart_count} file",
+      "1": "You have to select at least %{smart_count} files",
+      "2": "You have to select at least %{smart_count} files"
+    },
+    "exceedsSize": "This file exceeds maximum allowed size of",
+    "youCanOnlyUploadFileTypes": "You can only upload: %{types}",
+    "companionError": "Connection with Companion failed",
+    "companionAuthError": "Authorization required",
+    "companionUnauthorizeHint": "To unauthorize to your %{provider} account, please go to %{url}",
+    "failedToUpload": "Failed to upload %{file}",
+    "noInternetConnection": "No Internet connection",
+    "connectedToInternet": "Connected to the Internet",
+    "noFilesFound": "You have no files or folders here",
+    "selectX": {
+      "0": "Select %{smart_count}",
+      "1": "Select %{smart_count}",
+      "2": "Select %{smart_count}"
+    },
+    "selectAllFilesFromFolderNamed": "Select all files from folder %{name}",
+    "unselectAllFilesFromFolderNamed": "Unselect all files from folder %{name}",
+    "selectFileNamed": "Select file %{name}",
+    "unselectFileNamed": "Unselect file %{name}",
+    "openFolderNamed": "Open folder %{name}",
+    "cancel": "Cancel",
+    "logOut": "Log out",
+    "filter": "Filter",
+    "resetFilter": "Reset filter",
+    "loading": "Loading...",
+    "authenticateWithTitle": "Please authenticate with %{pluginName} to select files",
+    "authenticateWith": "Connect to %{pluginName}",
+    "emptyFolderAdded": "No files were added from empty folder",
+    "folderAdded": {
+      "0": "Added %{smart_count} file from %{folder}",
+      "1": "Added %{smart_count} files from %{folder}",
+      "2": "Added %{smart_count} files from %{folder}"
+    },
+    "uploading": "Uploading",
+    "upload": "Upload",
+    "complete": "Complete",
+    "uploadFailed": "Upload failed",
+    "paused": "Paused",
+    "retry": "Retry",
+    "pause": "Pause",
+    "resume": "Resume",
+    "filesUploadedOfTotal": {
+      "0": "%{complete} of %{smart_count} file uploaded",
+      "1": "%{complete} of %{smart_count} files uploaded",
+      "2": "%{complete} of %{smart_count} files uploaded"
+    },
+    "dataUploadedOfTotal": "%{complete} of %{total}",
+    "xTimeLeft": "%{time} left",
+    "uploadXFiles": {
+      "0": "Upload %{smart_count} file",
+      "1": "Upload %{smart_count} files",
+      "2": "Upload %{smart_count} files"
+    },
+    "uploadXNewFiles": {
+      "0": "Upload +%{smart_count} file",
+      "1": "Upload +%{smart_count} files",
+      "2": "Upload +%{smart_count} files"
+    },
+    "xMoreFilesAdded": {
+      "0": "%{smart_count} more file added",
+      "1": "%{smart_count} more files added",
+      "2": "%{smart_count} more files added"
+    },
+    "closeModal": "Close Modal",
+    "importFrom": "Import from %{name}",
+    "addingMoreFiles": "Adding more files",
+    "addMoreFiles": "Add more files",
+    "dashboardWindowTitle": "File Uploader Window (Press escape to close)",
+    "dashboardTitle": "File Uploader",
+    "copyLinkToClipboardSuccess": "Link copied to clipboard",
+    "copyLinkToClipboardFallback": "Copy the URL below",
+    "copyLink": "Copy link",
+    "link": "Link",
+    "fileSource": "File source: %{name}",
+    "done": "Done",
+    "back": "Back",
+    "addMore": "Add more",
+    "removeFile": "Remove file",
+    "editFile": "Edit file",
+    "editing": "Editing %{file}",
+    "edit": "Edit",
+    "finishEditingFile": "Finish editing file",
+    "saveChanges": "Save changes",
+    "myDevice": "My Device",
+    "dropPasteImport": "Drop files here, paste, %{browse} or import from",
+    "dropPaste": "Drop files here, paste or %{browse}",
+    "dropHint": "Drop your files here",
+    "browse": "browse",
+    "uploadComplete": "Upload complete",
+    "uploadPaused": "Upload paused",
+    "resumeUpload": "Resume upload",
+    "pauseUpload": "Pause upload",
+    "retryUpload": "Retry upload",
+    "cancelUpload": "Cancel upload",
+    "xFilesSelected": {
+      "0": "%{smart_count} file selected",
+      "1": "%{smart_count} files selected",
+      "2": "%{smart_count} files selected"
+    },
+    "uploadingXFiles": {
+      "0": "Uploading %{smart_count} file",
+      "1": "Uploading %{smart_count} files",
+      "2": "Uploading %{smart_count} files"
+    },
+    "processingXFiles": {
+      "0": "Processing %{smart_count} file",
+      "1": "Processing %{smart_count} files",
+      "2": "Processing %{smart_count} files"
+    },
+    "poweredBy": "Powered by",
+    "dropHereOr": "Drop files here or %{browse}",
+    "chooseFiles": "Choose files"
+  }
+}

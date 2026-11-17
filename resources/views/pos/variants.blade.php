@@ -16,12 +16,12 @@
                         @endif"></span>
                         <span class="flex-grow-1 pad-lft pl-2">
                             <span class="d-block strong-600">{{ $stock->variant }}</span>
-                            <span class="d-block">Price: {{ single_price($stock->price) }}</span>
+                            <span class="d-block">{{ translate('Price') }}: {{ single_price($stock->price) }}</span>
                             <span class="badge badge-inline @if ($stock->qty <= 0)
                                 badge-secondary
                             @else
                                 badge-success
-                            @endif">Stock: {{ $stock->qty }}</span>
+                            @endif">{{ translate('Stock') }}: {{ $stock->qty }}</span>
                         </span>
                     </span>
                 </label>
@@ -30,6 +30,6 @@
     </div>
 </div>
 <div class="modal-footer">
-    <button type="button" class="btn btn-styled btn-base-3" data-dismiss="modal">Close</button>
-    <button type="button" onclick="addVariantProductToCart({{ $stocks->first()->product->id }})" class="btn btn-primary btn-styled btn-base-1">Add Product</button>
+    <button type="button" class="btn btn-styled btn-base-3" data-dismiss="modal">{{ translate('Close') }}</button>
+    <button type="button" onclick="addVariantProductToCart({{ $stocks->first()->product->id }})" class="btn btn-primary btn-styled btn-base-1">{{ translate('Add Product') }}</button>
 </div>

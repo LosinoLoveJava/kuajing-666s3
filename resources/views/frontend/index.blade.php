@@ -23,7 +23,7 @@
                                         <img
                                             class="d-block mw-100 img-fit rounded shadow-sm overflow-hidden"
                                             src="{{ uploaded_asset($slider_images[$key]) }}"
-                                            alt="{{ env('APP_NAME')}} promo"
+                                            alt="{{ env('APP_NAME')}} {{ translate('Promotion') }}"
                                             @if(count($featured_categories) == 0)
                                             height="457"
                                             @else
@@ -118,7 +118,7 @@
                     <div class="col-xl col-md-6">
                         <div class="mb-3 mb-lg-0">
                             <a href="{{ json_decode(get_setting('home_banner1_links'), true)[$key] }}" class="d-block text-reset">
-                                <img src="{{ static_asset('assets/img/placeholder-rect.jpg') }}" data-src="{{ uploaded_asset($banner_1_imags[$key]) }}" alt="{{ env('APP_NAME') }} promo" class="img-fluid lazyload w-100">
+                                <img src="{{ static_asset('assets/img/placeholder-rect.jpg') }}" data-src="{{ uploaded_asset($banner_1_imags[$key]) }}" alt="{{ env('APP_NAME') }} {{ translate('Promotion') }}" class="img-fluid lazyload w-100">
                             </a>
                         </div>
                     </div>
@@ -218,7 +218,7 @@
                     <div class="col-xl col-md-6">
                         <div class="mb-3 mb-lg-0">
                             <a href="{{ json_decode(get_setting('home_banner2_links'), true)[$key] }}" class="d-block text-reset">
-                                <img src="{{ static_asset('assets/img/placeholder-rect.jpg') }}" data-src="{{ uploaded_asset($banner_2_imags[$key]) }}" alt="{{ env('APP_NAME') }} promo" class="img-fluid lazyload w-100">
+                                <img src="{{ static_asset('assets/img/placeholder-rect.jpg') }}" data-src="{{ uploaded_asset($banner_2_imags[$key]) }}" alt="{{ env('APP_NAME') }} {{ translate('Promotion') }}" class="img-fluid lazyload w-100">
                             </a>
                         </div>
                     </div>
@@ -298,7 +298,7 @@
                     <div class="col-xl col-md-6">
                         <div class="mb-3 mb-lg-0">
                             <a href="{{ json_decode(get_setting('home_banner3_links'), true)[$key] }}" class="d-block text-reset">
-                                <img src="{{ static_asset('assets/img/placeholder-rect.jpg') }}" data-src="{{ uploaded_asset($banner_3_imags[$key]) }}" alt="{{ env('APP_NAME') }} promo" class="img-fluid lazyload w-100">
+                                <img src="{{ static_asset('assets/img/placeholder-rect.jpg') }}" data-src="{{ uploaded_asset($banner_3_imags[$key]) }}" alt="{{ env('APP_NAME') }} {{ translate('Promotion') }}" class="img-fluid lazyload w-100">
                             </a>
                         </div>
                     </div>

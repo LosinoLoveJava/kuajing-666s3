@@ -104,9 +104,9 @@
                             </td>
                             <td>
                                 @if ($entry->source === 'withdrawal')
-                                    {{ [1 => translate('Cash'), 2 => translate('Bank'), 3 => 'USDT', 4 => 'BANK'][(int) $entry->payment_method] ?? '' }}
+                                    {{ [1 => translate('Cash'), 2 => translate('Bank'), 3 => 'USDT', 4 => translate('Bank')][(int) $entry->payment_method] ?? '' }}
                                 @else
-                                    {{ $entry->payment_method === 'IBAN' ? 'BANK' : translate($entry->payment_method ?? '') }}
+                                    {{ $entry->payment_method === 'IBAN' ? translate('Bank') : translate($entry->payment_method ?? '') }}
                                 @endif
                             </td>
                         </tr>
@@ -177,7 +177,7 @@
                             @elseif( $seller_withdraw_request->w_type == 3)
                             {{translate('USDT')}}
                             @elseif($seller_withdraw_request->w_type == 4)
-BANK
+{{ translate('Bank') }}
 @include('partials.iban_details')
 @endif
                         </td>
@@ -289,7 +289,7 @@ BANK
                     <tr>
                         <td>{{ $rechargeList->firstItem() + $key }}</td>
                         <td>{{ single_price($list->amount) }}</td>
-                        <td>{{ $list->payment_method === 'IBAN' ? 'BANK' : $list->payment_method }}</td>
+                        <td>{{ $list->payment_method === 'IBAN' ? translate('Bank') : $list->payment_method }}</td>
                         <td>{{ $list->payment_details }}</td>
                         <td>
                             @include('partials.wallet_status', ['approval' => $list->approval])
@@ -436,7 +436,7 @@ BANK
                             <input type="hidden" name="type" value="1">
                             <div class="form-group"><label for="p">{{ translate('Withdraw Type') }}</label>
                                 <input type="hidden" name="w_type" value="4">
-                                <input class="form-control" id="p" value="BANK" readonly>
+                                <input class="form-control" id="p" value="{{ translate('Bank') }}" readonly>
                             </div>
                             <div id="withdraw-country-panel" role="tabpanel" aria-labelledby="withdraw-tab-sg">
                                 @include('partials.iban_form', ['fixedBank' => true, 'manualReview' => true, 'bankOnly' => true])

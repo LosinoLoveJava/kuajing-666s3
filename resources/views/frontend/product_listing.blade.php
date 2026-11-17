@@ -150,7 +150,7 @@
                                                             onchange="filter()"
                                                         >
                                                         <span class="aiz-square-check"></span>
-                                                        <span>{{ $attribute_value->value }}</span>
+                                                        <span>{{ frontend_text($attribute_value->value) }}</span>
                                                     </label>
                                                 @endforeach
                                             </div>
@@ -166,7 +166,7 @@
                                         <div class="p-3">
                                             <div class="aiz-radio-inline">
                                                 @foreach ($colors as $key => $color)
-                                                <label class="aiz-megabox pl-0 mr-2" data-toggle="tooltip" data-title="{{ $color->name }}">
+                                                <label class="aiz-megabox pl-0 mr-2" data-toggle="tooltip" data-title="{{ frontend_text($color->name) }}">
                                                     <input
                                                         type="radio"
                                                         name="color"

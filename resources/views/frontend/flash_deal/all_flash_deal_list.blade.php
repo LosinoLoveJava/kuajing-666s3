@@ -36,7 +36,7 @@
                         <img
                             src="{{ static_asset('assets/img/placeholder-rect.jpg') }}"
                             data-src="{{ uploaded_asset($single->banner) }}"
-                            alt="{{ $single->title }}"
+                            alt="{{ frontend_text($single->title) }}"
                             class="img-fluid lazyload rounded w-100">
                     </a>
                 </div>

@@ -45,7 +45,7 @@
                     <div class="input-group col-sm-10">
                         <input type="number" min="0" step="1" placeholder="{{translate('Validity in number of days')}}" value="{{ $seller_spread_package->duration }}" id="duration" name="duration" class="form-control" required>
                         <div class="input-group-append">
-                            <span class="input-group-text" id="basic-addon2">天</span>
+                            <span class="input-group-text" id="basic-addon2">{{ translate('Days') }}</span>
                         </div>
                     </div>
                 </div>

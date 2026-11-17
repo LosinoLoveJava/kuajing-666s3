@@ -24,16 +24,16 @@
                     @if ($element->type == 'text')
                         <div class="row">
                             <div class="col-md-2">
-                                <label>{{ $element->label }} <span class="text-danger">*</span></label>
+                                <label>{{ frontend_text($element->label) }} <span class="text-danger">*</span></label>
                             </div>
                             <div class="col-md-10">
-                                <input type="{{ $element->type }}" class="form-control mb-3" placeholder="{{ $element->label }}" name="element_{{ $key }}" required>
+                                <input type="{{ $element->type }}" class="form-control mb-3" placeholder="{{ frontend_text($element->label) }}" name="element_{{ $key }}" required>
                             </div>
                         </div>
                     @elseif($element->type == 'file')
                         <div class="row">
                             <div class="col-md-2">
-                                <label>{{ $element->label }}</label>
+                                <label>{{ frontend_text($element->label) }}</label>
                             </div>
                             <div class="col-md-10">
                                 <div class="custom-file">
@@ -47,13 +47,13 @@
                     @elseif ($element->type == 'select' && is_array(json_decode($element->options)))
                         <div class="row">
                             <div class="col-md-2">
-                                <label>{{ $element->label }}</label>
+                                <label>{{ frontend_text($element->label) }}</label>
                             </div>
                             <div class="col-md-10">
                                 <div class="mb-3">
                                     <select class="form-control selectpicker" data-minimum-results-for-search="Infinity" name="element_{{ $key }}" required>
                                         @foreach (json_decode($element->options) as $value)
-                                            <option value="{{ $value }}">{{ $value }}</option>
+                                            <option value="{{ $value }}">{{ frontend_text($value) }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -62,13 +62,13 @@
                     @elseif ($element->type == 'multi_select' && is_array(json_decode($element->options)))
                         <div class="row">
                             <div class="col-md-2">
-                                <label>{{ $element->label }}</label>
+                                <label>{{ frontend_text($element->label) }}</label>
                             </div>
                             <div class="col-md-10">
                                 <div class="mb-3">
                                     <select class="form-control selectpicker" data-minimum-results-for-search="Infinity" name="element_{{ $key }}[]" multiple required>
                                         @foreach (json_decode($element->options) as $value)
-                                            <option value="{{ $value }}">{{ $value }}</option>
+                                            <option value="{{ $value }}">{{ frontend_text($value) }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -77,7 +77,7 @@
                     @elseif ($element->type == 'radio')
                         <div class="row">
                             <div class="col-md-2">
-                                <label>{{ $element->label }}</label>
+                                <label>{{ frontend_text($element->label) }}</label>
                             </div>
                             <div class="col-md-10">
                                 <div class="mb-3">

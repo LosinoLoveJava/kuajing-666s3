@@ -35,7 +35,7 @@ $preference->save();
 
 <html>
   <head>
-    <title>Mercadopago Payment</title>
+    <title>{{ translate('Mercadopago Payment') }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
     .loader {

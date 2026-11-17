@@ -12,7 +12,7 @@
 						</li>
 					</ul>
 				</div>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" data-dismiss="modal" aria-label="{{ translate('Close') }}">
 					<span aria-hidden="true"></span>
 				</button>
 			</div>
