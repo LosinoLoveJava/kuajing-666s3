@@ -135,13 +135,12 @@ class ProductStorehouseController extends Controller
             // 循环复制产品
             foreach ($productIds as $productId) {
                 $product = Product::find($productId);
-                $profitPrice = $product->unit_price * $maxProfit;
 
                 $product_new = $product->replicate();
                 $product_new->slug = $product_new->slug . '-' . Str::random(5);
                 $product_new->added_by = 'seller';
                 $product_new->user_id = $userId;
-                $product_new->unit_price = $product->unit_price + $profitPrice;
+                $product_new->unit_price = round($product->unit_price * (1 + $maxProfit), 2);
                 $product_new->original_id = $productId;
                 $product_new->published = 1;
                 $product_new->in_storehouse = 0;
@@ -169,7 +168,7 @@ class ProductStorehouseController extends Controller
                 }
 
                 //Product Stock
-                $this->productStockService->product_duplicate_store($product->stocks, $product_new, $profitPrice);
+                $this->productStockService->product_duplicate_store($product->stocks, $product_new, $maxProfit);
 
                 //VAT & Tax
                 $this->productTaxService->product_duplicate_store($product->taxes, $product_new);

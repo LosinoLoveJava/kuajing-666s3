@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Http\Controllers\Seller\ProductStorehouseController;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\ProductStockService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -125,6 +126,43 @@ class SellerStorehouseBulkAddTest extends TestCase
         DB::table('products')->insert(['id' => 1, 'category_id' => 3]);
         $this->assertSame(1, $this->add(['all' => 0, 'product_ids' => [1]])['success']);
         $this->assertDatabaseHas('products', ['user_id' => 1, 'original_id' => 1]);
+    }
+
+    /** @dataProvider addModes */
+    public function testEveryVariantUsesItsOwnCostForTheThirtyPercentMarkup(array $payload)
+    {
+        DB::table('seller_packages')->update(['max_profit' => 30]);
+        // Reproduce the reported order: base price 8.49, actual SKU cost 10.99.
+        DB::table('products')->insert(['id' => 1, 'unit_price' => 8.49]);
+        DB::table('product_stocks')->insert([
+            ['product_id' => 1, 'variant' => '', 'price' => 10.99],
+            ['product_id' => 1, 'variant' => 'Large', 'price' => 19.99],
+        ]);
+        $this->assertSame(1, $this->add($payload)['success']);
+        $copy = Product::without('product_translations', 'taxes')->where('user_id', 1)->firstOrFail();
+        $this->assertSame(11.04, (float) $copy->unit_price);
+        $this->assertDatabaseHas('product_stocks', ['product_id' => $copy->id, 'variant' => '', 'price' => 14.29]);
+        $this->assertDatabaseHas('product_stocks', ['product_id' => $copy->id, 'variant' => 'Large', 'price' => 25.99]);
+        $this->assertDatabaseHas('product_stocks', ['product_id' => 1, 'variant' => '', 'price' => 10.99]);
+    }
+
+    public function addModes()
+    {
+        return [
+            [['all' => 0, 'product_ids' => [1]]],
+            [['all' => 1, 'category' => 'category-1']],
+        ];
+    }
+
+    public function testOrdinaryProductDuplicationPreservesVariantPrices()
+    {
+        DB::table('products')->insert(['id' => 1]);
+        DB::table('product_stocks')->insert(['product_id' => 1, 'variant' => 'Large', 'price' => 19.99]);
+        $source = Product::findOrFail(1);
+        $copy = $source->replicate();
+        $copy->save();
+        app(ProductStockService::class)->product_duplicate_store($source->stocks, $copy);
+        $this->assertDatabaseHas('product_stocks', ['product_id' => $copy->id, 'variant' => 'Large', 'price' => 19.99]);
     }
 
     public function testBulkAddStillRespectsVerificationAndProductLimits()

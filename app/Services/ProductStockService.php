@@ -44,13 +44,14 @@ class ProductStockService
         }
     }
 
-    public function product_duplicate_store($product_stocks, $product_new, $profitPrice = 0)
+    public function product_duplicate_store($product_stocks, $product_new, $profitRate = 0)
     {
         foreach ($product_stocks as $key => $stock) {
             $product_stock = new ProductStock;
             $product_stock->product_id = $product_new->id;
             $product_stock->variant = $stock->variant;
-            $product_stock->price = $stock->price + $profitPrice;
+            // Each variant's own cost is the basis for its markup.
+            $product_stock->price = round($stock->price * (1 + $profitRate), 2);
             $product_stock->sku = $stock->sku;
             $product_stock->qty = $stock->qty;
             $product_stock->save();
