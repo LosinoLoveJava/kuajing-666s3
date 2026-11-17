@@ -8,8 +8,7 @@ class EnableShopViewIncrementByDefault extends Migration
 {
     public function up()
     {
-        // One-time upgrade: enable existing shops that still have the legacy zero default.
-        // Later explicit zero settings remain disabled because migrations run only once.
+        // Normalize unset values to the default without changing custom quotas.
         DB::table('shops')->where(function ($query) {
             $query->where('view_inc_num', 0)->orWhereNull('view_inc_num');
         })->update(['view_inc_num' => ShopViewCounter::DEFAULT_DAILY_INCREMENT]);

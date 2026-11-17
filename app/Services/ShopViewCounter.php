@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class ShopViewCounter
 {
-    public const DEFAULT_DAILY_INCREMENT = 1440;
+    public const DEFAULT_DAILY_INCREMENT = 0;
 
     public function sync(): void
     {

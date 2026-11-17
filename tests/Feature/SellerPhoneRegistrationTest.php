@@ -37,6 +37,7 @@ class SellerPhoneRegistrationTest extends TestCase
             $t->timestamps();
         });
         Schema::create('shops', function (Blueprint $t) {
+            $t->integer('view_base_num')->default(0);
             $t->integer('view_inc_num')->default(1440);
             $t->increments('id'); $t->integer('user_id')->unique(); $t->string('name'); $t->string('address');
             $t->string('phone'); $t->string('slug'); $t->integer('seller_package_id'); $t->integer('product_upload_limit');

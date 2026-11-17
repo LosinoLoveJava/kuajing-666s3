@@ -51,29 +51,32 @@ class ShopViewCounterTest extends TestCase
         app(ShopViewCounter::class)->sync();
     }
 
-    public function testNewShopsGrowByDefaultWhileExplicitZeroStaysDisabled()
+    public function testNewShopsStayDisabledByDefaultWhileCustomQuotasStillGrow()
     {
-        // The model default must override the legacy database default of zero.
+        // New shops must not grow unless an increment is explicitly configured.
         Schema::drop('shops');
         Schema::create('shops', function (Blueprint $t) {
             $t->increments('id'); $t->integer('views')->default(0);
-            $t->integer('view_base_num')->default(0); $t->integer('view_inc_num')->default(0);
+            $t->integer('view_base_num')->default(100); $t->integer('view_inc_num')->default(0);
             $t->integer('view_today_num')->default(0); $t->integer('views_up_time')->default(0);
             $t->timestamps();
         });
         Shop::withoutEvents(function () {
-            $enabled = new Shop;
-            $enabled->save();
             $disabled = new Shop;
-            $disabled->view_inc_num = 0;
             $disabled->save();
+            $enabled = new Shop;
+            $enabled->view_inc_num = 1440;
+            $enabled->save();
         });
         $this->syncAt('2026-10-28 00:00:00');
-        $this->assertDatabaseHas('shops', ['id' => 1, 'view_inc_num' => 1440, 'views' => 1]);
-        $this->assertDatabaseHas('shops', ['id' => 2, 'view_inc_num' => 0, 'views' => 0]);
+        $this->assertDatabaseHas('shops', ['id' => 1, 'view_base_num' => 0, 'view_inc_num' => 0, 'views' => 0]);
+        $this->assertDatabaseHas('shops', ['id' => 2, 'view_inc_num' => 1440, 'views' => 1]);
+        $this->syncAt('2026-10-28 23:59:00');
+        $this->assertDatabaseHas('shops', ['id' => 1, 'view_inc_num' => 0, 'views' => 0]);
+        $this->assertDatabaseHas('shops', ['id' => 2, 'view_inc_num' => 1440, 'views' => 1440]);
     }
 
-    public function testUpgradeEnablesExistingZeroAndNullSettingsAndPreservesCustomQuotas()
+    public function testUpgradeDefaultsZeroAndNullSettingsToDisabledAndPreservesCustomQuotas()
     {
         Schema::drop('shops');
         Schema::create('shops', function (Blueprint $t) {
@@ -87,9 +90,9 @@ class ShopViewCounterTest extends TestCase
         ]);
         require_once database_path('migrations/2026_10_28_100000_enable_shop_view_increment_by_default.php');
         (new \EnableShopViewIncrementByDefault)->up();
-        $this->assertDatabaseHas('shops', ['id' => 1, 'view_inc_num' => 1440, 'views' => 88,
+        $this->assertDatabaseHas('shops', ['id' => 1, 'view_inc_num' => 0, 'views' => 88,
             'view_base_num' => 20, 'view_today_num' => 7, 'views_up_time' => 1]);
-        $this->assertDatabaseHas('shops', ['id' => 2, 'view_inc_num' => 1440]);
+        $this->assertDatabaseHas('shops', ['id' => 2, 'view_inc_num' => 0]);
         $this->assertDatabaseHas('shops', ['id' => 3, 'view_inc_num' => 200]);
     }
 
