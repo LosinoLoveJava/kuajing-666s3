@@ -19,7 +19,8 @@
             form.elements.country.value = country;
             form.elements.phone.value = number;
             var pattern = country === 'TR' ? /^\+905[0-9]{9}$/ : (country === 'SG' ? /^\+65[3689][0-9]{7}$/ : /^\+971[1-9][0-9]{7,8}$/);
-            var valid = pattern.test(number) && intlTelInputUtils.isValidNumber(number, country);
+            // Match PhoneNumber::normalize for SG; the bundled number metadata rejects newer prefixes such as 8086.
+            var valid = pattern.test(number) && (country === 'SG' || intlTelInputUtils.isValidNumber(number, country));
             input.setCustomValidity(input.value && !valid ? @json(translate('Invalid phone number')) : '');
             return valid;
         };
