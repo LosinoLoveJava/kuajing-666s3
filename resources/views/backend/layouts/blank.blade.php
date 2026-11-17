@@ -22,9 +22,11 @@
 
     <script>
         var AIZ = AIZ || {};
+        AIZ.local = AIZ.local || {};
     </script>
 </head>
 <body>
+    @include('auth.partials.language_switcher')
     <div class="aiz-main-wrapper d-flex">
 
         <div class="flex-grow-1">
@@ -33,6 +35,10 @@
 
     </div><!-- .aiz-main-wrapper -->
     <script src="{{ static_asset('assets/js/vendors.js') }}" ></script>
+    @if(app()->getLocale() === 'tr')
+        <script src="{{ static_asset('assets/js/frontend-tr-plugins.js') }}"></script>
+        <script src="{{ static_asset('assets/js/frontend-tr.js') }}"></script>
+    @endif
     <script src="{{ static_asset('assets/js/responsive-tables.js') }}"></script>
     <script src="{{ static_asset('assets/js/aiz-core.js') }}" ></script>
     <script src="{{ static_asset('assets/js/page-jump.js') }}"></script>

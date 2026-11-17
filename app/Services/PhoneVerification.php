@@ -13,11 +13,11 @@ class PhoneVerification
     public function send($phone, $purpose, $ip)
     {
         if (!in_array($purpose, ['register', 'login', 'reset_password', 'verify_phone'], true)) {
-            throw ValidationException::withMessages(['purpose' => 'Invalid verification purpose.']);
+            throw ValidationException::withMessages(['purpose' => translate('Invalid verification purpose.')]);
         }
         foreach (['sms-phone:'.hash('sha256', $phone) => 10, 'sms-ip:'.hash('sha256', $ip) => 30] as $key => $limit) {
             if (RateLimiter::tooManyAttempts($key, $limit)) {
-                abort(429, 'Too many SMS requests. Please try again later.');
+                abort(429, translate('Too many SMS requests. Please try again later.'));
             }
             RateLimiter::hit($key, 3600);
         }
@@ -41,8 +41,8 @@ class PhoneVerification
             ]);
             return 'sent';
         });
-        if ($outcome === 'cooldown') { abort(429, 'Please wait 60 seconds before requesting another code.'); }
-        if ($outcome !== 'sent') { abort(503, 'SMS is temporarily unavailable. Please try again later.'); }
+        if ($outcome === 'cooldown') { abort(429, translate('Please wait 60 seconds before requesting another code.')); }
+        if ($outcome !== 'sent') { abort(503, translate('SMS is temporarily unavailable. Please try again later.')); }
     }
 
     public function consume($phone, $purpose, $code, Closure $action)
@@ -71,7 +71,7 @@ class PhoneVerification
         });
         // Throw outside the transaction so failed attempts are committed.
         if (!$outcome[0]) {
-            throw ValidationException::withMessages(['code' => 'Invalid or expired verification code.']);
+            throw ValidationException::withMessages(['code' => translate('Invalid or expired verification code.')]);
         }
         return $outcome[1];
     }

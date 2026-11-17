@@ -1,4 +1,25 @@
 /*your custom css goes here*/
+/* Keep language and account menus reachable on narrow portal headers. */
+@media (max-width: 575.98px) {
+    .aiz-topbar .btn-icon,
+    .aiz-topbar .customer_service_link {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        flex-shrink: 0;
+    }
+    .aiz-topbar .ml-2,
+    .aiz-topbar .ml-3 {
+        margin-left: 4px !important;
+    }
+    .aiz-topbar .avatar-sm {
+        width: 32px;
+        height: 32px;
+    }
+    .aiz-topbar > .d-flex > a > img {
+        width: 32px;
+    }
+}
 /* Keep the complete country/dial code visible, including when text is zoomed. */
 .phone-number-fields {
     display: flex;

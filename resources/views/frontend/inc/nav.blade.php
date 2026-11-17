@@ -14,7 +14,7 @@
         <div class="row">
             <div class="col-lg-7 col">
                 <ul class="list-inline d-flex justify-content-between justify-content-lg-start mb-0">
-                    @if(get_setting('show_language_switcher') == 'on')
+                    @if(get_setting('show_language_switcher') == 'on' || request()->routeIs('user.login', 'user.registration', 'phone.access', 'login', 'register', 'password.request', 'password.reset'))
                     <li class="list-inline-item dropdown mr-3" id="lang-change">
                         @php
                             if(Session::has('locale')){
@@ -25,14 +25,14 @@
                             }
                         @endphp
                         <a href="javascript:void(0)" class="dropdown-toggle text-reset py-2" data-toggle="dropdown" data-display="static">
-                            <img src="{{ static_asset('assets/img/placeholder.jpg') }}" data-src="{{ static_asset('assets/img/flags/'.$locale.'.png') }}" class="mr-2 lazyload" alt="{{ \App\Models\Language::where('code', $locale)->first()->name }}" height="11">
+                            <img src="{{ static_asset('assets/img/flags/'.$locale.'.png') }}" class="mr-2" alt="{{ \App\Models\Language::where('code', $locale)->first()->name }}" height="11">
                             <span class="opacity-60">{{ \App\Models\Language::where('code', $locale)->first()->name }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-left">
                             @foreach (\App\Models\Language::where('status', 1)->get() as $key => $language)
                                 <li>
-                                    <a href="javascript:void(0)" data-flag="{{ $language->code }}" class="dropdown-item @if($locale == $language) active @endif">
-                                        <img src="{{ static_asset('assets/img/placeholder.jpg') }}" data-src="{{ static_asset('assets/img/flags/'.$language->code.'.png') }}" class="mr-1 lazyload" alt="{{ $language->name }}" height="11">
+                                    <a href="javascript:void(0)" data-flag="{{ $language->code }}" class="dropdown-item @if($locale == $language->code) active @endif">
+                                        <img src="{{ static_asset('assets/img/flags/'.$language->code.'.png') }}" class="mr-1" alt="{{ $language->name }}" height="11">
                                         <span class="language">{{ $language->name }}</span>
                                     </a>
                                 </li>

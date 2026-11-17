@@ -38,7 +38,7 @@ class LoginController extends Controller
     public function adminPhoneCode(Request $request)
     {
         app(\App\Services\PhoneAuth::class)->sendAdminCode($request);
-        return response()->json(['result' => true, 'message' => 'SMS submitted. Code expires in 5 minutes.']);
+        return response()->json(['result' => true, 'message' => translate('SMS submitted. Code expires in 5 minutes.')]);
     }
 
     public function adminPhoneSubmit(Request $request)

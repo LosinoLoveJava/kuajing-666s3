@@ -108,7 +108,9 @@
                     var $this = $(this);
                     var locale = $this.data('flag');
                     $.post('{{ route('language.change') }}',{_token:'{{ csrf_token() }}', locale:locale}, function(data){
-                        location.reload();
+                        var url = new URL(window.location.href);
+                        url.searchParams.delete('lang');
+                        window.location.assign(url.toString());
                     });
 
                 });

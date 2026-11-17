@@ -24,10 +24,10 @@ class PhoneAuth
         $phone = app(PhoneNumber::class)->normalize($data['phone'], $data['country'] ?? null);
         $user = app(PhoneNumber::class)->user($phone);
         if ($user && (!in_array($user->user_type, ['customer', 'seller'], true) || $user->banned)) {
-            throw ValidationException::withMessages(['phone' => 'This account cannot use phone authentication.']);
+            throw ValidationException::withMessages(['phone' => translate('This account cannot use phone authentication.')]);
         }
         if (($data['purpose'] === 'register') === (bool) $user) {
-            throw ValidationException::withMessages(['phone' => $user ? 'Phone already registered.' : 'Account not found.']);
+            throw ValidationException::withMessages(['phone' => $user ? translate('Phone already registered.') : translate('Account not found.')]);
         }
         app(PhoneVerification::class)->send($phone, $data['purpose'], $request->ip());
     }
@@ -38,7 +38,7 @@ class PhoneAuth
         $phone = app(PhoneNumber::class)->normalizeAdmin($data['phone']);
         $user = app(PhoneNumber::class)->user($phone);
         if (!$user || !in_array($user->user_type, ['admin', 'staff', 'salesman'], true) || $user->banned) {
-            throw ValidationException::withMessages(['phone' => 'Account not found.']);
+            throw ValidationException::withMessages(['phone' => translate('Account not found.')]);
         }
         app(PhoneVerification::class)->send($phone, 'login', $request->ip());
     }
@@ -51,7 +51,7 @@ class PhoneAuth
         $phone = app(PhoneNumber::class)->normalize($data['phone'], $data['country'] ?? null);
         return app(PhoneVerification::class)->consume($phone, 'register', $data['code'], function () use ($phone, $data, $onRegistered) {
             if (app(PhoneNumber::class)->user($phone)) {
-                throw ValidationException::withMessages(['phone' => 'Phone already registered.']);
+                throw ValidationException::withMessages(['phone' => translate('Phone already registered.')]);
             }
             $user = new User;
             $user->name = $data['name'];
@@ -84,11 +84,11 @@ class PhoneAuth
             'code' => ['nullable', 'required_without:password', 'string', $this->verificationCodeRule()]]);
         $phone = app(PhoneNumber::class)->normalize($data['phone'], $data['country'] ?? null);
         $key = 'phone-login:'.hash('sha256', $phone.'|'.$request->ip());
-        if (RateLimiter::tooManyAttempts($key, 10)) { abort(429, 'Too many login attempts.'); }
+        if (RateLimiter::tooManyAttempts($key, 10)) { abort(429, translate('Too many login attempts.')); }
         RateLimiter::hit($key, 900);
         $user = app(PhoneNumber::class)->user($phone);
         if (!$user || !in_array($user->user_type, ['customer', 'seller'], true) || $user->banned) {
-            throw ValidationException::withMessages(['phone' => 'Invalid account or credentials.']);
+            throw ValidationException::withMessages(['phone' => translate('Invalid account or credentials.')]);
         }
         if (!empty($data['code'])) {
             $user = app(PhoneVerification::class)->consume($phone, 'login', $data['code'], function () use ($user, $phone) {
@@ -98,7 +98,7 @@ class PhoneAuth
                 return $user;
             });
         } elseif (!Hash::check($data['password'], $user->password) || (!$user->phone_verified_at && !$user->email_verified_at)) {
-            throw ValidationException::withMessages(['password' => 'Invalid credentials or unverified phone.']);
+            throw ValidationException::withMessages(['password' => translate('Invalid credentials or unverified phone.')]);
         }
         RateLimiter::clear($key);
         return $user;
@@ -113,12 +113,12 @@ class PhoneAuth
         ]);
         $phone = app(PhoneNumber::class)->normalizeAdmin($data['phone']);
         $key = 'admin-phone-login:'.hash('sha256', $phone.'|'.$request->ip());
-        if (RateLimiter::tooManyAttempts($key, 10)) { abort(429, 'Too many login attempts.'); }
+        if (RateLimiter::tooManyAttempts($key, 10)) { abort(429, translate('Too many login attempts.')); }
         RateLimiter::hit($key, 900);
         $user = app(PhoneNumber::class)->user($phone);
         if (!$user || !in_array($user->user_type, ['admin', 'staff', 'salesman'], true)
             || $user->banned) {
-            throw ValidationException::withMessages(['phone' => 'Invalid account or credentials.']);
+            throw ValidationException::withMessages(['phone' => translate('Invalid account or credentials.')]);
         }
         if (!empty($data['code'])) {
             $user = app(PhoneVerification::class)->consume($phone, 'login', $data['code'], function () use ($user, $phone) {
@@ -128,7 +128,7 @@ class PhoneAuth
                 return $user;
             });
         } elseif (!Hash::check($data['password'], $user->password)) {
-            throw ValidationException::withMessages(['phone' => 'Invalid account or credentials.']);
+            throw ValidationException::withMessages(['phone' => translate('Invalid account or credentials.')]);
         }
         RateLimiter::clear($key);
         return $user;
@@ -143,7 +143,7 @@ class PhoneAuth
         app(PhoneVerification::class)->consume($phone, 'reset_password', $data['code'], function () use ($phone, $data) {
             $user = app(PhoneNumber::class)->user($phone);
             if (!$user || !in_array($user->user_type, ['customer', 'seller'], true) || $user->banned) {
-                throw ValidationException::withMessages(['phone' => 'Invalid account.']);
+                throw ValidationException::withMessages(['phone' => translate('Invalid account.')]);
             }
             $user->password = Hash::make($data['password']);
             $user->phone_normalized = $phone;

@@ -40,7 +40,7 @@ class PhoneNumber
             throw ValidationException::withMessages(['phone' => translate('Invalid phone number')]);
         }
         if (!Country::where('status', 1)->whereRaw('UPPER(code) = ?', [$country])->exists()) {
-            throw ValidationException::withMessages(['phone' => 'This phone country is not enabled.']);
+            throw ValidationException::withMessages(['phone' => translate('This phone country is not enabled.')]);
         }
         return $number;
     }
@@ -59,7 +59,7 @@ class PhoneNumber
             if (Country::where('status', 1)->whereRaw('UPPER(code) = ?', ['AE'])->exists()) {
                 return $number;
             }
-            throw ValidationException::withMessages(['phone' => 'This phone country is not enabled.']);
+            throw ValidationException::withMessages(['phone' => translate('This phone country is not enabled.')]);
         }
         return $this->normalize($value);
     }
@@ -73,7 +73,7 @@ class PhoneNumber
         });
         $users = $query->limit(2)->get();
         if ($users->count() > 1) {
-            throw ValidationException::withMessages(['phone' => 'Multiple accounts use this number. Please contact support.']);
+            throw ValidationException::withMessages(['phone' => translate('Multiple accounts use this number. Please contact support.')]);
         }
         return $users->first();
     }

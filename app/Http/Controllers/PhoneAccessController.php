@@ -27,7 +27,7 @@ class PhoneAccessController extends Controller
     {
         $request->validate(['purpose' => 'required|in:register,reset_password']);
         app(PhoneAuth::class)->send($request);
-        return response()->json(['result' => true, 'message' => 'SMS submitted. Code expires in 5 minutes.']);
+        return response()->json(['result' => true, 'message' => translate('SMS submitted. Code expires in 5 minutes.')]);
     }
 
     public function submit(Request $request)
@@ -39,7 +39,7 @@ class PhoneAccessController extends Controller
         }
         if ($request->mode === 'reset_password') {
             app(PhoneAuth::class)->resetPassword($request);
-            return redirect()->route($isSellerPortal ? 'login' : 'phone.access')->with('status', 'Password updated. Please log in.');
+            return redirect()->route($isSellerPortal ? 'login' : 'phone.access')->with('status', translate('Password updated. Please log in.'));
         }
         $user = $request->mode === 'register' ? app(PhoneAuth::class)->register($request) : app(PhoneAuth::class)->login($request);
         app(\App\Services\PortalLogin::class)->login($user, $request, $request->boolean('remember'));

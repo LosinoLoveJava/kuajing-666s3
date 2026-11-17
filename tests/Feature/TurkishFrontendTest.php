@@ -49,6 +49,35 @@ class TurkishFrontendTest extends TestCase
         }
     }
 
+    public function testLanguageMenuSelectionPersistsEnabledTurkishAndRejectsDisabledOptions()
+    {
+        Schema::create('languages', function (Blueprint $t) {
+            $t->increments('id'); $t->string('code'); $t->string('name'); $t->integer('status');
+        });
+        DB::table('languages')->insert([
+            ['code'=>'en','name'=>'English','status'=>1],
+            ['code'=>'tr','name'=>'Türkçe','status'=>1],
+            ['code'=>'disabled','name'=>'Disabled','status'=>0],
+        ]);
+        $session = app('session.store');
+        $session->start();
+        foreach (['tr','en','tr'] as $locale) {
+            $request = \Illuminate\Http\Request::create('/language','POST',['locale'=>$locale]);
+            $request->setLaravelSession($session);
+            (new \App\Http\Controllers\LanguageController)->changeLanguage($request);
+            $this->assertSame($locale, $session->get('locale'));
+            $this->assertSame($locale, app()->getLocale());
+        }
+        $request = \Illuminate\Http\Request::create('/language','POST',['locale'=>'disabled']);
+        $request->setLaravelSession($session);
+        try {
+            (new \App\Http\Controllers\LanguageController)->changeLanguage($request);
+            $this->fail('Disabled language must not be selected.');
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $exception) {
+            $this->assertSame('tr', $session->get('locale'));
+        }
+    }
+
     public function testHtmlTranslationPreservesMarkupMediaScriptsAndEscapesText()
     {
         $html='Hello <a href="/Hello?q=Hello">World &amp; more</a><img src="Hello.jpg"><script>"Hello"</script><style>.Hello{}</style><!--Hello-->';

@@ -281,5 +281,22 @@
   "Processing": "İşleniyor",
   "Cash on delivery": "Kapıda ödeme",
   "Wallet": "Cüzdan",
-  "Credit card": "Kredi kartı"
+  "Credit card": "Kredi kartı",
+  "Language": "Dil",
+  "SMS submitted. Code expires in 5 minutes.": "SMS gönderildi. Kodun geçerlilik süresi 5 dakikadır.",
+  "Password updated. Please log in.": "Şifre güncellendi. Lütfen giriş yapın.",
+  "This phone country is not enabled.": "Bu ülke için telefonla doğrulama etkin değil.",
+  "Multiple accounts use this number. Please contact support.": "Bu numarayı birden fazla hesap kullanıyor. Lütfen destek ekibiyle iletişime geçin.",
+  "Invalid verification purpose.": "Geçersiz doğrulama amacı.",
+  "Too many SMS requests. Please try again later.": "Çok fazla SMS isteği gönderildi. Lütfen daha sonra tekrar deneyin.",
+  "Please wait 60 seconds before requesting another code.": "Yeni bir kod istemeden önce lütfen 60 saniye bekleyin.",
+  "SMS is temporarily unavailable. Please try again later.": "SMS hizmeti geçici olarak kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
+  "Invalid or expired verification code.": "Doğrulama kodu geçersiz veya süresi dolmuş.",
+  "This account cannot use phone authentication.": "Bu hesap telefonla doğrulamayı kullanamaz.",
+  "Phone already registered.": "Bu telefon numarası zaten kayıtlı.",
+  "Account not found.": "Hesap bulunamadı.",
+  "Too many login attempts.": "Çok fazla giriş denemesi yapıldı.",
+  "Invalid account or credentials.": "Hesap veya giriş bilgileri geçersiz.",
+  "Invalid credentials or unverified phone.": "Giriş bilgileri geçersiz veya telefon numarası doğrulanmamış.",
+  "Invalid account.": "Geçersiz hesap."
 }
