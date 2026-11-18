@@ -502,7 +502,7 @@ class UpdateController extends Controller
                 if ($shop->admin_to_pay == 0) {
                     $shop->admin_to_pay = $seller->admin_to_pay;
                 }
-                $shop->verification_status = $seller->verification_status;
+                // Existing shops retain their reviewed status; legacy seller data can be stale.
                 $shop->verification_info = $seller->verification_info;
                 $shop->cash_on_delivery_status = $seller->cash_on_delivery_status;
                 if (!$shop->bank_name) {

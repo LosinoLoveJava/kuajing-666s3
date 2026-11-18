@@ -164,15 +164,16 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
         Route::get('/sellers/destroy/{id}', 'destroy')->name('sellers.destroy');
         Route::post('/bulk-seller-delete', 'bulk_seller_delete')->name('bulk-seller-delete');
         Route::get('/sellers/view/{id}/verification', 'show_verification_request')->name('sellers.show_verification_request');
-        Route::get('/sellers/approve/{id}', 'approve_seller')->name('sellers.approve');
-        Route::get('/sellers/reject/{id}', 'reject_seller')->name('sellers.reject');
+        Route::post('/sellers/approve/{id}', 'approve_seller')->middleware(\App\Http\Middleware\VerifyCsrfToken::class)->name('sellers.approve');
+        Route::post('/sellers/reject/{id}', 'reject_seller')->middleware(\App\Http\Middleware\VerifyCsrfToken::class)->name('sellers.reject');
         Route::get('/sellers/login/{id}', 'login')->name('sellers.login');
         Route::post('/sellers/payment_modal', 'payment_modal')->name('sellers.payment_modal');
         Route::post('/sellers/guarantee_money_modal', 'guarantee_money_modal')->name('sellers.guarantee_money_modal');
 
 
         Route::post('/sellers/profile_modal', 'profile_modal')->name('sellers.profile_modal');
-        Route::post('/sellers/approved', 'updateApproved')->name('sellers.approved');
+        Route::post('/sellers/approved', 'updateApproved')->middleware(\App\Http\Middleware\VerifyCsrfToken::class)->name('sellers.approved');
+        Route::get('/sellers/{id}/approval-status', 'approvalStatus')->name('sellers.approval_status');
         Route::post('/sellers/comment_permission', 'updateCommentPermission')->name('sellers.comment_permission');
         Route::post('/sellers/home_display', 'updateHomeDisplay')->name('sellers.home_display');
 

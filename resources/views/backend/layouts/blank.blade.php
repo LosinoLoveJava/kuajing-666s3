@@ -50,5 +50,6 @@
         AIZ.plugins.notify('{{ $message['level'] }}', '{{ $message['message'] }}');
     @endforeach
     </script>
+    @include('frontend.partials.salesmartly', ['allowGuest' => true])
 </body>
 </html>

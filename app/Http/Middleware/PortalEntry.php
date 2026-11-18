@@ -12,6 +12,12 @@ class PortalEntry
             return $next($request);
         }
 
+        $host = strtolower($request->getHost());
+        if ($host === 'www.pddsellercenter.com' ||
+            (app()->environment('local') && in_array($host, ['localhost', '127.0.0.1', '[::1]'], true))) {
+            return redirect('/login?portal=seller');
+        }
+
         $portal = \App\Services\PortalContext::host($request);
         $portals = [
             'admin' => ['admin', '/admin'],

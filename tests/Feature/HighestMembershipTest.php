@@ -42,6 +42,7 @@ class HighestMembershipTest extends TestCase
         Schema::create('shops', function (Blueprint $t) {
             $t->increments('id'); $t->integer('user_id'); $t->integer('seller_package_id')->nullable();
             $t->integer('product_upload_limit')->default(0); $t->date('package_invalid_at')->nullable();
+            $t->integer('view_base_num')->default(0); $t->integer('view_inc_num')->default(0);
             $t->integer('verification_status')->default(0); $t->decimal('admin_to_pay',20,2)->default(0); $t->timestamps();
         });
         Schema::create('products', function (Blueprint $t) {

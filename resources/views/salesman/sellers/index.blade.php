@@ -61,9 +61,13 @@
                     <td>
                         <label class="aiz-switch aiz-switch-success mb-0">
                             @if (get_setting('salesman_reviews_switch') == 1)
-                                <input onchange="update_approved(this)" value="{{ $shop->id }}" type="checkbox" <?php if($shop->verification_status == 1) echo "checked";?> >
+                                <input onchange="update_approved(this)" value="{{ $shop->id }}" type="checkbox" name="shop_approval_{{ $shop->id }}" autocomplete="off"
+                                    data-seller-approval data-approved="{{ (int) $shop->verification_status }}" data-approval-version="{{ (int) $shop->approval_version }}"
+                                    data-approval-status-url="{{ route('salesman.sellers.approval_status', $shop->id) }}" @if($shop->verification_status == 1) checked @endif>
                             @else
-                            <input disabled readonly value="{{ $shop->id }}" type="checkbox" <?php if($shop->verification_status == 1) echo "checked";?> >
+                            <input disabled readonly data-approval-readonly="1" value="{{ $shop->id }}" type="checkbox" name="shop_approval_{{ $shop->id }}" autocomplete="off"
+                                data-seller-approval data-approved="{{ (int) $shop->verification_status }}" data-approval-version="{{ (int) $shop->approval_version }}"
+                                data-approval-status-url="{{ route('salesman.sellers.approval_status', $shop->id) }}" @if($shop->verification_status == 1) checked @endif>
                             @endif
                             <span class="slider round"></span>
                         </label>
@@ -163,6 +167,10 @@
 @endsection
 
 @section('script')
+<script src="{{ static_asset('assets/js/seller-approval.js') }}?v=20261118-1"></script>
+<script>
+    SellerApproval.configure({url: @json(route('salesman.sellers.approved')), token: @json(csrf_token()), messages: @json(__('seller_approval'))});
+</script>
 <script src="https://cdn.bootcdn.net/ajax/libs/layer/3.5.1/layer.min.js"></script>
     <script type="text/javascript">
     
@@ -235,20 +243,7 @@
         }
 
         function update_approved(el){
-            if(el.checked){
-                var status = 1;
-            }
-            else{
-                var status = 0;
-            }
-            $.post('{{ route('salesman.sellers.approved') }}', {_token:'{{ csrf_token() }}', id:el.value, status:status}, function(data){
-                if(data == 1){
-                    AIZ.plugins.notify('success', '{{ translate('Approved sellers updated successfully') }}');
-                }
-                else{
-                    AIZ.plugins.notify('danger', '{{ translate('Something went wrong') }}');
-                }
-            });
+            SellerApproval.update(el);
         }
 
     </script>

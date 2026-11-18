@@ -91,5 +91,6 @@
         @endforeach
     </script>
 
+    @include('frontend.partials.salesmartly', ['allowGuest' => true])
 </body>
 </html>

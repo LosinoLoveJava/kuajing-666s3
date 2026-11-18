@@ -111,7 +111,7 @@ class PhonePortalAccessTest extends TestCase
         $this->postJson('/register', ['email' => 'test@example.com'])->assertStatus(422)->assertJsonValidationErrors('email');
     }
 
-    public function testChatOnlyLoadsForAuthenticatedAccountsAndPassesTheirId()
+    public function testChatRequiresAnAccountUnlessGuestAccessIsExplicitlyEnabled()
     {
         $this->assertStringNotContainsString('plugin-code.salesmartly.com', view('frontend.partials.salesmartly')->render());
         $user = $this->account('customer');
@@ -121,5 +121,14 @@ class PhonePortalAccessTest extends TestCase
         $this->assertStringContainsString('user_id: "'.$user->id.'"', $html);
         auth()->logout();
         $this->assertStringNotContainsString('plugin-code.salesmartly.com', view('frontend.partials.salesmartly')->render());
+    }
+
+    public function testGuestChatUsesTheSellerProjectWithoutBindingAnAccount()
+    {
+        $html = view('frontend.partials.salesmartly', ['allowGuest' => true])->render();
+        $this->assertStringContainsString('project_840494_873536_1791129077.js', $html);
+        $this->assertStringContainsString('script.async = true', $html);
+        $this->assertStringNotContainsString('setLoginInfo', $html);
+        $this->assertStringNotContainsString('user_id', $html);
     }
 }

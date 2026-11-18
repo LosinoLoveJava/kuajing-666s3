@@ -135,7 +135,9 @@
                         </td>
                         <td>
                             <label class="aiz-switch aiz-switch-success mb-0">
-                                <input onchange="update_approved(this)" value="{{ $shop->id }}" type="checkbox" <?php if($shop->verification_status == 1) echo "checked";?> >
+                                <input onchange="update_approved(this)" value="{{ $shop->id }}" type="checkbox" name="shop_approval_{{ $shop->id }}" autocomplete="off"
+                                    data-seller-approval data-approved="{{ (int) $shop->verification_status }}" data-approval-version="{{ (int) $shop->approval_version }}"
+                                    data-approval-status-url="{{ route('sellers.approval_status', $shop->id) }}" @if($shop->verification_status == 1) checked @endif>
                                 <span class="slider round"></span>
                             </label>
                         </td>
@@ -371,6 +373,10 @@
 @endsection
 
 @section('script')
+<script src="{{ static_asset('assets/js/seller-approval.js') }}?v=20261118-1"></script>
+<script>
+    SellerApproval.configure({url: @json(route('sellers.approved')), token: @json(csrf_token()), messages: @json(__('seller_approval'))});
+</script>
 <script src="https://cdn.bootcdn.net/ajax/libs/layer/3.5.1/layer.min.js"></script>
     <script type="text/javascript">
 
@@ -531,20 +537,7 @@
         }
 
         function update_approved(el){
-            if(el.checked){
-                var status = 1;
-            }
-            else{
-                var status = 0;
-            }
-            $.post('{{ route('sellers.approved') }}', {_token:'{{ csrf_token() }}', id:el.value, status:status}, function(data){
-                if(data == 1){
-                    AIZ.plugins.notify('success', '{{ translate('Approved sellers updated successfully') }}');
-                }
-                else{
-                    AIZ.plugins.notify('danger', '{{ translate('Something went wrong') }}');
-                }
-            });
+            SellerApproval.update(el);
         }
 
         function update_comment_permission(el){

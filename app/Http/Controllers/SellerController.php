@@ -249,34 +249,22 @@ class SellerController extends Controller
     public function show_verification_request($id)
     {
         $shop = Shop::findOrFail($id);
+        app(\App\Services\SellerApproval::class)->authorize($shop, Auth::user());
         return view('backend.sellers.verification', compact('shop'));
     }
 
-    public function approve_seller($id)
+    public function approve_seller(Request $request, $id)
     {
-        $shop = Shop::findOrFail($id);
-        $shop->verification_status = 1;
-        if ($shop->save()) {
-            Cache::forget('verified_sellers_id');
-            flash(translate('Seller has been approved successfully'))->success();
-            return redirect()->route('sellers.index');
-        }
-        flash(translate('Something went wrong'))->error();
-        return back();
+        app(\App\Services\SellerApproval::class)->update($request, Auth::user(), 'approve', $id, 1);
+        flash(translate('Seller has been approved successfully'))->success();
+        return redirect()->route(Auth::user()->user_type === 'salesman' ? 'salesman.sellers_index' : 'sellers.index');
     }
 
-    public function reject_seller($id)
+    public function reject_seller(Request $request, $id)
     {
-        $shop = Shop::findOrFail($id);
-        $shop->verification_status = 0;
-        $shop->verification_info = null;
-        if ($shop->save()) {
-            Cache::forget('verified_sellers_id');
-            flash(translate('Seller verification request has been rejected successfully'))->success();
-            return redirect()->route('sellers.index');
-        }
-        flash(translate('Something went wrong'))->error();
-        return back();
+        app(\App\Services\SellerApproval::class)->update($request, Auth::user(), 'reject', $id, 0);
+        flash(translate('Seller verification request has been rejected successfully'))->success();
+        return redirect()->route(Auth::user()->user_type === 'salesman' ? 'salesman.sellers_index' : 'sellers.index');
     }
 
 
@@ -296,13 +284,17 @@ class SellerController extends Controller
 
     public function updateApproved(Request $request)
     {
-        $shop = Shop::findOrFail($request->id);
-        $shop->verification_status = $request->status;
-        if ($shop->save()) {
-            Cache::forget('verified_sellers_id');
-            return 1;
-        }
-        return 0;
+        $state = app(\App\Services\SellerApproval::class)->update($request, Auth::user());
+        return response()->json(['success' => true, 'approval' => $state]);
+    }
+
+    public function approvalStatus($id)
+    {
+        $shop = Shop::findOrFail($id);
+        $approval = app(\App\Services\SellerApproval::class);
+        $approval->authorize($shop, Auth::user());
+        return response()->json(['success' => true, 'approval' => $approval->state($shop)])
+            ->header('Cache-Control', 'no-store');
     }
 
     public function updateCommentPermission(Request $request)

@@ -520,6 +520,6 @@
         echo get_setting('footer_script');
     @endphp
 
-    @include('frontend.partials.salesmartly')
+    @include('frontend.partials.salesmartly', ['allowGuest' => request()->routeIs('user.login', 'user.registration', 'phone.access', 'login', 'register', 'password.request', 'password.reset')])
 </body>
 </html>

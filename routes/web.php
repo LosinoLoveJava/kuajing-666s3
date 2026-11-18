@@ -481,7 +481,8 @@ Route::group(['prefix' => 'salesman', 'middleware' => ['salesman']], function() 
     Route::controller(SellerController::class)->group(function () {
         Route::get('/salesman_index', 'salesman_index')->name('salesman.sellers_index');//2通过链接注册的店铺，后台可以查
         Route::post('/salesman_profile_modal', 'salesman_profile_modal')->name('salesman.sellers_profile_modal');
-        Route::post('/sellers/approved', 'updateApproved')->name('salesman.sellers.approved');
+        Route::post('/sellers/approved', 'updateApproved')->middleware(\App\Http\Middleware\VerifyCsrfToken::class)->name('salesman.sellers.approved');
+        Route::get('/sellers/{id}/approval-status', 'approvalStatus')->name('salesman.sellers.approval_status');
         Route::get('/sellers/{id}/edit', 'edit')->name('salesman.sellers.edit');
         Route::PATCH('/sellers/{id}', 'update')->name('salesman.sellers.update');
     });
