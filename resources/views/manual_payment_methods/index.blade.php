@@ -4,6 +4,7 @@
 
 <div class="aiz-titlebar mt-2 mb-3">
 	<div class="text-md-right">
+        @if(Auth::user()->user_type === 'admin')<a href="{{ route('crypto_wallet.settings') }}" class="btn btn-primary">{{ __('crypto_wallet.settings') }}</a>@endif
 		<a href="{{ route('manual_payment_methods.create') }}" class="btn btn-circle btn-info">
 			<span>{{translate('Add New Payment Method')}}</span>
 		</a>

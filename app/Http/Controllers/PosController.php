@@ -20,6 +20,7 @@ use App\Http\Resources\PosProductCollection;
 use App\Models\Country;
 use App\Models\State;
 use App\Utility\CategoryUtility;
+use Illuminate\Support\Facades\DB;
 use function get_setting;
 
 class PosController extends Controller
@@ -51,6 +52,11 @@ class PosController extends Controller
 
     public function search(Request $request)
     {
+        $filters = $request->validate([
+            'min_price' => ['nullable', 'numeric', 'min:0'],
+            'max_price' => array_merge(['nullable', 'numeric', 'min:0'], $request->filled('min_price') ? ['gte:min_price'] : []),
+            'sort' => ['nullable', 'in:price_asc,newest'],
+        ]);
         if(Auth::user()->user_type == 'admin' || Auth::user()->user_type == 'staff'){
 //            $products = ProductStock::join('products','product_stocks.product_id', '=', 'products.id')->where('products.added_by', 'admin')->select('products.*','product_stocks.id as stock_id','product_stocks.variant','product_stocks.price as stock_price', 'product_stocks.qty as stock_qty', 'product_stocks.image as stock_image')->orderBy('products.created_at', 'desc');
             $products = ProductStock::join('products','product_stocks.product_id', '=', 'products.id')->select('products.*','product_stocks.id as stock_id','product_stocks.variant','product_stocks.price as stock_price', 'product_stocks.qty as stock_qty', 'product_stocks.image as stock_image')->orderBy('products.created_at', 'desc');
@@ -82,15 +88,51 @@ class PosController extends Controller
         }
 
         if ($request->keyword != null) {
-            $products = $products->where('products.name', 'like', '%'.$request->keyword.'%')->orWhere('products.barcode', $request->keyword);
+            $products->where(function ($query) use ($request) {
+                $query->where('products.name', 'like', '%'.$request->keyword.'%')
+                    ->orWhere('products.barcode', $request->keyword);
+            });
         }
 
-        /*$p = $products->get();
-
-        dd($p);*/
+        $sort = $filters['sort'] ?? 'price_asc';
+        $products->reorder();
+        if ($sort === 'price_asc' || $request->filled('min_price') || $request->filled('max_price')) {
+            // Match the discounted, tax-inclusive variant price shown on POS cards.
+            // Aggregate taxes first so multiple tax rows never duplicate variants.
+            $taxes = DB::table('product_taxes')->select('product_id')
+                ->selectRaw("SUM(CASE WHEN tax_type = 'percent' THEN tax ELSE 0 END) AS percent_tax")
+                ->selectRaw("SUM(CASE WHEN tax_type = 'amount' THEN tax ELSE 0 END) AS amount_tax")
+                ->groupBy('product_id');
+            $products->leftJoinSub($taxes, 'pos_taxes', function ($join) {
+                $join->on('pos_taxes.product_id', '=', 'products.id');
+            });
+            $now = time();
+            $discounted = "CASE WHEN products.discount_start_date IS NULL OR (products.discount_start_date <= $now AND products.discount_end_date >= $now) "
+                ."THEN CASE WHEN products.discount_type = 'percent' THEN product_stocks.price * (1 - COALESCE(products.discount, 0) / 100.0) "
+                ."WHEN products.discount_type = 'amount' THEN product_stocks.price - COALESCE(products.discount, 0) ELSE product_stocks.price END ELSE product_stocks.price END";
+            $price = '(('.$discounted.') * (1 + COALESCE(pos_taxes.percent_tax, 0) / 100.0) + COALESCE(pos_taxes.amount_tax, 0))';
+            if ($request->filled('min_price') || $request->filled('max_price')) {
+                $rate = convert_price(1);
+                $decimals = (int) get_setting('no_of_decimals', 2);
+                foreach (['min_price' => '>=', 'max_price' => '<='] as $field => $operator) {
+                    if ($request->filled($field)) {
+                        $products->whereRaw('ROUND('.$price.' * ?, '.$decimals.') '.$operator.' CAST(? AS DECIMAL(30, 8))', [$rate, $filters[$field]]);
+                    }
+                }
+            }
+            if ($sort === 'price_asc') {
+                $products->orderByRaw($price.' ASC');
+            }
+        }
+        if ($sort === 'newest') {
+            $products->orderBy('products.created_at', 'desc');
+        }
+        $products->orderBy('product_stocks.id');
 
         $stocks = new PosProductCollection($products->paginate(16));
-        $stocks->appends(['keyword' =>  $request->keyword,'category' => $request->category, 'brand' => $request->brand, 'user_id' => $request->user_id]);
+        $stocks->appends(['keyword' => $request->keyword, 'category' => $request->category,
+            'brand' => $request->brand, 'user_id' => $request->user_id,
+            'min_price' => $request->min_price, 'max_price' => $request->max_price, 'sort' => $sort]);
         return $stocks;
     }
 

@@ -67,13 +67,14 @@ class SellerRechargeFormTest extends TestCase
         $this->assertEquals(10000, auth()->user()->fresh()->balance);
     }
 
-    public function testSellerModalUsesFixedBankWithIbanFields()
+    public function testSellerModalOffersBankAndCryptoWithCurrencyLogos()
     {
         $this->post('/offline-wallet-recharge-modal', ['type' => 1])->assertOk()
-            ->assertSee('name="recharge_method"', false)->assertSee('value="BANK"', false)
+            ->assertSee('name="recharge_method"', false)->assertSee('value="Crypto"', false)
             ->assertSee('value="IBAN"', false)->assertSee('name="currency"', false)->assertSee('name="amount_local"', false)
             ->assertSee('value="SGD"', false)->assertSee('value="TRY"', false)
-            ->assertDontSee('Test transfer instructions')->assertDontSee('name="amount_aed"', false)->assertDontSee('aiz-megabox')
+            ->assertSee('Test transfer instructions')->assertDontSee('name="amount_aed"', false)->assertDontSee('aiz-megabox')
+            ->assertSee('USDT_TRC20')->assertSee('USDT_ERC20')->assertSee('currencies/btc.svg')->assertSee('currencies/trx.svg')
             ->assertSee('name="request_token"', false)->assertDontSee('data-iban-required');
     }
 }

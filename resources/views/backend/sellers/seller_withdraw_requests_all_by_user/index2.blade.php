@@ -39,6 +39,8 @@
                                     {{translate('Bank')}}
                                     @elseif  ($seller_withdraw_request->w_type == 3)
                                      {{translate('USDT')}}
+                                    @elseif($seller_withdraw_request->w_type == 5)
+                                    {{ $seller_withdraw_request->iban_details['method'] ?? __('crypto_wallet.crypto') }}
                                     @elseif($seller_withdraw_request->w_type == 4)
 IBAN
 @endif

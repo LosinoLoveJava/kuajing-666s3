@@ -38,6 +38,7 @@
                         </select>
                     </div>
                 </div>
+                @include('partials.pos_price_filters')
                 <div class="aiz-pos-product-list c-scrollbar-light">
                     <div class="d-flex flex-wrap justify-content-center" id="product-list">
 

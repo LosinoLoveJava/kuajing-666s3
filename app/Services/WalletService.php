@@ -92,6 +92,9 @@ class WalletService
     public function submit(Request $request, User $principal)
     {
         abort_unless(in_array($principal->user_type, ['customer', 'seller'], true) && !$principal->banned, 403);
+        if ($request->input('recharge_method') === 'Crypto') {
+            return $this->submitCrypto($request, $principal);
+        }
         $rules = [
             'type' => 'nullable|integer|in:1', 'amount' => self::amountRules(),
             'trx_id' => 'required|string|max:200', 'photo' => 'nullable|integer',
@@ -174,6 +177,53 @@ class WalletService
             $wallet->amount = $data['amount'];
             $wallet->payment_method = $method;
             $wallet->payment_details = implode(' | ', $details);
+            $wallet->transaction_reference = $reference;
+            $wallet->request_key = $key;
+            $wallet->approval = 0;
+            $wallet->offline_payment = 1;
+            $wallet->reciept = $data['photo'] ?? null;
+            $wallet->operator_id = 0;
+            $wallet->type = 1;
+            $wallet->save();
+            return $wallet;
+        }, 3);
+    }
+
+    private function submitCrypto(Request $request, User $principal)
+    {
+        $data = $request->validate([
+            'type' => 'nullable|integer|in:1', 'crypto_asset' => 'required|string|in:'.implode(',', array_keys(CryptoWallet::catalog())),
+            'crypto_amount' => ['required', 'regex:/^[0-9]{1,10}(\.[0-9]{1,8})?$/D', 'numeric', 'min:0.00000001'],
+            'trx_id' => ['required', 'string', 'regex:/^(?:0x)?[a-fA-F0-9]{64}$/D'],
+            'photo' => 'nullable|integer',
+        ]);
+        $asset = CryptoWallet::asset($data['crypto_asset'], true);
+        if (!empty($data['photo']) && !Upload::whereKey($data['photo'])->where('user_id', $principal->id)->where('type', 'image')->exists()) {
+            throw ValidationException::withMessages(['photo' => 'Please select an image uploaded by your account.']);
+        }
+        $amount = CryptoWallet::toUsd($data['crypto_amount'], $asset['usd_price']);
+        if (bccomp($amount, '0.01', 2) < 0 || bccomp($amount, '9999999999.99', 2) > 0) {
+            throw ValidationException::withMessages(['crypto_amount' => 'USD amount must be between 0.01 and 9999999999.99.']);
+        }
+        $reference = strtolower(preg_replace('/^0x/i', '', $data['trx_id']));
+        // One chain transaction can only fund one application across all accounts and assets.
+        $chain = $data['crypto_asset'] === 'USDT_ERC20' ? 'ethereum' : ($data['crypto_asset'] === 'BTC' ? 'bitcoin' : 'tron');
+        $key = hash('sha256', 'crypto|'.$chain.'|'.$reference);
+        return DB::transaction(function () use ($principal, $data, $asset, $amount, $reference, $key) {
+            $user = User::whereKey($principal->id)->lockForUpdate()->firstOrFail();
+            abort_if($user->banned, 403);
+            if ($existing = Wallet::where('request_key', $key)->first()) {
+                abort_unless((int) $existing->user_id === (int) $user->id, 409, 'Transaction already submitted.');
+                return $existing;
+            }
+            $wallet = new Wallet;
+            $wallet->user_id = $user->id;
+            $wallet->amount = $amount;
+            $wallet->payment_method = $asset['label'];
+            $wallet->payment_details = implode(' | ', [
+                'Currency: '.$asset['coin'], 'Network: '.$asset['network'], 'Amount: '.$data['crypto_amount'],
+                'Deposit address: '.$asset['address'], 'USD price: '.$asset['usd_price'], 'Transaction ID: '.$reference,
+            ]);
             $wallet->transaction_reference = $reference;
             $wallet->request_key = $key;
             $wallet->approval = 0;

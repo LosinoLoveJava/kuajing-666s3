@@ -104,7 +104,7 @@
                             </td>
                             <td>
                                 @if ($entry->source === 'withdrawal')
-                                    {{ [1 => translate('Cash'), 2 => translate('Bank'), 3 => 'USDT', 4 => translate('Bank')][(int) $entry->payment_method] ?? '' }}
+                                    {{ [1 => translate('Cash'), 2 => translate('Bank'), 3 => 'USDT', 4 => translate('Bank'), 5 => __('crypto_wallet.crypto')][(int) $entry->payment_method] ?? '' }}
                                 @else
                                     {{ $entry->payment_method === 'IBAN' ? translate('Bank') : translate($entry->payment_method ?? '') }}
                                 @endif
@@ -176,6 +176,9 @@
                               {{translate('Bank')}}
                             @elseif( $seller_withdraw_request->w_type == 3)
                             {{translate('USDT')}}
+                            @elseif($seller_withdraw_request->w_type == 5)
+                            {{ $seller_withdraw_request->iban_details['method'] ?? __('crypto_wallet.crypto') }}
+                            @include('partials.iban_details')
                             @elseif($seller_withdraw_request->w_type == 4)
 {{ translate('Bank') }}
 @include('partials.iban_details')
@@ -419,8 +422,8 @@
                         <input type="hidden" name="request_token" value="{{ old('request_token', (string) \Illuminate\Support\Str::uuid()) }}">
                         <div class="modal-body p-4" style="max-height:calc(100vh - 180px);overflow-y:auto">
                             <div class="nav nav-tabs mb-4" role="tablist" aria-label="{{ translate('Withdrawal country') }}">
-                                <button type="button" class="nav-link active" id="withdraw-tab-sg" role="tab" data-withdraw-market="SG" aria-controls="withdraw-country-panel" aria-selected="true">{{ translate('Singapore') }}</button>
-                                <button type="button" class="nav-link" id="withdraw-tab-tr" role="tab" data-withdraw-market="TR" aria-controls="withdraw-country-panel" aria-selected="false" tabindex="-1">{{ translate('Turkey') }}</button>
+                                <button type="button" class="nav-link active" id="withdraw-tab-sg" role="tab" data-withdraw-market="SG" aria-controls="withdraw-country-panel" aria-selected="true"><img src="{{ static_asset('assets/img/currencies/sgd.svg') }}" width="22" height="22" alt=""> {{ translate('Singapore') }}</button>
+                                <button type="button" class="nav-link" id="withdraw-tab-tr" role="tab" data-withdraw-market="TR" aria-controls="withdraw-country-panel" aria-selected="false" tabindex="-1"><img src="{{ static_asset('assets/img/currencies/try.svg') }}" width="22" height="22" alt=""> {{ translate('Turkey') }}</button>
                             </div>
                             <input type="hidden" name="withdrawal_market" value="{{ old('withdrawal_market', 'SG') }}">
                             <input type="hidden" name="iban_country" value="SG">
@@ -436,7 +439,13 @@
                             <input type="hidden" name="type" value="1">
                             <div class="form-group"><label for="p">{{ translate('Withdraw Type') }}</label>
                                 <input type="hidden" name="w_type" value="4">
-                                <input class="form-control" id="p" value="{{ translate('Bank') }}" readonly>
+                                <select class="form-control" id="p"><option value="4">{{ __('crypto_wallet.bank') }}</option><option value="5">{{ __('crypto_wallet.crypto') }}</option></select>
+                            </div>
+                            <div id="withdraw-crypto-fields" hidden>
+                                <fieldset class="form-group"><legend class="fs-14">{{ __('crypto_wallet.asset') }}</legend><div class="row">@include('partials.crypto_asset_options', ['deposit' => false])</div></fieldset>
+                                <div class="form-group"><label for="withdraw-crypto-address">{{ __('crypto_wallet.withdraw_address') }} *</label><input id="withdraw-crypto-address" name="crypto_address" class="form-control" value="{{ old('crypto_address') }}" maxlength="128" dir="ltr" autocomplete="off" spellcheck="false" disabled></div>
+                                <div class="alert alert-info">{{ __('crypto_wallet.withdraw_hint') }}</div>
+                                <div id="withdraw-crypto-unavailable" class="alert alert-warning" hidden>{{ __('crypto_wallet.unavailable') }}</div>
                             </div>
                             <div id="withdraw-country-panel" role="tabpanel" aria-labelledby="withdraw-tab-sg">
                                 @include('partials.iban_form', ['fixedBank' => true, 'manualReview' => true, 'bankOnly' => true])
@@ -507,7 +516,21 @@
                 minimumFractionDigits: 2, maximumFractionDigits: 2
             });
             var rates = @json(app(\App\Services\ExchangeRate::class)->availableRates());
+            var cryptoAssets = @json(\App\Services\CryptoWallet::assets());
+            var cryptoType = document.getElementById('p');
             function updateAmount() {
+                if (cryptoType.value === '5') {
+                    var selected = form.querySelector('[name="crypto_asset"]:checked');
+                    var asset = selected && cryptoAssets[selected.value];
+                    document.getElementById('withdraw-currency').textContent = asset ? asset.coin : '';
+                    document.getElementById('withdraw-rate').textContent = asset ? '1 ' + asset.coin + ' = ' + asset.usd_price + ' USD' : @json(__('crypto_wallet.unavailable'));
+                    output.textContent = asset && Number(amount.value) > 0 ? (Math.floor(Number(amount.value) / Number(asset.usd_price) * 1e8) / 1e8).toFixed(8) : '0.00000000';
+                    amount.setCustomValidity(asset ? '' : @json(__('crypto_wallet.unavailable')));
+                    form.querySelector('button[type="submit"]').disabled = !asset;
+                    document.getElementById('withdraw-crypto-unavailable').hidden = !!asset;
+                    return;
+                }
+                form.querySelector('button[type="submit"]').disabled = false;
                 var currency = form.elements.withdrawal_market.value === 'TR' ? 'TRY' : 'SGD';
                 var rate = Number(rates[currency]);
                 document.getElementById('withdraw-currency').textContent = currency;
@@ -566,7 +589,30 @@
                 });
             });
             amount.addEventListener('input', updateAmount);
+            var firstCrypto = form.querySelector('[name="crypto_asset"]:not(:disabled)');
+            var oldAsset = @json(old('wallet_form') === 'withdraw' ? old('crypto_asset') : null);
+            if (oldAsset) firstCrypto = form.querySelector('[name="crypto_asset"][value="' + oldAsset + '"]:not(:disabled)') || firstCrypto;
+            if (firstCrypto) firstCrypto.checked = true;
+            function toggleCrypto() {
+                var crypto = cryptoType.value === '5';
+                form.elements.w_type.value = cryptoType.value;
+                document.getElementById('withdraw-crypto-fields').hidden = !crypto;
+                document.getElementById('withdraw-country-panel').hidden = crypto;
+                form.querySelector('[role="tablist"]').hidden = crypto;
+                form.elements.withdrawal_market.disabled = crypto;
+                form.elements.iban_country.disabled = crypto;
+                selectMarket(form.elements.withdrawal_market.value === 'TR' ? 'TR' : 'SG');
+                if (crypto) form.querySelectorAll('#withdraw-country-panel input').forEach(function (el) { el.disabled = true; el.required = false; });
+                form.elements.crypto_address.disabled = !crypto;
+                form.elements.crypto_address.required = crypto;
+                form.querySelectorAll('[name="crypto_asset"]').forEach(function (el) { el.disabled = !crypto || !cryptoAssets[el.value].enabled; el.required = crypto; });
+                updateAmount();
+            }
+            cryptoType.addEventListener('change', toggleCrypto);
+            form.querySelectorAll('[name="crypto_asset"]').forEach(function (el) { el.addEventListener('change', updateAmount); });
+            cryptoType.value = @json(old('wallet_form') === 'withdraw' && (string) old('w_type') === '5' ? '5' : '4');
             selectMarket(form.elements.withdrawal_market.value === 'TR' ? 'TR' : 'SG');
+            toggleCrypto();
         })();
     </script>
 @endsection

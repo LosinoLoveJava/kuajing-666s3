@@ -29,12 +29,13 @@ class WithdrawalService
             abort_unless((int) $withdrawal->status === 0, 409, 'Withdrawal has already been reviewed.');
             abort_unless(bccomp((string) $withdrawal->amount, '0', 2) > 0, 409, 'Invalid withdrawal amount.');
             if ($approve) {
-                $methods = [1 => 'cash', 2 => 'bank_payment', 3 => 'usdt_payment', 4 => 'iban_payment'];
+                $methods = [1 => 'cash', 2 => 'bank_payment', 3 => 'usdt_payment', 4 => 'iban_payment', 5 => 'crypto_payment'];
                 abort_unless(isset($methods[$withdrawal->w_type]), 422, 'Unknown withdrawal method.');
                 $payment = new Payment;
                 $payment->seller_id = $withdrawal->user_id;
                 $payment->amount = $withdrawal->amount;
-                $payment->payment_method = $methods[$withdrawal->w_type];
+                $payment->payment_method = (int) $withdrawal->w_type === 5
+                    ? ($withdrawal->iban_details['method'] ?? 'Cryptocurrency') : $methods[$withdrawal->w_type];
                 $payment->payment_details = json_encode([
                     'withdrawal_id' => $withdrawal->id,
                     'account' => $withdrawal->iban_details,
@@ -66,7 +67,7 @@ class WithdrawalService
         abort_unless(in_array($principal->user_type, ['customer', 'seller'], true) && !$principal->banned, 403);
         $rules = [
             'amount' => ['required', 'numeric', 'regex:/^[0-9]{1,10}(\.[0-9]{1,2})?$/D', 'min:0.01'],
-            'w_type' => 'required|integer|in:1,2,3,4',
+            'w_type' => 'required|integer|in:1,2,3,4,5',
             'type' => 'nullable|integer|in:1',
             'request_token' => 'nullable|uuid',
             'message' => 'nullable|string|max:2000',
@@ -77,6 +78,8 @@ class WithdrawalService
             'iban_number' => 'required_if:w_type,4|nullable|string|max:64',
             'iban_bic' => ['nullable', 'string', 'regex:/^[a-zA-Z]{6}[a-zA-Z0-9]{2}([a-zA-Z0-9]{3})?$/D'],
             'withdrawal_market' => 'nullable|in:SG,TR',
+            'crypto_asset' => 'required_if:w_type,5|nullable|string|in:'.implode(',', array_keys(CryptoWallet::catalog())),
+            'crypto_address' => 'required_if:w_type,5|nullable|string|max:128',
         ];
         $manualReview = $principal->user_type === 'seller';
         if ($manualReview) {
@@ -84,7 +87,8 @@ class WithdrawalService
                 $rules[$field] = 'nullable|string|max:2000';
             }
         }
-        $turkey = $request->input('withdrawal_market') === 'TR';
+        $crypto = (string) $request->input('w_type') === '5';
+        $turkey = !$crypto && $request->input('withdrawal_market') === 'TR';
         if ($turkey) {
             $rules['w_type'] = 'required|integer|in:4';
             $rules['iban_country'] = 'required|in:TR';
@@ -94,6 +98,19 @@ class WithdrawalService
         }
         $data = $request->validate($rules);
         $snapshot = null;
+        if ($crypto) {
+            $asset = CryptoWallet::asset($data['crypto_asset']);
+            if (!CryptoWallet::validAddress($data['crypto_asset'], $data['crypto_address'])) {
+                throw ValidationException::withMessages(['crypto_address' => __('crypto_wallet.invalid_address')]);
+            }
+            $quantity = CryptoWallet::fromUsd($data['amount'], $asset['usd_price']);
+            if (bccomp($quantity, '0', 8) <= 0) {
+                throw ValidationException::withMessages(['amount' => 'Amount is too small.']);
+            }
+            $snapshot = ['method' => $asset['label'], 'asset' => $data['crypto_asset'], 'currency' => $asset['coin'],
+                'network' => $asset['network'], 'address' => $data['crypto_address'],
+                'usd_price' => $asset['usd_price'], 'estimated_amount' => $quantity];
+        }
         if ((int) $data['w_type'] === 4) {
             if ((!$manualReview || $turkey) && !Iban::valid($data['iban_number'], $data['iban_country'])) {
                 throw ValidationException::withMessages(['iban_number' => 'Invalid IBAN or account country.']);
@@ -104,7 +121,7 @@ class WithdrawalService
                 'account_number' => $data['bank_account'] ?? '', 'bic' => $manualReview ? ($data['iban_bic'] ?? '') : strtoupper($data['iban_bic'] ?? ''),
             ];
         }
-        if (!empty($data['withdrawal_market']) && $snapshot !== null) {
+        if (!$crypto && !empty($data['withdrawal_market']) && $snapshot !== null) {
             $currency = $turkey ? 'TRY' : 'SGD';
             try {
                 $rates = app(ExchangeRate::class);
@@ -130,7 +147,7 @@ class WithdrawalService
             }
             if ((int) $data['w_type'] === 2) {
                 $snapshot = ['method' => 'Bank', 'holder' => $data['iban_holder'] ?? '', 'bank' => $data['iban_bank'] ?? '', 'account_number' => $data['bank_account'] ?? ''];
-            } elseif ((int) $data['w_type'] !== 4) {
+            } elseif (!in_array((int) $data['w_type'], [4, 5], true)) {
                 $snapshot = $this->profileAccount($user, (int) $data['w_type']);
             }
             $withdrawal = new SellerWithdrawRequest;

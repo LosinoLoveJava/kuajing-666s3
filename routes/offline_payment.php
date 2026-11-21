@@ -22,6 +22,8 @@ use App\Http\Controllers\SellerSpreadPackagePaymentController;
 
 //Admin
 Route::group(['prefix' =>'admin', 'middleware' => ['auth', 'admin']], function(){
+    Route::get('/crypto-wallet-settings', [\App\Http\Controllers\CryptoWalletSettingController::class, 'index'])->name('crypto_wallet.settings');
+    Route::post('/crypto-wallet-settings', [\App\Http\Controllers\CryptoWalletSettingController::class, 'update'])->name('crypto_wallet.settings.update')->middleware(\App\Http\Middleware\VerifyCsrfToken::class);
     Route::resource('manual_payment_methods', ManualPaymentMethodController::class);
     Route::get('/manual_payment_methods/destroy/{id}', [ManualPaymentMethodController::class, 'destroy'])->name('manual_payment_methods.destroy');
     Route::get('/offline-wallet-recharge-requests', [WalletController::class, 'offline_recharge_request'])->name('offline_wallet_recharge_request.index');

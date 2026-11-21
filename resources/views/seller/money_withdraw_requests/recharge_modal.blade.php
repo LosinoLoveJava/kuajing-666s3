@@ -9,18 +9,20 @@
     <input type="hidden" name="wallet_form" value="recharge">
     <input type="hidden" name="request_token" value="{{ old('request_token', (string) \Illuminate\Support\Str::uuid()) }}">
     <input type="hidden" name="type" value="{{ $type }}">
-    <div class="modal-body p-4">
+    <div class="modal-body p-4" style="max-height:calc(100vh - 180px);overflow-y:auto">
         <div class="form-group">
             <label for="recharge-method">{{ translate('Payment method') }} <span class="text-danger">*</span></label>
-            <input type="hidden" name="recharge_method" value="IBAN">
-            <input id="recharge-method" class="form-control" value="{{ translate('Bank') }}" readonly>
+            <select id="recharge-method" name="recharge_method" class="form-control"><option value="IBAN">{{ __('crypto_wallet.bank') }}</option><option value="Crypto">{{ __('crypto_wallet.crypto') }}</option></select>
         </div>
+        <div id="recharge-bank-fields">
         <div class="form-group">
             <label for="recharge-currency">{{ translate('Currency') }} <span class="text-danger">*</span></label>
-            <select id="recharge-currency" name="currency" class="form-control" required>
-                <option value="SGD" @if(!$rechargeRates['SGD']) disabled @endif>SGD — {{ translate('Singapore Dollar') }}</option>
-                <option value="TRY" @if(!$rechargeRates['TRY']) disabled @endif>TRY — {{ translate('Turkish Lira') }}</option>
+            <div class="d-flex align-items-center"><img id="recharge-fiat-logo" src="{{ static_asset('assets/img/currencies/sgd.svg') }}" width="28" height="28" class="mr-2" alt="SGD">
+            <select id="recharge-currency" name="currency" class="form-control aiz-selectpicker" required>
+                <option value="SGD" data-content="&lt;img src='{{ static_asset('assets/img/currencies/sgd.svg') }}' width='24' height='24' alt=''&gt; SGD — {{ translate('Singapore Dollar') }}" @if(!$rechargeRates['SGD']) disabled @endif>SGD — {{ translate('Singapore Dollar') }}</option>
+                <option value="TRY" data-content="&lt;img src='{{ static_asset('assets/img/currencies/try.svg') }}' width='24' height='24' alt=''&gt; TRY — {{ translate('Turkish Lira') }}" @if(!$rechargeRates['TRY']) disabled @endif>TRY — {{ translate('Turkish Lira') }}</option>
             </select>
+            </div>
         </div>
         <div class="form-group">
             <label for="recharge-amount">{{ translate('Amount') }} (<span id="recharge-currency-label">SGD</span>) <span class="text-danger">*</span></label>
@@ -28,6 +30,17 @@
             <input type="hidden" name="amount" value="0.00">
             <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr"><span id="recharge-rate"></span></bdi></div>
             <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="recharge-usd">0.00</span> USD</bdi></div>
+        </div>
+        @include('partials.wallet_bank_instructions')
+        </div>
+        <div id="recharge-crypto-fields" hidden>
+            <fieldset class="form-group"><legend class="fs-14">{{ __('crypto_wallet.asset') }}</legend><div class="row">@include('partials.crypto_asset_options', ['deposit' => true])</div></fieldset>
+            <div class="alert alert-info">{{ __('crypto_wallet.deposit_hint') }}</div>
+            <div class="form-group"><label>{{ __('crypto_wallet.network') }}</label><div id="recharge-crypto-network" class="fw-600"></div></div>
+            <div class="form-group"><label for="recharge-crypto-address">{{ __('crypto_wallet.deposit_address') }}</label><input id="recharge-crypto-address" class="form-control" dir="ltr" readonly><button type="button" id="recharge-copy-address" class="btn btn-sm btn-light mt-2">{{ __('crypto_wallet.copy') }}</button><small id="recharge-copy-status" class="ml-2" role="status"></small></div>
+            <div class="form-group"><label for="recharge-crypto-amount">{{ __('crypto_wallet.quantity') }} <span id="recharge-crypto-coin"></span> *</label><input id="recharge-crypto-amount" name="crypto_amount" type="number" class="form-control" min="0.00000001" max="9999999999.99999999" step="0.00000001" inputmode="decimal" disabled>
+            <small id="recharge-crypto-rate" class="form-text text-muted"></small><div class="text-primary mt-1">≈ <span id="recharge-crypto-usd">0.00</span> USD</div></div>
+            <div id="recharge-crypto-unavailable" class="alert alert-warning" hidden>{{ __('crypto_wallet.unavailable') }}</div>
         </div>
         <div class="form-group">
             <label for="recharge-transaction">{{ translate('Transaction ID') }}</label>
@@ -42,16 +55,35 @@
             </div>
             <div class="file-preview box sm"></div>
         </div>
-        <div style="text-align: end"><button type="submit" class="btn btn-primary" @if($bankMethods->isEmpty()) disabled @endif>{{ translate('Confirm') }}</button></div>
+        <div style="text-align: end"><button type="submit" class="btn btn-primary">{{ translate('Confirm') }}</button></div>
     </div>
 </form>
 <script>
 (function () {
     var form = document.getElementById('seller-recharge-form');
     var rates = @json($rechargeRates);
+    var assets = @json(\App\Services\CryptoWallet::assets());
+    var hasBank = @json($bankMethods->isNotEmpty());
     var numberFormat = new Intl.NumberFormat(form.lang, {minimumFractionDigits: 2, maximumFractionDigits: 2});
     function updateAmount() {
+        var crypto = form.elements.recharge_method.value === 'Crypto';
+        var selected = form.querySelector('input[name="crypto_asset"]:checked');
+        var asset = selected && assets[selected.value];
+        if (crypto) {
+            form.querySelector('#recharge-crypto-network').textContent = asset ? asset.network : '';
+            form.querySelector('#recharge-crypto-address').value = asset ? asset.address : '';
+            form.querySelector('#recharge-crypto-coin').textContent = asset ? asset.coin : '';
+            form.querySelector('#recharge-crypto-rate').textContent = asset ? '1 ' + asset.coin + ' = ' + asset.usd_price + ' USD' : '';
+            var quantity = Number(form.elements.crypto_amount.value);
+            form.querySelector('#recharge-crypto-usd').textContent = numberFormat.format(asset && quantity > 0 ? quantity * Number(asset.usd_price) : 0);
+            form.querySelector('#recharge-crypto-unavailable').hidden = !!asset;
+            form.querySelector('button[type="submit"]').disabled = !asset;
+            return;
+        }
         var currency = form.elements.currency.value, rate = Number(rates[currency]);
+        form.querySelector('#recharge-fiat-logo').src = currency === 'TRY' ? @json(static_asset('assets/img/currencies/try.svg')) : @json(static_asset('assets/img/currencies/sgd.svg'));
+        form.querySelector('#recharge-fiat-logo').alt = currency;
+        form.querySelector('button[type="submit"]').disabled = !hasBank || !(rate > 0);
         form.querySelector('#recharge-currency-label').textContent = currency;
         form.querySelector('#recharge-rate').textContent = rate > 0 ? '1 USD = ' + numberFormat.format(rate) + ' ' + currency : @json(translate('Exchange rate is not configured. Please contact support.'));
         form.elements.amount_local.setCustomValidity(rate > 0 ? '' : @json(translate('Exchange rate is not configured. Please contact support.')));
@@ -61,12 +93,36 @@
         form.querySelector('#recharge-usd').textContent = numberFormat.format(usd);
     }
     form.elements.amount_local.addEventListener('input', updateAmount);
+    form.elements.crypto_amount.addEventListener('input', updateAmount);
+    form.querySelectorAll('[name="crypto_asset"]').forEach(function (input) { input.addEventListener('change', function () { form.querySelector('#recharge-copy-status').textContent = ''; updateAmount(); }); });
     form.elements.currency.addEventListener('change', updateAmount);
     form.addEventListener('submit', updateAmount);
     var previous = @json(old('wallet_form') === 'recharge' ? old() : []);
-    Object.keys(previous).forEach(function (name) { if (form.elements[name] && name !== '_token') form.elements[name].value = previous[name]; });
+    Object.keys(previous).forEach(function (name) { if (form.elements[name] && name !== '_token' && name !== 'crypto_asset') form.elements[name].value = previous[name]; });
     if (!previous.currency && previous.amount_sgd) form.elements.amount_local.value = previous.amount_sgd;
-    form.elements.recharge_method.value = 'IBAN';
-    updateAmount();
+    var firstAsset = form.querySelector('[name="crypto_asset"]:not(:disabled)');
+    if (previous.crypto_asset) firstAsset = form.querySelector('[name="crypto_asset"][value="' + previous.crypto_asset + '"]:not(:disabled)') || firstAsset;
+    if (firstAsset) firstAsset.checked = true;
+    function toggleMethod() {
+        var crypto = form.elements.recharge_method.value === 'Crypto';
+        form.querySelector('#recharge-bank-fields').hidden = crypto;
+        form.querySelector('#recharge-crypto-fields').hidden = !crypto;
+        form.querySelectorAll('#recharge-bank-fields input, #recharge-bank-fields select').forEach(function (el) { el.disabled = crypto; });
+        form.elements.crypto_amount.disabled = !crypto;
+        form.elements.crypto_amount.required = crypto;
+        form.elements.trx_id.required = crypto;
+        form.elements.trx_id.pattern = crypto ? '(0x)?[a-fA-F0-9]{64}' : '.*';
+        form.querySelectorAll('[name="crypto_asset"]').forEach(function (el) { el.disabled = !crypto || !assets[el.value].deposit_enabled; el.required = crypto; });
+        updateAmount();
+    }
+    form.elements.recharge_method.addEventListener('change', toggleMethod);
+    form.querySelector('#recharge-copy-address').addEventListener('click', async function () {
+        var input = form.querySelector('#recharge-crypto-address');
+        if (!input.value) return;
+        try { await navigator.clipboard.writeText(input.value); } catch (e) { input.select(); document.execCommand('copy'); }
+        form.querySelector('#recharge-copy-status').textContent = @json(__('crypto_wallet.copied'));
+    });
+    if (window.jQuery && jQuery.fn.selectpicker) jQuery(form).find('.aiz-selectpicker').selectpicker();
+    toggleMethod();
 })();
 </script>

@@ -504,6 +504,9 @@
                                         <span class="aiz-side-nav-text">{{translate('Manual Payment Methods')}}</span>
                                     </a>
                                 </li>
+                                @if(Auth::user()->user_type === 'admin')
+                                <li class="aiz-side-nav-item"><a href="{{ route('crypto_wallet.settings') }}" class="aiz-side-nav-link {{ areActiveRoutes(['crypto_wallet.settings']) }}"><span class="aiz-side-nav-text">{{ __('crypto_wallet.settings') }}</span></a></li>
+                                @endif
                                 <li class="aiz-side-nav-item">
                                     <a href="{{ route('offline_wallet_recharge_request.index') }}" class="aiz-side-nav-link">
                                         <span class="aiz-side-nav-text">{{translate('Offline Wallet Recharge')}}</span>

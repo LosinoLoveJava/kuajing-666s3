@@ -12,6 +12,10 @@
 !/tests/Feature/SellerApprovalTest.php
 !/tests/Feature/AdminDisplayTest.php
 !/tests/Feature/PaginationJumpTest.php
+!/tests/Feature/PosPriceFilterTest.php
+!/tests/Feature/CryptoWalletTest.php
+!/tests/Feature/SingaporeMarketTest.php
+!/tests/Feature/SellerRechargeFormTest.php
 !/tests/Feature/SellerProductDeletionTest.php
 !/tests/Feature/SellerStorehouseBulkAddTest.php
 !/tests/Feature/SellerWalletDisplayTest.php
@@ -21,6 +25,7 @@
 !/tests/Feature/TurkishFrontendTest.php
 !/tests/Concerns/
 !/tests/Concerns/InteractsWithPortalSessions.php
+!/tests/Concerns/WalletDatabase.php
 !/tests/Fixtures/
 /tests/Fixtures/*
 !/tests/Fixtures/views/

@@ -6,17 +6,32 @@
 @once
 <script>
     var posPageRequest = null, posPageRequestId = 0;
+    function resetPosPriceFilters() {
+        $('input[name=min_price], input[name=max_price]').val('');
+        loadPosProductPage(1);
+    }
     function loadPosProductPage(page) {
         var requestId = ++posPageRequestId;
         if (posPageRequest) posPageRequest.abort();
         $('#pos-pagination').empty();
         $('#pos-page-jump').addClass('d-none');
         $('#product-list').empty().attr('aria-busy', 'true');
+        var minPrice = $('input[name=min_price]'), maxPrice = $('input[name=max_price]');
+        var invalidPrice = (minPrice.length && !minPrice[0].validity.valid) || (maxPrice.length && !maxPrice[0].validity.valid);
+        var invalidRange = minPrice.val() !== '' && maxPrice.val() !== '' && Number(minPrice.val()) > Number(maxPrice.val());
+        $('#pos-price-error').toggleClass('d-none', !invalidPrice && !invalidRange)
+            .text(invalidPrice ? @json(__('pos.invalid_price')) : @json(__('pos.invalid_range')));
+        if (invalidPrice || invalidRange) {
+            $('#pos-pagination-status').empty();
+            $('#product-list').attr('aria-busy', 'false');
+            return;
+        }
         $('#pos-pagination-status').text(@json(translate('Loading..')));
         posPageRequest = $.get(@json(route('pos.search_product')), {
             page: page, keyword: $('input[name=keyword]').val(),
             category: $('select[name=poscategory]').val(), brand: $('select[name=brand]').val(),
-            user_id: $('select[name=shop_id]').val()
+            user_id: $('select[name=shop_id]').val(),
+            min_price: minPrice.val(), max_price: maxPrice.val(), sort: $('select[name=sort]').val() || 'price_asc'
         }).done(function (data) {
             if (requestId !== posPageRequestId) return;
             var last = Math.max(1, Number(data.meta.last_page));
@@ -27,7 +42,8 @@
             renderPosPagination(data.meta);
         }).fail(function (xhr, status) {
             if (requestId !== posPageRequestId || status === 'abort') return;
-            $('#pos-pagination-status').text(@json(translate('Something went wrong')));
+            var errors = xhr.responseJSON && xhr.responseJSON.errors;
+            $('#pos-pagination-status').text(errors ? Object.values(errors)[0][0] : @json(translate('Something went wrong')));
             $('<button>', {type: 'button', class: 'btn btn-sm btn-primary', text: @json(translate('Retry'))})
                 .on('click', function () { loadPosProductPage(page); }).appendTo('#pos-pagination');
         }).always(function () {
