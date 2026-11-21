@@ -1,5 +1,6 @@
 <?php
-return ['history' => 'Cüzdan İşlem Geçmişi',
+return ['account_details' => 'Hesap bilgilerini görüntüle',
+'history' => 'Cüzdan İşlem Geçmişi',
 'recharge_history' => 'Cüzdan Yükleme Geçmişi',
 'recharge' => 'Bakiye Yükle',
 'withdrawal' => 'Para çekme talebi',

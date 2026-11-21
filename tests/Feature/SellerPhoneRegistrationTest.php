@@ -67,7 +67,7 @@ class SellerPhoneRegistrationTest extends TestCase
         });
         Schema::create('countries', function (Blueprint $t) { $t->increments('id'); $t->string('code'); $t->string('name'); $t->integer('status'); });
         DB::table('countries')->insert([
-            ['code'=>'SG','name'=>'Singapore','status'=>1], ['code'=>'GB','name'=>'United Kingdom','status'=>0],
+            ['code'=>'TR','name'=>'Turkey','status'=>1], ['code'=>'GB','name'=>'United Kingdom','status'=>0],
         ]);
         Schema::create('translations', function (Blueprint $t) { $t->increments('id'); $t->string('lang'); $t->string('lang_key'); $t->text('lang_value'); $t->timestamps(); });
         Schema::create('sellers', function (Blueprint $t) { $t->increments('id'); $t->integer('user_id')->unique(); $t->timestamps(); });
@@ -80,7 +80,7 @@ class SellerPhoneRegistrationTest extends TestCase
 
     private function seedCode($purpose = 'register', $expired = false)
     {
-        DB::table('phone_verifications')->updateOrInsert(['phone'=>'+6581234567'], [
+        DB::table('phone_verifications')->updateOrInsert(['phone'=>'+905321234567'], [
             'purpose'=>$purpose, 'code_hash'=>Hash::make('123456'), 'attempts'=>0,
             'expires_at'=>$expired ? now()->subSecond() : now()->addMinutes(5),
         ]);
@@ -88,7 +88,7 @@ class SellerPhoneRegistrationTest extends TestCase
 
     private function payload($overrides = [])
     {
-        return array_merge(['mode'=>'register','phone'=>'+65 8123 4567','country'=>'SG','code'=>'123456',
+        return array_merge(['mode'=>'register','phone'=>'+90 532 123 4567','country'=>'TR','code'=>'123456',
             'account_name'=>'Test Merchant','name'=>'Test Shop','address'=>'Dubai',
             'password'=>'password123','password_confirmation'=>'password123', 'certtype'=>'idcard',
             'identity_card_front'=>1,'identity_card_back'=>2], $overrides);
@@ -102,7 +102,7 @@ class SellerPhoneRegistrationTest extends TestCase
         $this->assertPortalAuthenticatedAs($user, $response);
         $this->assertSame('seller', $user->user_type);
         $this->assertSame('Test Merchant', $user->name);
-        $this->assertSame('+6581234567', $user->phone_normalized);
+        $this->assertSame('+905321234567', $user->phone_normalized);
         $this->assertNotNull($user->phone_verified_at);
         $this->assertNull($user->email);
         $this->assertNull($user->email_verified_at);
@@ -120,9 +120,6 @@ class SellerPhoneRegistrationTest extends TestCase
 
     public function testTurkishSmsCodeRegistersSellerAndShopWithInternationalPhone()
     {
-        DB::table('countries')->insert(['code'=>'TR','name'=>'Turkey','status'=>1]);
-        DB::table('phone_verifications')->insert(['phone'=>'+905321234567','purpose'=>'register',
-            'code_hash'=>Hash::make('123456'),'attempts'=>0,'expires_at'=>now()->addMinutes(5)]);
         $this->post('/shops', $this->payload(['phone'=>'0532 123 45 67','country'=>'TR']))->assertRedirect();
         $this->assertDatabaseHas('users',['user_type'=>'seller','phone_normalized'=>'+905321234567']);
         $this->assertDatabaseHas('shops',['phone'=>'+905321234567','verification_status'=>0]);
@@ -277,7 +274,7 @@ class SellerPhoneRegistrationTest extends TestCase
         $this->assertPortalAuthenticatedAs($user, $response);
         auth()->logout();
         session()->save();
-        $response = $this->post('/login', ['country_code'=>'65','phone'=>'81234567','password'=>'password123'])
+        $response = $this->post('/login', ['country_code'=>'90','phone'=>'5321234567','password'=>'password123'])
             ->assertRedirect(route('seller.dashboard'));
         $this->assertPortalAuthenticatedAs($user, $response);
         auth()->logout();
@@ -295,7 +292,7 @@ class SellerPhoneRegistrationTest extends TestCase
         $parent->name = 'Sales Referrer'; $parent->password = Hash::make('password123');
         $parent->user_type = 'salesman'; $parent->save();
         $this->withUnencryptedCookie('invitation_code', (string) $parent->id)->post('/shops', $this->payload())->assertRedirect();
-        $this->assertDatabaseHas('users', ['phone_normalized'=>'+6581234567','user_type'=>'seller','pid'=>$parent->id]);
+        $this->assertDatabaseHas('users', ['phone_normalized'=>'+905321234567','user_type'=>'seller','pid'=>$parent->id]);
     }
 
     public function testSellerCodeCannotBeMissingExpiredOrForAnotherPurpose()
@@ -324,7 +321,7 @@ class SellerPhoneRegistrationTest extends TestCase
         auth()->logout();
         DB::table('uploads')->insert(['id'=>6,'user_id'=>0,'type'=>'image']);
         $documents = ['identity_card_front'=>3,'identity_card_back'=>6];
-        $this->postJson('/shops', $this->payload(array_merge($documents, ['phone'=>'+6581234568'])))
+        $this->postJson('/shops', $this->payload(array_merge($documents, ['phone'=>'+905321234568'])))
             ->assertStatus(422)->assertJsonValidationErrors('code');
         $this->seedCode();
         $this->postJson('/shops', $this->payload($documents))->assertStatus(422)->assertJsonValidationErrors('phone');
@@ -371,7 +368,7 @@ class SellerPhoneRegistrationTest extends TestCase
     {
         $view = app(\App\Http\Controllers\ShopController::class)->create(Request::create('/shops/create'));
         $this->assertSame('frontend.seller_form', $view->name());
-        $this->assertSame(['SG'], array_column($view->getData()['countries'], 'country'));
+        $this->assertSame(['TR'], array_column($view->getData()['countries'], 'country'));
         $this->assertDatabaseCount('uploads', 5);
     }
 
@@ -393,7 +390,7 @@ class SellerPhoneRegistrationTest extends TestCase
             $request = Request::create('https://seller.pddglobalmerchanthub.com/users/phone?mode='.$mode);
             $html = app(\App\Http\Controllers\PhoneAccessController::class)->show($request)->render();
             $this->assertStringContainsString('name="country"', $html);
-            $this->assertStringContainsString('Singapore +65', $html);
+            $this->assertStringContainsString('Turkey +90', $html);
             $this->assertStringContainsString('name="national_phone" value=""', $html);
             $this->assertStringContainsString('type="hidden" name="phone"', $html);
             $this->assertStringContainsString('assets/js/intlTelutils.js', $html);
@@ -444,7 +441,7 @@ class SellerPhoneRegistrationTest extends TestCase
     {
         Schema::table('users', function (Blueprint $table) { $table->string('verification_code')->nullable(); });
         $user = $this->operator($role);
-        $user->phone = '+6581234567';
+        $user->phone = '+905321234567';
         $user->phone_normalized = $user->phone;
         $user->save();
         $user->createToken('old-token');
@@ -481,7 +478,7 @@ class SellerPhoneRegistrationTest extends TestCase
             ->assertRedirect(route($role === 'salesman' ? 'salesman.sellers_index' : 'sellers.index'));
         $seller = User::where('user_type', 'seller')->firstOrFail();
         $this->assertSame('Test Merchant', $seller->name);
-        $this->assertSame('+6581234567', $seller->phone);
+        $this->assertSame('+905321234567', $seller->phone);
         $this->assertSame($seller->phone, $seller->phone_normalized);
         $this->assertNotNull($seller->phone_verified_at);
         $this->assertNull($seller->email); $this->assertNull($seller->email_verified_at);
@@ -530,7 +527,7 @@ class SellerPhoneRegistrationTest extends TestCase
     public function testManagementChecksLegacyPhoneDuplicatesAcrossRoles()
     {
         $operator = $this->operator();
-        $existing = $this->operator('customer'); $existing->phone = '+65 (8123) 4567'; $existing->save();
+        $existing = $this->operator('customer'); $existing->phone = '+90 (532) 123 4567'; $existing->save();
         foreach (['shops.store', 'sellers.store'] as $route) {
             $this->actingAs($operator)->postJson(route($route), $this->payload())
                 ->assertStatus(422)->assertJsonValidationErrors('phone');
@@ -587,10 +584,10 @@ class SellerPhoneRegistrationTest extends TestCase
         $seller->createToken('old-device');
         $shop = $seller->shop;
         $this->actingAs($operator)->patch(route('sellers.update', $shop->id), [
-            'name' => 'Updated Merchant', 'phone' => '+65-8123-4567', 'country' => 'SG', 'views' => 4,
+            'name' => 'Updated Merchant', 'phone' => '+90-532-123-4567', 'country' => 'TR', 'views' => 4,
         ])->assertRedirect(route('sellers.index'));
         $seller->refresh();
-        $this->assertSame('+6581234567', $seller->phone_normalized);
+        $this->assertSame('+905321234567', $seller->phone_normalized);
         $this->assertSame('legacy@example.test', $seller->email);
         $this->assertNotNull($seller->phone_verified_at);
         $this->assertDatabaseHas('shops', ['id' => $shop->id, 'phone' => $seller->phone, 'views' => 4]);
@@ -608,7 +605,7 @@ class SellerPhoneRegistrationTest extends TestCase
         $this->actingAs($operator)->patch(route('salesman.sellers.update', $shop->id), [
             'name' => 'Updated', 'phone' => $seller->phone,
         ])->assertRedirect(route('salesman.sellers_index'));
-        $other = $this->operator(); $other->phone = '+6581234568'; $other->phone_normalized = $other->phone; $other->save();
+        $other = $this->operator(); $other->phone = '+905321234568'; $other->phone_normalized = $other->phone; $other->save();
         $this->patchJson(route('salesman.sellers.update', $shop->id), ['name' => 'Bad', 'phone' => $other->phone])
             ->assertStatus(422)->assertJsonValidationErrors('phone');
         $seller->pid = $other->id; $seller->save();
@@ -621,13 +618,13 @@ class SellerPhoneRegistrationTest extends TestCase
     public function testManagementCustomerCreationAlsoUsesPhoneAndHashesPasswords($role, $route)
     {
         $operator = $this->operator($role);
-        $this->actingAs($operator)->post(route($route), ['name' => 'Customer', 'phone' => '+65 8123 4567',
-            'country' => 'SG', 'password' => 'password123', 'password_confirmation' => 'password123', 'balance' => '12.50'])
+        $this->actingAs($operator)->post(route($route), ['name' => 'Customer', 'phone' => '+90 532 123 4567',
+            'country' => 'TR', 'password' => 'password123', 'password_confirmation' => 'password123', 'balance' => '12.50'])
             ->assertRedirect(route($role === 'salesman' ? 'salesman.customers.index' : 'customers.index'));
         $user = User::where('user_type', 'customer')->firstOrFail();
         $this->assertNull($user->email); $this->assertNotNull($user->phone_verified_at);
         $this->assertTrue(Hash::check('password123', $user->password));
-        $this->assertSame('+6581234567', $user->phone_normalized);
+        $this->assertSame('+905321234567', $user->phone_normalized);
         $this->assertEquals(12.50, $user->balance);
         if ($role === 'salesman') { $this->assertSame($operator->id, (int) $user->referred_by); }
         auth()->logout();
@@ -641,7 +638,7 @@ class SellerPhoneRegistrationTest extends TestCase
         return [['admin', 'customers.store'], ['salesman', 'salesman.customers.store']];
     }
 
-    public function testAllManagementCreationFormsUseSharedPhoneFieldsWithDefaultSgAndNoEmail()
+    public function testAllManagementCreationFormsUseSharedPhoneFieldsWithDefaultTrAndNoEmail()
     {
         $finder = app('view')->getFinder();
         $finder->prependLocation(base_path('tests/Fixtures/views')); $finder->flush();
@@ -656,9 +653,9 @@ class SellerPhoneRegistrationTest extends TestCase
             $this->assertSame(0, $xpath->query('//input[@name="email"]')->length, $view);
             $this->assertSame(1, $xpath->query('//input[@name="phone" and @type="hidden"]')->length, $view);
             $this->assertSame(1, $xpath->query('//input[@name="national_phone" and @required]')->length, $view);
-            $this->assertSame(1, $xpath->query('//select[@name="country"]/option[@value="SG" and @selected]')->length, $view);
+            $this->assertSame(1, $xpath->query('//select[@name="country"]/option[@value="TR" and @selected]')->length, $view);
             $this->assertSame(1, $xpath->query('//select[@name="country"]')->length, $view);
-            $this->assertStringContainsString('Singapore +65', $html);
+            $this->assertStringContainsString('Turkey +90', $html);
             $this->assertSame(1, $xpath->query('//input[@name="name"]')->length, $view);
             $this->assertStringNotContainsString('grecaptcha', $html);
             $this->assertStringContainsString('if (button) button.addEventListener', $html);
@@ -674,16 +671,16 @@ class SellerPhoneRegistrationTest extends TestCase
         $seller = app(\App\Services\ManagedPhoneAccounts::class)->createSeller(Request::create('/', 'POST', $this->payload()), $operator);
         $html = app(\App\Http\Controllers\SellerController::class)->edit(encrypt($seller->shop->id))->render();
         $this->assertStringNotContainsString('name="email"', $html);
-        $this->assertStringContainsString('name="phone" value="+6581234567"', $html);
-        $this->assertStringContainsString('name="national_phone" value="+6581234567"', $html);
+        $this->assertStringContainsString('name="phone" value="+905321234567"', $html);
+        $this->assertStringContainsString('name="national_phone" value="+905321234567"', $html);
     }
 
     public function testPhoneOnlyCustomersAreVisibleInManagementAndSearchable()
     {
-        $user = $this->operator('customer'); $user->phone = '+6581234567'; $user->phone_normalized = $user->phone;
+        $user = $this->operator('customer'); $user->phone = '+905321234567'; $user->phone_normalized = $user->phone;
         $user->phone_verified_at = now(); $user->email = null; $user->save();
         $this->actingAs($this->operator());
-        $view = app(\App\Http\Controllers\CustomerController::class)->index(Request::create('/', 'GET', ['search' => '81234567']));
+        $view = app(\App\Http\Controllers\CustomerController::class)->index(Request::create('/', 'GET', ['search' => '5321234567']));
         $this->assertSame([$user->id], $view->getData()['users']->pluck('id')->all());
     }
 

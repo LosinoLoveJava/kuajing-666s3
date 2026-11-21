@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'account_details' => 'View account details',
     'history' => 'Wallet Transaction History',
     'recharge_history' => 'Wallet Recharge History',
     'recharge' => 'Recharge',

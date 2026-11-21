@@ -7,9 +7,9 @@ use RuntimeException;
 
 class ExchangeRate
 {
-    public function quote($to = 'SGD')
+    public function quote($to = 'TRY')
     {
-        if (!in_array($to, ['SGD', 'TRY'], true)) throw new RuntimeException('Unsupported exchange currency.');
+        if ($to !== 'TRY') throw new RuntimeException('Unsupported exchange currency.');
         $currencies = Currency::whereIn('code', ['USD', $to])->get()->keyBy('code');
         $usd = $currencies->get('USD');
         $sgd = $currencies->get($to);
@@ -28,14 +28,9 @@ class ExchangeRate
             'updated_at' => collect([$usd->updated_at, $sgd->updated_at])->filter()->sort()->last()];
     }
 
-    public function rate($to = 'SGD')
+    public function rate($to = 'TRY')
     {
         return $this->quote($to)['rate'];
-    }
-
-    public function sgdToUsd($amount)
-    {
-        return $this->toUsd($amount, 'SGD');
     }
 
     public function toUsd($amount, $currency)
@@ -51,7 +46,7 @@ class ExchangeRate
     public function availableRates()
     {
         $rates = [];
-        foreach (['SGD', 'TRY'] as $currency) {
+        foreach (['TRY'] as $currency) {
             try { $rates[$currency] = $this->rate($currency); }
             catch (RuntimeException $error) { $rates[$currency] = null; }
         }

@@ -115,6 +115,21 @@ class SellerWalletDisplayTest extends TestCase
         $this->assertStringContainsString('seller-wallet-page', $html);
     }
 
+    public function testWithdrawalFormOnlyOffersTurkeyAndCrypto()
+    {
+        $this->request();
+        $html = app(SellerWithdrawRequestController::class)->index()->render();
+        $dom = new \DOMDocument; @$dom->loadHTML($html); $xpath = new \DOMXPath($dom);
+        $this->assertSame(1, $xpath->query('//*[@id="request_modal"]//input[@name="withdrawal_market" and @value="TR"]')->length);
+        $this->assertSame(1, $xpath->query('//*[@id="request_modal"]//input[@name="iban_country" and @value="TR"]')->length);
+        $this->assertSame(0, $xpath->query('//*[@id="request_modal"]//*[@data-withdraw-market="SG" or @value="SG"]')->length);
+        $this->assertStringNotContainsString('withdraw-tab-sg', $html);
+        $this->assertStringContainsString('USDT_TRC20', $html);
+        $this->assertStringContainsString('USDT_ERC20', $html);
+        $this->assertStringContainsString('currencies/btc.svg', $html);
+        $this->assertStringContainsString('currencies/trx.svg', $html);
+    }
+
     public function testExistingWalletRecordsAndEveryApprovalStateAreRendered()
     {
         $this->records(1, 3); $this->records(2, 1);

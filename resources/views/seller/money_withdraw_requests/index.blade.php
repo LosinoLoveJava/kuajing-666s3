@@ -29,6 +29,39 @@
         .seller-wallet-page .wallet-card-withdraw { background: linear-gradient(135deg, #5541bb, #8054c7); }
         .seller-wallet-page .wallet-card-recharge { background: linear-gradient(135deg, #f57b58, #f7b52d); }
         .seller-wallet-page .wallet-history-card { border: 1px solid #edf0f5; border-radius: 6px; }
+        .seller-wallet-page .wallet-withdraw-table { min-width: 880px; }
+        .seller-wallet-page .wallet-withdraw-table .wallet-withdraw-date,
+        .seller-wallet-page .wallet-withdraw-table .wallet-withdraw-amount { white-space: nowrap; }
+        .seller-wallet-page .wallet-withdraw-method { min-width: 240px; }
+        .seller-wallet-page .wallet-withdraw-details { margin-top: .5rem; }
+        .seller-wallet-page .wallet-withdraw-details > summary { cursor: pointer; color: #377dff; }
+        .seller-wallet-page .wallet-withdraw-details .iban-account-details { margin-bottom: 0 !important; }
+        .seller-wallet-page .wallet-withdraw-details dt { overflow-wrap: normal; word-break: normal; }
+        .seller-wallet-page .wallet-withdraw-details dd { overflow-wrap: anywhere; word-break: normal; }
+        @media (max-width: 991.98px) {
+            .seller-wallet-page .wallet-withdraw-table { display: block; min-width: 0; }
+            .seller-wallet-page .wallet-withdraw-table > thead {
+                position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden;
+                clip: rect(0, 0, 0, 0); white-space: nowrap;
+            }
+            .seller-wallet-page .wallet-withdraw-table > tbody { display: block; }
+            .seller-wallet-page .wallet-withdraw-table > tbody > tr {
+                display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px 16px; padding: 16px; margin-bottom: 16px;
+                border: 1px solid #edf0f5; border-radius: 6px;
+            }
+            .seller-wallet-page .wallet-withdraw-table > tbody > tr:last-child { margin-bottom: 0; }
+            .seller-wallet-page .aiz-table-scroll > .wallet-withdraw-table > tbody > tr > td {
+                display: block; min-width: 0; max-width: none; padding: 0; border: 0;
+            }
+            .seller-wallet-page .wallet-withdraw-table td[data-label]::before {
+                content: attr(data-label); display: block; margin-bottom: 4px; color: #6c757d;
+                font-size: 12px; white-space: normal; overflow-wrap: normal;
+            }
+            .seller-wallet-page .wallet-withdraw-table .wallet-withdraw-method,
+            .seller-wallet-page .wallet-withdraw-table .wallet-withdraw-notes,
+            .seller-wallet-page .wallet-withdraw-table .wallet-withdraw-empty { grid-column: 1 / -1; }
+        }
     </style>
 
     <div class="seller-wallet-page">
@@ -120,24 +153,24 @@
         </div>
     </div>
 
-    <div class="card wallet-history-card">
+    <div class="card wallet-history-card" id="wallet-withdraw-history">
         <div class="card-header">
             <h5 class="mb-0 h6">{{ translate('Withdraw Request history')}}</h5>
         </div>
         <div class="card-body">
             <div class="aiz-table-scroll" tabindex="0">
-            <table class="table aiz-table mb-0">
+            <table class="table wallet-withdraw-table mb-0" role="table">
                 <thead>
                 <tr>
-                    <th>#</th>
-                    <th>{{ translate('Date') }}</th>
-                    <th>{{ translate('Amount')}}</th>
-                    <th>{{ translate('Type')}}</th>
+                    <th scope="col">#</th>
+                    <th scope="col">{{ translate('Date') }}</th>
+                    <th scope="col">{{ translate('Amount')}}</th>
+                    <th scope="col">{{ translate('Type')}}</th>
                     
-                    <th data-breakpoints="lg">{{ translate('Status')}}</th>
-                    <th>{{ translate('Withdraw Type')}}</th>
-                    <th>{{ translate('Remarks')}}</th>
-                    <th data-breakpoints="lg" width="40%">{{ translate('Message')}}</th>
+                    <th scope="col">{{ translate('Status')}}</th>
+                    <th scope="col">{{ translate('Withdraw Type')}}</th>
+                    <th scope="col">{{ translate('Remarks')}}</th>
+                    <th scope="col">{{ translate('Message')}}</th>
                     
                     
                 </tr>
@@ -145,10 +178,10 @@
                 <tbody>
                 @forelse ($seller_withdraw_requests as $key => $seller_withdraw_request)
                     <tr>
-                        <td>{{ $seller_withdraw_requests->firstItem() + $key }}</td>
-                        <td>{{ date('d-m-Y', strtotime($seller_withdraw_request->created_at)) }}</td>
-                        <td>{{ single_price($seller_withdraw_request->amount) }}</td>
-                        <td>
+                        <td data-label="#">{{ $seller_withdraw_requests->firstItem() + $key }}</td>
+                        <td data-label="{{ translate('Date') }}" class="wallet-withdraw-date">{{ date('d-m-Y', strtotime($seller_withdraw_request->created_at)) }}</td>
+                        <td data-label="{{ translate('Amount') }}" class="wallet-withdraw-amount">{{ single_price($seller_withdraw_request->amount) }}</td>
+                        <td data-label="{{ translate('Type') }}">
                             @if( $seller_withdraw_request->type == 1)
                             
                             {{translate('User Balance')}}
@@ -157,7 +190,7 @@
                               {{translate('Guarantee')}}
                             @endif
                         </td>
-                        <td> 
+                        <td data-label="{{ translate('Status') }}">
                             @if ($seller_withdraw_request->status == 1)
                                 <span class=" badge badge-inline badge-success">{{ translate('Paid')}}</span>
                              @elseif ($seller_withdraw_request->status == 2)
@@ -166,7 +199,7 @@
                                 <span class=" badge badge-inline badge-info">{{ translate('Pending')}}</span>
                             @endif
                         </td>
-                        <td>
+                        <td data-label="{{ translate('Withdraw Type') }}" class="wallet-withdraw-method">
                             
                             @if( $seller_withdraw_request->w_type == 1)
                             
@@ -178,22 +211,26 @@
                             {{translate('USDT')}}
                             @elseif($seller_withdraw_request->w_type == 5)
                             {{ $seller_withdraw_request->iban_details['method'] ?? __('crypto_wallet.crypto') }}
-                            @include('partials.iban_details')
                             @elseif($seller_withdraw_request->w_type == 4)
 {{ translate('Bank') }}
-@include('partials.iban_details')
 @endif
+                            @if(in_array((int) $seller_withdraw_request->w_type, [4, 5], true))
+                                <details class="wallet-withdraw-details">
+                                    <summary>{{ __('seller_wallet.account_details') }}</summary>
+                                    @include('partials.iban_details')
+                                </details>
+                            @endif
                         </td>
-                             <td>
+                             <td data-label="{{ translate('Remarks') }}" class="wallet-withdraw-notes">
                             {{ $seller_withdraw_request->remarks }}
                         </td>
-                        <td>
+                        <td data-label="{{ translate('Message') }}" class="wallet-withdraw-notes">
                             {{ $seller_withdraw_request->message }}
                         </td>
                    
                     </tr>
                 @empty
-                    <tr><td colspan="8" class="text-center text-muted">{{ translate('Nothing found') }}</td></tr>
+                    <tr><td colspan="8" class="text-center text-muted wallet-withdraw-empty">{{ translate('Nothing found') }}</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -421,12 +458,11 @@
                         <input type="hidden" name="wallet_form" value="withdraw">
                         <input type="hidden" name="request_token" value="{{ old('request_token', (string) \Illuminate\Support\Str::uuid()) }}">
                         <div class="modal-body p-4" style="max-height:calc(100vh - 180px);overflow-y:auto">
-                            <div class="nav nav-tabs mb-4" role="tablist" aria-label="{{ translate('Withdrawal country') }}">
-                                <button type="button" class="nav-link active" id="withdraw-tab-sg" role="tab" data-withdraw-market="SG" aria-controls="withdraw-country-panel" aria-selected="true"><img src="{{ static_asset('assets/img/currencies/sgd.svg') }}" width="22" height="22" alt=""> {{ translate('Singapore') }}</button>
-                                <button type="button" class="nav-link" id="withdraw-tab-tr" role="tab" data-withdraw-market="TR" aria-controls="withdraw-country-panel" aria-selected="false" tabindex="-1"><img src="{{ static_asset('assets/img/currencies/try.svg') }}" width="22" height="22" alt=""> {{ translate('Turkey') }}</button>
+                            <div id="withdraw-bank-market" class="d-flex align-items-center mb-4">
+                                <img src="{{ static_asset('assets/img/currencies/try.svg') }}" width="22" height="22" class="mr-2" alt="TRY"> {{ translate('Turkey') }}
                             </div>
-                            <input type="hidden" name="withdrawal_market" value="{{ old('withdrawal_market', 'SG') }}">
-                            <input type="hidden" name="iban_country" value="SG">
+                            <input type="hidden" name="withdrawal_market" value="TR">
+                            <input type="hidden" name="iban_country" value="TR">
                             <div class="row">
                                 <div class="col">
                                     <div class="alert alert-success" role="alert">
@@ -447,7 +483,7 @@
                                 <div class="alert alert-info">{{ __('crypto_wallet.withdraw_hint') }}</div>
                                 <div id="withdraw-crypto-unavailable" class="alert alert-warning" hidden>{{ __('crypto_wallet.unavailable') }}</div>
                             </div>
-                            <div id="withdraw-country-panel" role="tabpanel" aria-labelledby="withdraw-tab-sg">
+                            <div id="withdraw-country-panel">
                                 @include('partials.iban_form', ['fixedBank' => true, 'manualReview' => true, 'bankOnly' => true])
                                 <div class="form-group" id="turkey-iban-field" hidden>
                                     <label for="withdraw-turkey-iban">IBAN <span class="text-danger">*</span></label>
@@ -458,7 +494,7 @@
                                 <label for="withdraw-amount">{{ translate('Amount')}} (USD) <span class="text-danger">*</span></label>
                                 <input id="withdraw-amount" type="number" lang="en" dir="ltr" class="form-control" name="amount" value="{{ old('amount') }}" min="0.01" max="9999999999.99" step="0.01" placeholder="{{ translate('Amount') }}" required>
                                 <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr" id="withdraw-rate"></bdi></div>
-                                <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="withdraw-sgd">0.00</span> <span id="withdraw-currency">SGD</span></bdi></div>
+                                <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="withdraw-estimate">0.00</span> <span id="withdraw-currency">TRY</span></bdi></div>
                             </div>
 
                             <div class="form-group">
@@ -509,7 +545,7 @@
             var form = document.querySelector('#request_modal form');
             if (!form) return;
             var amount = form.elements.amount;
-            var output = document.getElementById('withdraw-sgd');
+            var output = document.getElementById('withdraw-estimate');
             var locales = {cn: 'zh-CN', hk: 'zh-HK', sa: 'ar-SA', bd: 'bn-BD', jp: 'ja-JP', kr: 'ko-KR', in: 'hi-IN', be: 'be-BY'};
             var locale = @json(app()->getLocale());
             var numberFormat = new Intl.NumberFormat(locales[locale] || locale.replace('_', '-'), {
@@ -531,7 +567,7 @@
                     return;
                 }
                 form.querySelector('button[type="submit"]').disabled = false;
-                var currency = form.elements.withdrawal_market.value === 'TR' ? 'TRY' : 'SGD';
+                var currency = 'TRY';
                 var rate = Number(rates[currency]);
                 document.getElementById('withdraw-currency').textContent = currency;
                 document.getElementById('withdraw-rate').textContent = rate > 0 ? '1 USD = ' + numberFormat.format(rate) + ' ' + currency : @json(translate('Exchange rate is not configured. Please contact support.'));
@@ -539,31 +575,20 @@
                 var usd = Number(amount.value);
                 output.textContent = numberFormat.format(rate > 0 && Number.isFinite(usd) && usd > 0 ? Math.round(Math.round(usd * 100) * rate) / 100 : 0);
             }
-            function selectMarket(market) {
-                var turkey = market === 'TR';
-                form.elements.withdrawal_market.value = market;
-                form.elements.iban_country.value = market;
-                form.querySelectorAll('[data-withdraw-market]').forEach(function (tab) {
-                    var selected = tab.dataset.withdrawMarket === market;
-                    tab.classList.toggle('active', selected);
-                    tab.setAttribute('aria-selected', String(selected));
-                    tab.tabIndex = selected ? 0 : -1;
-                });
-                document.getElementById('withdraw-country-panel').setAttribute('aria-labelledby', turkey ? 'withdraw-tab-tr' : 'withdraw-tab-sg');
+            function configureBankFields(crypto) {
                 ['iban_holder', 'iban_bank'].forEach(function (name) {
-                    form.elements[name].required = turkey;
-                    form.elements[name].maxLength = turkey ? 200 : 2000;
+                    form.elements[name].disabled = crypto;
+                    form.elements[name].required = !crypto;
+                    form.elements[name].maxLength = 200;
                 });
-                form.querySelector('label[for="withdraw-holder"]').textContent = turkey ? @json(translate('Full name')) + ' *' : @json(translate('Account holder'));
-                form.querySelector('label[for="withdraw-bank"]').textContent = @json(translate('Bank Name')) + (turkey ? ' *' : '');
-                form.elements.bank_account.closest('.form-group').hidden = turkey;
-                form.elements.bank_account.disabled = turkey;
-                document.getElementById('turkey-iban-field').hidden = !turkey;
-                form.elements.iban_number.disabled = !turkey;
-                form.elements.iban_number.required = turkey;
-                if (!turkey) form.elements.iban_number.setCustomValidity('');
+                form.querySelector('label[for="withdraw-holder"]').textContent = @json(translate('Full name')) + ' *';
+                form.querySelector('label[for="withdraw-bank"]').textContent = @json(translate('Bank Name')) + ' *';
+                form.elements.bank_account.closest('.form-group').hidden = true;
+                form.elements.bank_account.disabled = true;
+                document.getElementById('turkey-iban-field').hidden = false;
+                form.elements.iban_number.disabled = crypto;
+                form.elements.iban_number.required = !crypto;
                 validateIban();
-                updateAmount();
             }
             function validateIban() {
                 var input = form.elements.iban_number, iban = input.value.replace(/\s+/g, '').toUpperCase();
@@ -579,15 +604,6 @@
                 input.setCustomValidity(valid ? '' : @json(translate('Invalid IBAN or account country.')));
             }
             form.elements.iban_number.addEventListener('input', validateIban);
-            form.querySelectorAll('[data-withdraw-market]').forEach(function (tab) {
-                tab.addEventListener('click', function () { selectMarket(tab.dataset.withdrawMarket); });
-                tab.addEventListener('keydown', function (event) {
-                    if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].indexOf(event.key) < 0) return;
-                    event.preventDefault();
-                    var market = event.key === 'Home' ? 'SG' : event.key === 'End' ? 'TR' : (form.elements.withdrawal_market.value === 'TR' ? 'SG' : 'TR');
-                    selectMarket(market); form.querySelector('[data-withdraw-market="' + market + '"]').focus();
-                });
-            });
             amount.addEventListener('input', updateAmount);
             var firstCrypto = form.querySelector('[name="crypto_asset"]:not(:disabled)');
             var oldAsset = @json(old('wallet_form') === 'withdraw' ? old('crypto_asset') : null);
@@ -598,11 +614,11 @@
                 form.elements.w_type.value = cryptoType.value;
                 document.getElementById('withdraw-crypto-fields').hidden = !crypto;
                 document.getElementById('withdraw-country-panel').hidden = crypto;
-                form.querySelector('[role="tablist"]').hidden = crypto;
+                document.getElementById('withdraw-bank-market').hidden = crypto;
+                document.getElementById('withdraw-bank-market').classList.toggle('d-flex', !crypto);
                 form.elements.withdrawal_market.disabled = crypto;
                 form.elements.iban_country.disabled = crypto;
-                selectMarket(form.elements.withdrawal_market.value === 'TR' ? 'TR' : 'SG');
-                if (crypto) form.querySelectorAll('#withdraw-country-panel input').forEach(function (el) { el.disabled = true; el.required = false; });
+                configureBankFields(crypto);
                 form.elements.crypto_address.disabled = !crypto;
                 form.elements.crypto_address.required = crypto;
                 form.querySelectorAll('[name="crypto_asset"]').forEach(function (el) { el.disabled = !crypto || !cryptoAssets[el.value].enabled; el.required = crypto; });
@@ -611,7 +627,6 @@
             cryptoType.addEventListener('change', toggleCrypto);
             form.querySelectorAll('[name="crypto_asset"]').forEach(function (el) { el.addEventListener('change', updateAmount); });
             cryptoType.value = @json(old('wallet_form') === 'withdraw' && (string) old('w_type') === '5' ? '5' : '4');
-            selectMarket(form.elements.withdrawal_market.value === 'TR' ? 'TR' : 'SG');
             toggleCrypto();
         })();
     </script>

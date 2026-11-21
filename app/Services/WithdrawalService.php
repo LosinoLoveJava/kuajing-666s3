@@ -71,13 +71,13 @@ class WithdrawalService
             'type' => 'nullable|integer|in:1',
             'request_token' => 'nullable|uuid',
             'message' => 'nullable|string|max:2000',
-            'iban_country' => 'required_if:w_type,4|nullable|string|size:2',
+            'iban_country' => 'required_if:w_type,4|nullable|string|size:2|not_in:SG,sg',
             'iban_holder' => 'required_if:w_type,2,4|nullable|string|max:200',
             'iban_bank' => 'required_if:w_type,2,4|nullable|string|max:200',
             'bank_account' => 'required_if:w_type,2|nullable|string|max:100',
             'iban_number' => 'required_if:w_type,4|nullable|string|max:64',
             'iban_bic' => ['nullable', 'string', 'regex:/^[a-zA-Z]{6}[a-zA-Z0-9]{2}([a-zA-Z0-9]{3})?$/D'],
-            'withdrawal_market' => 'nullable|in:SG,TR',
+            'withdrawal_market' => 'nullable|in:TR',
             'crypto_asset' => 'required_if:w_type,5|nullable|string|in:'.implode(',', array_keys(CryptoWallet::catalog())),
             'crypto_address' => 'required_if:w_type,5|nullable|string|max:128',
         ];
@@ -86,10 +86,16 @@ class WithdrawalService
             foreach (['iban_country', 'iban_holder', 'iban_bank', 'bank_account', 'iban_number', 'iban_bic'] as $field) {
                 $rules[$field] = 'nullable|string|max:2000';
             }
+            $rules['iban_country'] .= '|not_in:SG,sg';
         }
         $crypto = (string) $request->input('w_type') === '5';
-        $turkey = !$crypto && $request->input('withdrawal_market') === 'TR';
+        if ($manualReview && (string) $request->input('w_type') === '4' && !$request->has('withdrawal_market')) {
+            $request->merge(['withdrawal_market' => 'TR']);
+        }
+        $turkey = !$crypto && ($request->input('withdrawal_market') === 'TR'
+            || ($manualReview && (string) $request->input('w_type') === '4'));
         if ($turkey) {
+            $rules['withdrawal_market'] = 'required|in:TR';
             $rules['w_type'] = 'required|integer|in:4';
             $rules['iban_country'] = 'required|in:TR';
             $rules['iban_holder'] = 'required|string|max:200';
@@ -122,7 +128,7 @@ class WithdrawalService
             ];
         }
         if (!$crypto && !empty($data['withdrawal_market']) && $snapshot !== null) {
-            $currency = $turkey ? 'TRY' : 'SGD';
+            $currency = 'TRY';
             try {
                 $rates = app(ExchangeRate::class);
                 $quote = $rates->rate($currency);

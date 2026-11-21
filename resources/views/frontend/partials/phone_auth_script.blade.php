@@ -8,19 +8,18 @@
         var country;
         syncPhone = function () {
             country = form.elements.country.value;
-            var dialCode = country === 'TR' ? '90' : (country === 'SG' ? '65' : '971');
+            var dialCode = country === 'TR' ? '90' : '971';
             var number = input.value.replace(/[\s().-]+/g, '');
             if (number.indexOf('00') === 0) number = '+' + number.slice(2);
             if (number && number.charAt(0) !== '+') {
                 if (country === 'TR' && number.length === 11 && number.charAt(0) === '0') number = number.slice(1);
-                var hasDialCode = country === 'SG' ? number.length === 10 && number.indexOf(dialCode) === 0 : country === 'TR' ? number.length === 12 && number.indexOf(dialCode) === 0 : number.indexOf(dialCode) === 0;
-                number = hasDialCode ? '+' + number : '+' + dialCode + (country === 'SG' ? number : number.replace(/^0+/, ''));
+                var hasDialCode = country === 'TR' ? number.length === 12 && number.indexOf(dialCode) === 0 : number.indexOf(dialCode) === 0;
+                number = hasDialCode ? '+' + number : '+' + dialCode + number.replace(/^0+/, '');
             }
             form.elements.country.value = country;
             form.elements.phone.value = number;
-            var pattern = country === 'TR' ? /^\+905[0-9]{9}$/ : (country === 'SG' ? /^\+65[3689][0-9]{7}$/ : /^\+971[1-9][0-9]{7,8}$/);
-            // Match PhoneNumber::normalize for SG; the bundled number metadata rejects newer prefixes such as 8086.
-            var valid = pattern.test(number) && (country === 'SG' || intlTelInputUtils.isValidNumber(number, country));
+            var pattern = country === 'TR' ? /^\+905[0-9]{9}$/ : /^\+971[1-9][0-9]{7,8}$/;
+            var valid = pattern.test(number) && intlTelInputUtils.isValidNumber(number, country);
             input.setCustomValidity(input.value && !valid ? @json(translate('Invalid phone number')) : '');
             return valid;
         };

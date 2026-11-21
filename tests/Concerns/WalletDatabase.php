@@ -17,7 +17,7 @@ trait WalletDatabase
             $t->increments('id'); $t->string('code'); $t->decimal('exchange_rate', 15, 5); $t->timestamps();
         });
         DB::table('currencies')->insert([
-            ['code' => 'USD', 'exchange_rate' => 1], ['code' => 'SGD', 'exchange_rate' => 1.28],
+            ['code' => 'USD', 'exchange_rate' => 1], ['code' => 'SGD', 'exchange_rate' => 1.28], ['code' => 'TRY', 'exchange_rate' => 50.5],
         ]);
         Schema::create('users', function (Blueprint $t) {
             $t->increments('id'); $t->string('name'); $t->string('user_type'); $t->decimal('balance',20,2)->default(100);

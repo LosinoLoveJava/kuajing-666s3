@@ -26,7 +26,7 @@ class SellerRechargeFormTest extends TestCase
     {
         return ['type' => 1, 'recharge_method' => 'Bank', 'bank_name' => 'Test Bank',
             'account_holder' => 'Test Holder', 'bank_account' => '00123456',
-            'amount' => '100.04', 'amount_sgd' => '128.05', 'trx_id' => 'TEST-RECHARGE'];
+            'amount' => '100.04', 'currency' => 'TRY', 'amount_local' => '5052.02', 'trx_id' => 'TEST-RECHARGE'];
     }
 
     public function testBankDetailsAreSavedForReviewAndBalanceIsNotCredited()
@@ -37,7 +37,7 @@ class SellerRechargeFormTest extends TestCase
         $this->assertSame('Bank', $wallet->payment_method);
         $this->assertEquals(0, $wallet->approval);
         $this->assertStringContainsString('Account number: 00123456', $wallet->payment_details);
-        $this->assertStringContainsString('SGD: 128.05', $wallet->payment_details);
+        $this->assertStringContainsString('TRY: 5052.02', $wallet->payment_details);
         $this->assertEquals(100.04, $wallet->amount);
         $this->assertEquals(10000, auth()->user()->balance);
     }
@@ -72,9 +72,19 @@ class SellerRechargeFormTest extends TestCase
         $this->post('/offline-wallet-recharge-modal', ['type' => 1])->assertOk()
             ->assertSee('name="recharge_method"', false)->assertSee('value="Crypto"', false)
             ->assertSee('value="IBAN"', false)->assertSee('name="currency"', false)->assertSee('name="amount_local"', false)
-            ->assertSee('value="SGD"', false)->assertSee('value="TRY"', false)
+            ->assertDontSee('value="SGD"', false)->assertSee('value="TRY"', false)
             ->assertSee('Test transfer instructions')->assertDontSee('name="amount_aed"', false)->assertDontSee('aiz-megabox')
             ->assertSee('USDT_TRC20')->assertSee('USDT_ERC20')->assertSee('currencies/btc.svg')->assertSee('currencies/trx.svg')
             ->assertSee('name="request_token"', false)->assertDontSee('data-iban-required');
+    }
+
+    public function testDirectSingaporeRechargeIsRejectedBeforeCreatingARecord()
+    {
+        foreach ([['currency'=>'SGD'], ['amount_sgd'=>'128.05'], ['amount_sgd'=>'']] as $retired) {
+            $this->postJson('/offline-wallet-recharge', array_merge($this->payload(), $retired))
+                ->assertStatus(422)->assertJsonValidationErrors(array_keys($retired));
+        }
+        $this->assertDatabaseCount('wallets', 0);
+        $this->assertEquals(10000, auth()->user()->fresh()->balance);
     }
 }

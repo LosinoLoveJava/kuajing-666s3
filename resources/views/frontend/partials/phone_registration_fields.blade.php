@@ -1,9 +1,9 @@
 @php
-    $phoneCountry = $phoneCountry ?? 'SG';
+    $phoneCountry = $phoneCountry ?? 'TR';
     $phoneCountries = $phoneCountry === 'AE' ? [['country'=>'AE', 'name'=>'United Arab Emirates', 'dial_code'=>'+971']] : app(\App\Services\PhoneNumber::class)->countries();
     $savedPhone = old('phone', $phoneValue ?? '');
     $selectedCountry = old('country', preg_match('/^(?:(?:\+|00)90|90[0-9]{10}$)/', $savedPhone) ? 'TR' : $phoneCountry);
-    if (!in_array($selectedCountry, array_column($phoneCountries, 'country'), true)) $selectedCountry = $phoneCountries[0]['country'] ?? 'SG';
+    if (!in_array($selectedCountry, array_column($phoneCountries, 'country'), true)) $selectedCountry = $phoneCountries[0]['country'] ?? 'TR';
 @endphp
 <input type="hidden" name="phone" value="{{ old('phone', $phoneValue ?? '') }}">
 <label class="d-block" for="registration-phone">{{ translate('Phone') }}</label>

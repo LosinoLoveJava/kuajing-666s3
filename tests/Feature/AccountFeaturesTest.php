@@ -53,7 +53,7 @@ class AccountFeaturesTest extends TestCase
         });
         Schema::create('countries', function (Blueprint $t) { $t->increments('id'); $t->string('name'); $t->string('code'); $t->integer('status'); });
         DB::table('countries')->insert([
-            ['name'=>'Singapore','code'=>'SG','status'=>1], ['name'=>'United Kingdom','code'=>'GB','status'=>0],
+            ['name'=>'Turkey','code'=>'TR','status'=>1], ['name'=>'United Kingdom','code'=>'GB','status'=>0],
             ['name'=>'United States','code'=>'US','status'=>1], ['name'=>'Bahamas','code'=>'BS','status'=>0],
         ]);
         Schema::create('currencies', function (Blueprint $t) { $t->increments('id'); $t->string('code'); $t->decimal('exchange_rate',10,5); $t->timestamps(); });
@@ -94,7 +94,7 @@ class AccountFeaturesTest extends TestCase
         foreach (['register', 'login', 'reset_password'] as $mode) {
             $html = $this->renderPhonePage($mode);
             $this->assertStringContainsString('name="country"', $html);
-            $this->assertStringContainsString('Singapore +65', $html);
+            $this->assertStringContainsString('Turkey +90', $html);
             $this->assertStringContainsString('name="national_phone" value=""', $html);
             $this->assertStringContainsString('autocomplete="tel-national"', $html);
             $this->assertStringContainsString('<select class="form-control', $html);
@@ -103,34 +103,34 @@ class AccountFeaturesTest extends TestCase
         }
     }
 
-    public function testOldCountryInputCannotChangeFixedSingaporeCountry()
+    public function testOldCountryInputCannotChangeFixedTurkeyCountry()
     {
         session()->flashInput(['country'=>'US', 'phone'=>'+12025550123', 'national_phone'=>'+12025550123']);
         $html = $this->renderPhonePage('register');
-        $this->assertStringContainsString('value="SG"  selected', $html);
+        $this->assertStringContainsString('value="TR"  selected', $html);
         $this->assertStringNotContainsString('value="US"', $html);
-        // Keep invalid old input visible for correction; never silently turn a foreign account into Singapore.
+        // Keep invalid old input visible for correction; never silently turn a foreign account into Turkey.
         $this->assertStringContainsString('name="national_phone" value="+12025550123"', $html);
     }
 
-    public function testDisabledSingaporeCannotBeUsedEvenWithFixedPrefix()
+    public function testDisabledTurkeyCannotBeUsedEvenWithFixedPrefix()
     {
-        DB::table('countries')->where('code', 'SG')->update(['status'=>0]);
+        DB::table('countries')->where('code', 'TR')->update(['status'=>0]);
         $this->getJson('/api/v2/auth/phone/countries')->assertOk()->assertJsonCount(0, 'data');
-        $this->postJson('/api/v2/auth/phone/send-code', ['phone'=>'+6581234567', 'purpose'=>'register'])
+        $this->postJson('/api/v2/auth/phone/send-code', ['phone'=>'+905321234567', 'purpose'=>'register'])
             ->assertStatus(422)->assertJsonValidationErrors('phone');
         Http::assertNothingSent();
     }
 
-    /** @dataProvider singaporeNumberFormats */
-    public function testSingaporeNumberFormatsNormalizeToOneAccount($number)
+    /** @dataProvider turkeyNumberFormats */
+    public function testTurkeyNumberFormatsNormalizeToOneAccount($number)
     {
-        $this->assertSame('+6581234567', app(PhoneNumber::class)->normalize($number));
+        $this->assertSame('+905321234567', app(PhoneNumber::class)->normalize($number));
     }
 
-    public function singaporeNumberFormats(): array
+    public function turkeyNumberFormats(): array
     {
-        return [['81234567'], ['81234567'], ['+65 8123 4567'], ['006581234567'], ['6581234567']];
+        return [['5321234567'], ['5321234567'], ['+90 532 123 4567'], ['00905321234567'], ['905321234567']];
     }
 
     /** @dataProvider forbiddenPhoneInputs */
@@ -145,23 +145,23 @@ class AccountFeaturesTest extends TestCase
     public function forbiddenPhoneInputs(): array
     {
         return [['+12025550123','US'], ['+12025550123',null], ['+447911123456',null],
-            ['+6581234567','US'], ['+971',null], ['abc',null], ['501234',null]];
+            ['+905321234567','US'], ['+971',null], ['abc',null], ['501234',null]];
     }
 
-    public function testLocalSingaporeNumberCanRegisterAndLogInViaApi()
+    public function testLocalTurkeyNumberCanRegisterAndLogInViaApi()
     {
-        $payload = ['phone'=>'81234567','name'=>'Singapore Customer','code'=>'89001',
+        $payload = ['phone'=>'5321234567','name'=>'Turkey Customer','code'=>'89001',
             'password'=>'password123','password_confirmation'=>'password123'];
         $this->postJson('/api/v2/auth/phone/register', $payload)->assertOk();
-        $this->assertDatabaseHas('users', ['phone'=>'+6581234567', 'phone_normalized'=>'+6581234567']);
-        $this->postJson('/api/v2/auth/phone/login', ['phone'=>'81234567','password'=>'password123'])->assertOk();
+        $this->assertDatabaseHas('users', ['phone'=>'+905321234567', 'phone_normalized'=>'+905321234567']);
+        $this->postJson('/api/v2/auth/phone/login', ['phone'=>'5321234567','password'=>'password123'])->assertOk();
         Http::assertNothingSent();
     }
 
     public function testTurkishSmsRegisterLoginAndResetUseNormalizedNumberAndSingleUseCode()
     {
-        DB::table('countries')->insert(['code'=>'TR','name'=>'Turkey','status'=>1]);
-        $this->getJson('/api/v2/auth/phone/countries')->assertOk()->assertJsonCount(2,'data')->assertJsonFragment(['country'=>'TR','dial_code'=>'+90','name'=>'Turkey']);
+        DB::table('countries')->where('code','TR')->update(['status'=>1]);
+        $this->getJson('/api/v2/auth/phone/countries')->assertOk()->assertJsonCount(1,'data')->assertJsonFragment(['country'=>'TR','dial_code'=>'+90','name'=>'Turkey']);
         $this->postJson('/api/v2/auth/phone/send-code',['phone'=>'0532 123 45 67','country'=>'TR','purpose'=>'register'])->assertOk();
         Http::assertSent(function ($request) { return $request['phone'] === '905321234567'; });
         $payload = ['phone'=>'5321234567','country'=>'TR','name'=>'Turkish Customer','code'=>$this->code,
@@ -177,18 +177,18 @@ class AccountFeaturesTest extends TestCase
         $this->postJson('/api/v2/auth/phone/login',['phone'=>'00905321234567','password'=>'newpassword123'])->assertOk();
     }
 
-    public function testLegacyLoginAndCartDefaultToFixedSingaporeWithoutCountryCode()
+    public function testLegacyLoginAndCartDefaultToFixedTurkeyWithoutCountryCode()
     {
         $user = $this->user(); $user->phone_verified_at = now(); $user->save();
-        $response = $this->post('/login', ['phone'=>'81234567','password'=>'password123'])->assertRedirect(route('dashboard', ['portal' => 'customer']));
+        $response = $this->post('/login', ['phone'=>'5321234567','password'=>'password123'])->assertRedirect(route('dashboard', ['portal' => 'customer']));
         $this->assertPortalAuthenticatedAs($user, $response); auth()->logout();
-        $this->post(route('cart.login.submit'), ['phone'=>'81234567','password'=>'password123'])->assertRedirect();
+        $this->post(route('cart.login.submit'), ['phone'=>'5321234567','password'=>'password123'])->assertRedirect();
         $this->assertAuthenticatedAs($user); auth()->logout();
-        $this->postJson('/login', ['phone'=>'81234567','country_code'=>'1','password'=>'password123'])
+        $this->postJson('/login', ['phone'=>'5321234567','country_code'=>'1','password'=>'password123'])
             ->assertStatus(422)->assertJsonValidationErrors('country_code');
     }
 
-    private function user($role = 'customer', $phone = '+6581234567')
+    private function user($role = 'customer', $phone = '+905321234567')
     {
         $user = new User;
         $user->name = 'Test User'; $user->user_type = $role; $user->phone = $phone;
@@ -209,21 +209,21 @@ class AccountFeaturesTest extends TestCase
     private function ibanRequest($overrides = [])
     {
         return Request::create('/withdraw', 'POST', array_merge([
-            'amount'=>'20.50','type'=>1,'w_type'=>4,'iban_country'=>'AE','iban_holder'=>'Test Holder',
-            'iban_bank'=>'Test Bank','iban_number'=>'AE07 0331 2345 6789 0123 456','iban_bic'=>'BOMLAEAD',
+            'amount'=>'20.50','type'=>1,'w_type'=>4,'iban_country'=>'TR','iban_holder'=>'Test Holder',
+            'iban_bank'=>'Test Bank','iban_number'=>'TR33 0006 1005 1978 6457 8413 26','iban_bic'=>'BOMLAEAD',
         ], $overrides));
     }
 
     public function testExchangeRateUsesRelativeConfiguredRates()
     {
-        DB::table('currencies')->insert([['code'=>'USD','exchange_rate'=>'2'],['code'=>'SGD','exchange_rate'=>'2.56']]);
-        $this->getJson('/api/v2/exchange-rate?from=USD&to=SGD')->assertOk()->assertJsonPath('data.rate','1.280000');
+        DB::table('currencies')->insert([['code'=>'USD','exchange_rate'=>'2'],['code'=>'TRY','exchange_rate'=>'101.0']]);
+        $this->getJson('/api/v2/exchange-rate?from=USD&to=TRY')->assertOk()->assertJsonPath('data.rate','50.500000');
     }
 
     public function testMissingAndZeroRatesDoNotInventARate()
     {
         $this->getJson('/api/v2/exchange-rate')->assertStatus(503);
-        DB::table('currencies')->insert([['code'=>'USD','exchange_rate'=>0],['code'=>'SGD','exchange_rate'=>1.28]]);
+        DB::table('currencies')->insert([['code'=>'USD','exchange_rate'=>0],['code'=>'TRY','exchange_rate'=>50.5]]);
         $this->getJson('/api/v2/exchange-rate')->assertStatus(503);
         $this->getJson('/api/v2/exchange-rate?from=EUR')->assertStatus(422);
     }
@@ -236,7 +236,7 @@ class AccountFeaturesTest extends TestCase
 
     public function testOrdersCountBuyerSellerAndRefundBoundaries()
     {
-        $buyer=$this->user(); $seller=$this->user('seller','+6581234568'); $other=$this->user('customer','+6581234569');
+        $buyer=$this->user(); $seller=$this->user('seller','+905321234568'); $other=$this->user('customer','+905321234569');
         for($id=1;$id<=6;$id++) {
             DB::table('orders')->insert(['id'=>$id,'user_id'=>$id===6?$other->id:$buyer->id,'seller_id'=>$seller->id,
                 'payment_status'=>$id===4?'unpaid':'paid','delivery_status'=>$id===5?'pending':'delivered']);
@@ -249,7 +249,7 @@ class AccountFeaturesTest extends TestCase
 
     public function testDefaultScoreAndAdminAdjustmentAudit()
     {
-        $user=$this->user(); $admin=$this->user('admin','+6581234568');
+        $user=$this->user(); $admin=$this->user('admin','+905321234568');
         $this->actingAs($user,'sanctum')->getJson('/api/v2/user/reputation')->assertOk()->assertJsonPath('data.score',100);
         $this->actingAs($admin)->post('/admin/reputation/'.$user->id,['score'=>80,'reason'=>'Verified adjustment'])->assertRedirect();
         $this->assertSame(80,(int)$user->fresh()->reputation_score);
@@ -258,22 +258,22 @@ class AccountFeaturesTest extends TestCase
 
     public function testScoreRejectsUnauthorizedOrInvalidChanges()
     {
-        $user=$this->user(); $staff=$this->user('staff','+6581234568');
+        $user=$this->user(); $staff=$this->user('staff','+905321234568');
         $this->actingAs($staff)->postJson('/admin/reputation/'.$user->id,['score'=>50,'reason'=>'test'])->assertForbidden();
-        $admin=$this->user('admin','+6581234569');
+        $admin=$this->user('admin','+905321234569');
         $this->actingAs($admin)->postJson('/admin/reputation/'.$user->id,['score'=>101,'reason'=>''])->assertStatus(422);
         $this->assertDatabaseCount('reputation_logs',0);
     }
 
     public function testIbanValidationAndImmutableSnapshot()
     {
-        $this->assertTrue(Iban::valid('AE07 0331 2345 6789 0123 456','AE'));
+        $this->assertTrue(Iban::valid('TR33 0006 1005 1978 6457 8413 26','TR'));
         $this->assertTrue(Iban::valid('GB82 WEST 1234 5698 7654 32','GB'));
         $this->assertFalse(Iban::valid('AE08 0331 2345 6789 0123 456','AE'));
         $this->assertFalse(Iban::valid('GB82 WEST 1234 5698 7654 32','AE'));
         $user=$this->user();
         $withdrawal=app(WithdrawalService::class)->apply($this->ibanRequest(),$user,true);
-        $this->assertSame('AE070331234567890123456',$withdrawal->fresh()->iban_details['iban']);
+        $this->assertSame('TR330006100519786457841326',$withdrawal->fresh()->iban_details['iban']);
         $user->name='Changed'; $user->save();
         $this->assertSame('Test Holder',$withdrawal->fresh()->iban_details['holder']);
         $this->assertEquals(79.50,$user->fresh()->balance);
@@ -320,6 +320,7 @@ class AccountFeaturesTest extends TestCase
     public function testSellerCannotSubmitTwoPendingRequests()
     {
         $seller=$this->user('seller');
+        DB::table('currencies')->insert([['code'=>'USD','exchange_rate'=>1],['code'=>'TRY','exchange_rate'=>50.5]]);
         app(WithdrawalService::class)->apply($this->ibanRequest(),$seller);
         try { app(WithdrawalService::class)->apply($this->ibanRequest(),$seller); $this->fail(); }
         catch(ValidationException $e) { $this->assertArrayHasKey('amount',$e->errors()); }
@@ -328,7 +329,7 @@ class AccountFeaturesTest extends TestCase
 
     public function testIbanRejectionRestoresBalanceOnlyOnce()
     {
-        $user=$this->user(); $admin=$this->user('admin','+6581234568');
+        $user=$this->user(); $admin=$this->user('admin','+905321234568');
         $withdrawal=app(WithdrawalService::class)->apply($this->ibanRequest(),$user,true);
         $request=Request::create('/review','POST',['remarks'=>'Rejected']); $request->setUserResolver(function()use($admin){return $admin;});
         app(WithdrawalService::class)->reviewIban($request,$withdrawal->id,false);
@@ -340,7 +341,7 @@ class AccountFeaturesTest extends TestCase
 
     public function testIbanApprovalRecordsPaymentOnlyOnce()
     {
-        $user=$this->user(); $admin=$this->user('admin','+6581234568');
+        $user=$this->user(); $admin=$this->user('admin','+905321234568');
         $withdrawal=app(WithdrawalService::class)->apply($this->ibanRequest(),$user,true);
         $request=Request::create('/review','POST',['amount'=>9999]); $request->setUserResolver(function()use($admin){return $admin;});
         app(WithdrawalService::class)->reviewIban($request,$withdrawal->id,true);
@@ -352,45 +353,45 @@ class AccountFeaturesTest extends TestCase
 
     public function testPhoneCountryPolicyAndSharedCallingCodes()
     {
-        $this->assertSame('+6581234567',app(PhoneNumber::class)->normalize('+65 8123 4567','SG'));
+        $this->assertSame('+905321234567',app(PhoneNumber::class)->normalize('+90 532 123 4567','TR'));
         foreach(['+447911123456','+12425551234'] as $phone) {
             try { app(PhoneNumber::class)->normalize($phone); $this->fail(); }
             catch(ValidationException $e) { $this->assertArrayHasKey('phone',$e->errors()); }
         }
-        $this->getJson('/api/v2/auth/phone/countries')->assertOk()->assertJsonCount(1,'data')->assertJsonPath('data.0.country','SG');
+        $this->getJson('/api/v2/auth/phone/countries')->assertOk()->assertJsonCount(1,'data')->assertJsonPath('data.0.country','TR');
     }
 
     public function testSmsSubmissionStoresHashAndEnforcesCooldown()
     {
-        $this->postJson('/api/v2/auth/phone/send-code',['phone'=>'+6581234567','purpose'=>'register'])->assertOk();
+        $this->postJson('/api/v2/auth/phone/send-code',['phone'=>'+905321234567','purpose'=>'register'])->assertOk();
         $row=DB::table('phone_verifications')->first();
         $this->assertTrue(Hash::check($this->code,$row->code_hash));
         $this->assertNotSame($this->code,$row->code_hash);
-        $this->postJson('/api/v2/auth/phone/send-code',['phone'=>'+6581234567','purpose'=>'register'])->assertStatus(429);
+        $this->postJson('/api/v2/auth/phone/send-code',['phone'=>'+905321234567','purpose'=>'register'])->assertStatus(429);
         Http::assertSentCount(1);
     }
 
     public function testSmsRecipientFailureDoesNotReportSuccess()
     {
         Http::swap(new \Illuminate\Http\Client\Factory);
-        Http::fake(['*'=>Http::response(['code'=>'00000','result'=>[['phone'=>'6581234567','status'=>'F0015']]])]);
-        $this->postJson('/api/v2/auth/phone/send-code',['phone'=>'+6581234567','purpose'=>'register'])->assertStatus(503);
+        Http::fake(['*'=>Http::response(['code'=>'00000','result'=>[['phone'=>'905321234567','status'=>'F0015']]])]);
+        $this->postJson('/api/v2/auth/phone/send-code',['phone'=>'+905321234567','purpose'=>'register'])->assertStatus(503);
         $this->assertNull(DB::table('phone_verifications')->value('code_hash'));
     }
 
     public function testMissingProviderCredentialsNeverSends()
     {
         config(['chuanx.appsecret'=>null]);
-        $this->postJson('/api/v2/auth/phone/send-code',['phone'=>'+6581234567','purpose'=>'register'])->assertStatus(503);
+        $this->postJson('/api/v2/auth/phone/send-code',['phone'=>'+905321234567','purpose'=>'register'])->assertStatus(503);
         Http::assertNothingSent();
     }
 
     public function testPhoneRegistrationAndSingleUseCode()
     {
-        $this->seedCode('+6581234567','register');
-        $payload=['phone'=>'+6581234567','code'=>'123456','name'=>'New Customer','password'=>'password123','password_confirmation'=>'password123'];
+        $this->seedCode('+905321234567','register');
+        $payload=['phone'=>'+905321234567','code'=>'123456','name'=>'New Customer','password'=>'password123','password_confirmation'=>'password123'];
         $this->postJson('/api/v2/auth/phone/register',$payload)->assertOk()->assertJsonPath('user.type','customer')->assertJsonStructure(['access_token']);
-        $this->assertDatabaseHas('users',['phone_normalized'=>'+6581234567','reputation_score'=>100]);
+        $this->assertDatabaseHas('users',['phone_normalized'=>'+905321234567','reputation_score'=>100]);
         $this->assertNotNull(User::first()->phone_verified_at);
         $this->assertNull(User::first()->email_verified_at);
         $this->postJson('/api/v2/auth/phone/register',$payload)->assertStatus(422);
@@ -399,7 +400,7 @@ class AccountFeaturesTest extends TestCase
 
     public function testGenericCodeRegistersARegularCustomerWithoutAnSmsRecord()
     {
-        $payload=['phone'=>'+6581234567','code'=>'89001','name'=>'Generic Customer',
+        $payload=['phone'=>'+905321234567','code'=>'89001','name'=>'Generic Customer',
             'password'=>'password123','password_confirmation'=>'password123'];
         $this->postJson('/api/v2/auth/phone/register',$payload)
             ->assertOk()->assertJsonPath('user.type','customer');
@@ -430,7 +431,7 @@ class AccountFeaturesTest extends TestCase
             $this->seedCode($user->phone,$case[0],0,$case[1]);
             $this->postJson('/api/v2/auth/phone/login',['phone'=>$user->phone,'code'=>'123456'])->assertStatus(422);
         }
-        $this->seedCode('+6581234568','login');
+        $this->seedCode('+905321234568','login');
         $this->postJson('/api/v2/auth/phone/login',['phone'=>$user->phone,'code'=>'123456'])->assertStatus(422);
     }
 
@@ -470,8 +471,8 @@ class AccountFeaturesTest extends TestCase
 
     public function testDuplicateLegacyPhoneAccountsRequireResolution()
     {
-        $this->user(); $this->user('customer','6581234567');
-        $this->postJson('/api/v2/auth/phone/send-code',['phone'=>'+6581234567','purpose'=>'login'])->assertStatus(422);
+        $this->user(); $this->user('customer','905321234567');
+        $this->postJson('/api/v2/auth/phone/send-code',['phone'=>'+905321234567','purpose'=>'login'])->assertStatus(422);
         Http::assertNothingSent();
     }
 
@@ -484,7 +485,7 @@ class AccountFeaturesTest extends TestCase
 
     public function testLegacyPhoneSignupRequiresOtp()
     {
-        $this->postJson('/api/v2/auth/signup',['register_by'=>'phone','email_or_phone'=>'+6581234567','name'=>'Customer','password'=>'password123','password_confirmation'=>'password123'])->assertStatus(422);
+        $this->postJson('/api/v2/auth/signup',['register_by'=>'phone','email_or_phone'=>'+905321234567','name'=>'Customer','password'=>'password123','password_confirmation'=>'password123'])->assertStatus(422);
         $this->assertDatabaseCount('users',0);
     }
 
@@ -494,7 +495,7 @@ class AccountFeaturesTest extends TestCase
         $withdrawal = app(WithdrawalService::class)->apply($this->ibanRequest(), $user, true);
         $controller = app(\App\Http\Controllers\SellerWithdrawRequestController::class);
         $request = Request::create('/modal', 'POST', ['id'=>$user->id, 'seller_withdraw_request_id'=>$withdrawal->id]);
-        $admin = $this->user('admin', '+6581234568');
+        $admin = $this->user('admin', '+905321234568');
         $request->setUserResolver(function () use ($admin) { return $admin; });
         $this->assertSame('backend.sellers.seller_withdraw_requests.iban_payment_modal', $controller->payment_modal($request)->name());
         $this->assertSame('backend.sellers.seller_withdraw_requests.iban_refuse_modal', $controller->refuse_modal($request)->name());
@@ -503,7 +504,7 @@ class AccountFeaturesTest extends TestCase
     public function testCartPhoneLoginUsesVerificationAndBannedRules()
     {
         $user = $this->user();
-        $payload = ['country_code'=>'65','phone'=>'81234567','password'=>'password123'];
+        $payload = ['country_code'=>'90','phone'=>'5321234567','password'=>'password123'];
         $this->postJson('/users/login/cart', $payload)->assertStatus(422);
         $user->phone_verified_at = now(); $user->save();
         $this->post('/users/login/cart', $payload)->assertRedirect();

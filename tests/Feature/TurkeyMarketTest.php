@@ -50,10 +50,9 @@ class TurkeyMarketTest extends TestCase
     }
 
     /** @dataProvider turkishNumbers */
-    public function testTurkishPhoneFormatsNormalizeWithoutChangingSingapore($value, $country)
+    public function testTurkishPhoneFormatsNormalizeToOneAccount($value, $country)
     {
         $this->assertSame('+905321234567', app(PhoneNumber::class)->normalize($value, $country));
-        $this->assertSame('+6565123456', app(PhoneNumber::class)->normalize('65123456'));
     }
 
     public function turkishNumbers()
@@ -69,7 +68,7 @@ class TurkeyMarketTest extends TestCase
             catch (ValidationException $error) { $this->assertArrayHasKey('phone', $error->errors()); }
         }
         DB::table('countries')->where('code','TR')->update(['status'=>0]);
-        $this->assertCount(1, app(PhoneNumber::class)->countries());
+        $this->assertCount(0, app(PhoneNumber::class)->countries());
         $this->expectException(ValidationException::class);
         app(PhoneNumber::class)->normalize('+905321234567');
     }
@@ -91,7 +90,7 @@ class TurkeyMarketTest extends TestCase
     public function localAmounts()
     {
         return [['TRY','5050.00','100.00'],['TRY','50.75','1.00'],['TRY','50.76','1.01'],
-            ['TRY','0.51','0.01'],['SGD','128.05','100.04'],['TRY','9999999999.99','198019801.98']];
+            ['TRY','0.51','0.01'],['TRY','9999999999.99','198019801.98']];
     }
 
     /** @dataProvider invalidRecharges */
@@ -152,22 +151,27 @@ class TurkeyMarketTest extends TestCase
     public function invalidWithdrawals()
     {
         return [[['iban_holder'=>''],'iban_holder'],[['iban_bank'=>''],'iban_bank'],[['iban_number'=>''],'iban_number'],
-            [['iban_number'=>'TR330006100519786457841327'],'iban_number'],[['iban_country'=>'AE'],'iban_country'],[['w_type'=>2],'w_type']];
+            [['iban_number'=>'TR330006100519786457841327'],'iban_number'],[['iban_country'=>'AE'],'iban_country'],[['w_type'=>2],'w_type'],
+            [['withdrawal_market'=>'SG'],'withdrawal_market'], [['withdrawal_market'=>null],'withdrawal_market'],
+            [['withdrawal_market'=>null,'iban_country'=>'SG'],'iban_country']];
     }
 
-    public function testSingaporeStillAllowsBlankBankDetailsAndStoresSgdEstimate()
+    public function testSingaporeWithdrawalIsRejectedWithoutReservingFunds()
     {
-        $record = app(WithdrawalService::class)->apply(Request::create('/', 'POST', ['withdrawal_market'=>'SG','iban_country'=>'SG','amount'=>'10','w_type'=>4]),$this->seller());
-        $this->assertSame('SGD',$record->iban_details['currency']);
-        $this->assertSame('12.80',$record->iban_details['estimated_amount']);
-        $this->assertSame('',$record->iban_details['holder']);
+        $seller = $this->seller();
+        try {
+            app(WithdrawalService::class)->apply(Request::create('/', 'POST', ['withdrawal_market'=>'SG','iban_country'=>'SG','amount'=>'10','w_type'=>4]),$seller);
+            $this->fail('Retired Singapore withdrawal accepted');
+        } catch (ValidationException $error) { $this->assertArrayHasKey('withdrawal_market', $error->errors()); }
+        $this->assertEquals(1000, $seller->fresh()->balance);
+        $this->assertDatabaseCount('seller_withdraw_requests', 0);
     }
 
-    public function testMissingTryRateBlocksTurkeyButLeavesSingaporeUsable()
+    public function testMissingTryRateBlocksBankingWithoutSingaporeFallback()
     {
         DB::table('currencies')->where('code','TRY')->delete();
         $this->getJson('/api/v2/exchange-rate?to=TRY')->assertStatus(503);
-        $this->getJson('/api/v2/exchange-rate')->assertOk()->assertJsonPath('data.rate','1.280000');
+        $this->getJson('/api/v2/exchange-rate')->assertStatus(503);
         $this->assertNull(app(ExchangeRate::class)->availableRates()['TRY']);
         $this->expectException(ValidationException::class);
         app(WithdrawalService::class)->apply($this->turkeyWithdrawal(),$this->seller());

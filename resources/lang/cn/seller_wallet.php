@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'account_details' => '查看账户明细',
     'history' => '钱包收支明细',
     'recharge_history' => '钱包充值记录',
     'recharge' => '充值',

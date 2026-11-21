@@ -92,15 +92,20 @@ class WalletService
     public function submit(Request $request, User $principal)
     {
         abort_unless(in_array($principal->user_type, ['customer', 'seller'], true) && !$principal->banned, 403);
+        // Reject the retired field even when empty; never fall back to a hidden USD amount.
+        if ($request->has('amount_sgd')) {
+            throw ValidationException::withMessages(['amount_sgd' => 'SGD recharge is not available.']);
+        }
         if ($request->input('recharge_method') === 'Crypto') {
             return $this->submitCrypto($request, $principal);
         }
         $rules = [
             'type' => 'nullable|integer|in:1', 'amount' => self::amountRules(),
             'trx_id' => 'required|string|max:200', 'photo' => 'nullable|integer',
+            'currency' => 'nullable|in:TRY',
         ];
         if ($principal->user_type === 'seller') {
-            $rules += [
+            $rules = array_merge($rules, [
                 'recharge_method' => 'required|in:Bank,IBAN',
                 'bank_name' => 'nullable|string|max:2000', 'account_holder' => 'nullable|string|max:2000',
                 'bank_account' => 'nullable|string|max:2000',
@@ -109,12 +114,10 @@ class WalletService
                 'iban_bic' => 'nullable|string|max:2000',
                 'request_token' => 'required_without:trx_id|nullable|uuid',
                 'amount_aed' => 'prohibited',
-                'amount_sgd' => ['nullable', 'numeric', 'regex:/^[0-9]{1,10}(\.[0-9]{1,2})?$/D', 'min:0.01'],
-                'currency' => 'required_with:amount_local|nullable|in:SGD,TRY',
+                'amount_sgd' => 'prohibited',
+                'currency' => 'required_with:amount_local|nullable|in:TRY',
                 'amount_local' => array_merge(['required_with:currency'], self::amountRules()),
-            ];
-            if ($request->has('amount_sgd')) $rules['amount_sgd'] = self::amountRules();
-            if ($request->has('currency') || $request->has('amount_local')) $rules['amount_sgd'] = 'prohibited';
+            ]);
             if (!$request->has('currency') && !$request->has('amount_local')) unset($rules['amount_local']);
             $rules['trx_id'] = 'nullable|string|max:200';
             if ($request->has('amount_sgd') || $request->has('amount_local') || $request->has('currency')) $rules['amount'] = 'exclude';
@@ -139,11 +142,11 @@ class WalletService
                 $details[] = 'Country: '.($data['iban_country'] ?? '');
                 $details[] = 'SWIFT / BIC: '.($data['iban_bic'] ?? '');
             }
-            if (isset($data['amount_sgd']) || isset($data['amount_local'])) {
+            if (isset($data['amount_local'])) {
                 // Compute from the configured rate, never the client's hidden USD estimate.
                 $rate = app(ExchangeRate::class);
-                $currency = isset($data['amount_local']) ? $data['currency'] : 'SGD';
-                $amountField = isset($data['amount_local']) ? 'amount_local' : 'amount_sgd';
+                $currency = $data['currency'];
+                $amountField = 'amount_local';
                 try {
                     $quote = $rate->rate($currency);
                     $data['amount'] = bcadd(bcdiv((string) $data[$amountField], $quote, 12), '0.005', 2);

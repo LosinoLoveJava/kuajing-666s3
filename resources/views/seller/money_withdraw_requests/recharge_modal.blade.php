@@ -17,15 +17,14 @@
         <div id="recharge-bank-fields">
         <div class="form-group">
             <label for="recharge-currency">{{ translate('Currency') }} <span class="text-danger">*</span></label>
-            <div class="d-flex align-items-center"><img id="recharge-fiat-logo" src="{{ static_asset('assets/img/currencies/sgd.svg') }}" width="28" height="28" class="mr-2" alt="SGD">
+            <div class="d-flex align-items-center"><img id="recharge-fiat-logo" src="{{ static_asset('assets/img/currencies/try.svg') }}" width="28" height="28" class="mr-2" alt="TRY">
             <select id="recharge-currency" name="currency" class="form-control aiz-selectpicker" required>
-                <option value="SGD" data-content="&lt;img src='{{ static_asset('assets/img/currencies/sgd.svg') }}' width='24' height='24' alt=''&gt; SGD — {{ translate('Singapore Dollar') }}" @if(!$rechargeRates['SGD']) disabled @endif>SGD — {{ translate('Singapore Dollar') }}</option>
                 <option value="TRY" data-content="&lt;img src='{{ static_asset('assets/img/currencies/try.svg') }}' width='24' height='24' alt=''&gt; TRY — {{ translate('Turkish Lira') }}" @if(!$rechargeRates['TRY']) disabled @endif>TRY — {{ translate('Turkish Lira') }}</option>
             </select>
             </div>
         </div>
         <div class="form-group">
-            <label for="recharge-amount">{{ translate('Amount') }} (<span id="recharge-currency-label">SGD</span>) <span class="text-danger">*</span></label>
+            <label for="recharge-amount">{{ translate('Amount') }} (<span id="recharge-currency-label">TRY</span>) <span class="text-danger">*</span></label>
             <input id="recharge-amount" class="form-control" dir="ltr" type="number" name="amount_local" min="0.01" max="9999999999.99" step="0.01" inputmode="decimal" placeholder="{{ translate('Please enter the amount') }}" required>
             <input type="hidden" name="amount" value="0.00">
             <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr"><span id="recharge-rate"></span></bdi></div>
@@ -81,7 +80,6 @@
             return;
         }
         var currency = form.elements.currency.value, rate = Number(rates[currency]);
-        form.querySelector('#recharge-fiat-logo').src = currency === 'TRY' ? @json(static_asset('assets/img/currencies/try.svg')) : @json(static_asset('assets/img/currencies/sgd.svg'));
         form.querySelector('#recharge-fiat-logo').alt = currency;
         form.querySelector('button[type="submit"]').disabled = !hasBank || !(rate > 0);
         form.querySelector('#recharge-currency-label').textContent = currency;
@@ -98,8 +96,8 @@
     form.elements.currency.addEventListener('change', updateAmount);
     form.addEventListener('submit', updateAmount);
     var previous = @json(old('wallet_form') === 'recharge' ? old() : []);
-    Object.keys(previous).forEach(function (name) { if (form.elements[name] && name !== '_token' && name !== 'crypto_asset') form.elements[name].value = previous[name]; });
-    if (!previous.currency && previous.amount_sgd) form.elements.amount_local.value = previous.amount_sgd;
+    if (previous.currency && previous.currency !== 'TRY') delete previous.amount_local;
+    Object.keys(previous).forEach(function (name) { if (form.elements[name] && name !== '_token' && name !== 'crypto_asset' && name !== 'currency') form.elements[name].value = previous[name]; });
     var firstAsset = form.querySelector('[name="crypto_asset"]:not(:disabled)');
     if (previous.crypto_asset) firstAsset = form.querySelector('[name="crypto_asset"][value="' + previous.crypto_asset + '"]:not(:disabled)') || firstAsset;
     if (firstAsset) firstAsset.checked = true;
