@@ -212,6 +212,11 @@
                                     <a href="{{route('sellers.edit', encrypt($shop->id))}}" class="dropdown-item">
                                         {{translate('Edit')}}
                                     </a>
+                                    @if(in_array(optional(Auth::user())->user_type, ['admin', 'staff'], true) && !Auth::user()->banned)
+                                    <a href="{{ route('sellers.balance_deduction', $shop->user_id) }}" class="dropdown-item text-danger seller-balance-deduction">
+                                        {{ __('seller_balance.title') }}
+                                    </a>
+                                    @endif
                                     @if($shop->user->banned != 1)
                                         <a href="#" onclick="confirm_ban('{{route('sellers.ban', $shop->id)}}');" class="dropdown-item">
                                         {{translate('Ban this seller')}}

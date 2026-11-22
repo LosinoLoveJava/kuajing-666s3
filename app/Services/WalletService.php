@@ -13,6 +13,8 @@ use Illuminate\Validation\ValidationException;
 
 class WalletService
 {
+    const ADMIN_DEBIT = 'Admin debit';
+
     public static function onlineMethods()
     {
         return collect(['paypal' => 'paypal_payment', 'stripe' => 'stripe_payment'])
@@ -299,5 +301,45 @@ class WalletService
     private function authorizeReviewer(Request $request)
     {
         abort_unless($request->user() && in_array($request->user()->user_type, ['admin', 'staff'], true), 403);
+    }
+
+    public function debitSeller(Request $request, $sellerId)
+    {
+        $this->authorizeReviewer($request);
+        abort_if($request->user()->banned, 403);
+        $data = $request->validate(['amount' => self::amountRules(), 'request_token' => 'required|uuid',
+            'remarks' => 'required|string|max:2000']);
+        return DB::transaction(function () use ($request, $sellerId, $data) {
+            $seller = User::where('user_type', 'seller')->lockForUpdate()->findOrFail($sellerId);
+            $key = hash('sha256', 'admin-debit|'.$request->user()->id.'|'.$data['request_token']);
+            if ($existing = Wallet::where('request_key', $key)->first()) {
+                abort_unless((int) $existing->user_id === (int) $seller->id
+                    && $existing->payment_method === self::ADMIN_DEBIT
+                    && bccomp((string) $existing->amount, bcsub('0', $data['amount'], 2), 2) === 0
+                    && $existing->remarks === $data['remarks'], 409, __('seller_balance.request_conflict'));
+                return $existing;
+            }
+            if (bccomp((string) $seller->balance, $data['amount'], 2) < 0) {
+                throw ValidationException::withMessages(['amount' => __('seller_balance.insufficient')]);
+            }
+            $before = bcadd((string) $seller->balance, '0', 2);
+            $after = bcsub($before, $data['amount'], 2);
+            $wallet = new Wallet;
+            $wallet->user_id = $seller->id;
+            $wallet->amount = bcsub('0', $data['amount'], 2);
+            $wallet->payment_method = self::ADMIN_DEBIT;
+            $wallet->payment_details = json_encode(['currency'=>'USD', 'balance_before'=>$before, 'balance_after'=>$after]);
+            $wallet->approval = 1;
+            $wallet->offline_payment = 0;
+            $wallet->type = 1;
+            $wallet->operator_id = $request->user()->id;
+            $wallet->remarks = $data['remarks'];
+            $wallet->request_key = $key;
+            $wallet->reviewed_at = now();
+            $wallet->save();
+            $seller->balance = $after;
+            $seller->save();
+            return $wallet;
+        }, 3);
     }
 }

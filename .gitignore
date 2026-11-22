@@ -2,6 +2,7 @@
 /tests/*
 !/tests/Feature/
 /tests/Feature/*
+!/tests/Feature/SellerBalanceDeductionTest.php
 !/tests/Feature/SellerDashboardPerformanceTest.php
 !/tests/Feature/ShopViewCounterTest.php
 !/tests/Feature/PortalSessionIsolationTest.php

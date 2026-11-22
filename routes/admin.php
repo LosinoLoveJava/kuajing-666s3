@@ -158,6 +158,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     });
 
     // Seller
+    Route::get('sellers/{id}/balance-deduction', [\App\Http\Controllers\SellerBalanceController::class, 'show'])->name('sellers.balance_deduction');
+    Route::post('sellers/{id}/balance-deduction', [\App\Http\Controllers\SellerBalanceController::class, 'store'])
+        ->middleware(\App\Http\Middleware\VerifyCsrfToken::class)->name('sellers.balance_deduction.store');
     Route::resource('sellers', SellerController::class);
     Route::controller(SellerController::class)->group(function () {
         Route::get('sellers_ban/{id}', 'ban')->name('sellers.ban');

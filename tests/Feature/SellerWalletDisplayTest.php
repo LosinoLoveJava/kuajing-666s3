@@ -115,6 +115,24 @@ class SellerWalletDisplayTest extends TestCase
         $this->assertStringContainsString('seller-wallet-page', $html);
     }
 
+    public function testDeductionIsShownAsExpenseAndExcludedFromRechargeHistory()
+    {
+        DB::table('wallets')->insert(['user_id'=>1, 'amount'=>-20.5, 'payment_method'=>\App\Services\WalletService::ADMIN_DEBIT,
+            'approval'=>1, 'created_at'=>'2026-11-22 10:00:00']);
+        DB::table('wallets')->insert(['user_id'=>2, 'amount'=>-99, 'payment_method'=>\App\Services\WalletService::ADMIN_DEBIT,
+            'approval'=>1, 'created_at'=>'2026-11-22 10:00:00']);
+        $this->request();
+        $view = app(SellerWithdrawRequestController::class)->index();
+        $this->assertSame(0, $view->getData()['rechargeList']->total());
+        $this->assertSame(1, $view->getData()['walletHistory']->total());
+        $this->assertSame('deduction', $view->getData()['walletHistory']->first()->source);
+        $html = $view->render();
+        $this->assertStringContainsString('Balance deduction', $html);
+        $this->assertStringContainsString('Admin deduction', $html);
+        $this->assertStringContainsString('-20.50', $html);
+        $this->assertStringContainsString('Completed', $html);
+    }
+
     public function testWithdrawalFormOnlyOffersTurkeyAndCrypto()
     {
         $this->request();

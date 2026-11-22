@@ -101,7 +101,7 @@ class AdminSellerListingTest extends TestCase
         $this->seller(1); $this->seller(2, ['pid' => null]);
         DB::table('products')->insert([['user_id' => 1], ['user_id' => 1], ['user_id' => 2]]);
         foreach ([[1, 100, 1, 'bank'], [1, 25, 1, null], [1, 900, 1, 'seller_order_reward'],
-            [1, 400, 0, 'bank'], [2, 700, 1, 'bank']] as $row) {
+            [1, 400, 0, 'bank'], [1, -15, 1, \App\Services\WalletService::ADMIN_DEBIT], [2, 700, 1, 'bank']] as $row) {
             DB::table('wallets')->insert(array_combine(['user_id', 'amount', 'approval', 'payment_method'], $row));
         }
         foreach ([[1, 20, 1], [1, 300, 0], [2, 100, 1]] as $row) {

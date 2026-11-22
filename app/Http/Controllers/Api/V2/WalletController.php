@@ -12,7 +12,9 @@ class WalletController extends Controller
     public function balance()
     {
         $user = User::find(auth()->user()->id);
-        $latest = Wallet::where('user_id', auth()->user()->id)->latest()->first();
+        $latest = Wallet::where('user_id', auth()->user()->id)->where(function ($query) {
+            $query->whereNull('payment_method')->orWhere('payment_method', '!=', \App\Services\WalletService::ADMIN_DEBIT);
+        })->latest()->first();
         return response()->json([
             'balance' => format_price($user->balance),
             'last_recharged' => $latest == null ? "Not Available" : $latest->created_at->diffForHumans(),
@@ -21,7 +23,9 @@ class WalletController extends Controller
 
     public function walletRechargeHistory()
     {
-        return new WalletCollection(Wallet::where('user_id', auth()->user()->id)->latest()->paginate(10));
+        return new WalletCollection(Wallet::where('user_id', auth()->user()->id)->where(function ($query) {
+            $query->whereNull('payment_method')->orWhere('payment_method', '!=', \App\Services\WalletService::ADMIN_DEBIT);
+        })->latest()->paginate(10));
     }
 
     public function processPayment(Request $request)

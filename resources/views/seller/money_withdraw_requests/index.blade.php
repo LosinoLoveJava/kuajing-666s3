@@ -122,10 +122,12 @@
                         <tr data-history-source="{{ $entry->source }}" data-history-id="{{ $entry->id }}">
                             <td>{{ $walletHistory->firstItem() + $key }}</td>
                             <td>{{ date('d-m-Y H:i', strtotime($entry->created_at)) }}</td>
-                            <td>{{ __('seller_wallet.'.$entry->source) }}</td>
+                            <td>{{ $entry->source === 'deduction' ? __('seller_balance.title') : __('seller_wallet.'.$entry->source) }}</td>
                             <td>{{ single_price($entry->amount) }}</td>
                             <td>
-                                @if ($entry->source === 'recharge')
+                                @if ($entry->source === 'deduction')
+                                    <span class="badge badge-inline badge-success">{{ __('seller_balance.completed') }}</span>
+                                @elseif ($entry->source === 'recharge')
                                     @include('partials.wallet_status', ['approval' => $entry->status])
                                 @elseif ((int) $entry->status === 1)
                                     <span class="badge badge-inline badge-success">{{ translate('Paid') }}</span>
@@ -138,6 +140,8 @@
                             <td>
                                 @if ($entry->source === 'withdrawal')
                                     {{ [1 => translate('Cash'), 2 => translate('Bank'), 3 => 'USDT', 4 => translate('Bank'), 5 => __('crypto_wallet.crypto')][(int) $entry->payment_method] ?? '' }}
+                                @elseif ($entry->source === 'deduction')
+                                    {{ __('seller_balance.admin_debit') }}
                                 @else
                                     {{ $entry->payment_method === 'IBAN' ? translate('Bank') : translate($entry->payment_method ?? '') }}
                                 @endif

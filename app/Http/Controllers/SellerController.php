@@ -116,7 +116,7 @@ class SellerController extends Controller
             // Only hydrate this page's accounts; catalogue and ledger rows stay in SQL.
             $query->withCount('products')->withSum(['wallets as recharge_total' => function ($wallets) {
                 $wallets->where('approval', 1)->where(function ($query) {
-                    $query->whereNull('payment_method')->orWhere('payment_method', '!=', 'seller_order_reward');
+                    $query->whereNull('payment_method')->orWhereNotIn('payment_method', ['seller_order_reward', \App\Services\WalletService::ADMIN_DEBIT]);
                 });
             }], 'amount')->withSum(['seller_withdraw_requests as withdrawal_total' => function ($withdrawals) {
                 $withdrawals->where('status', 1);

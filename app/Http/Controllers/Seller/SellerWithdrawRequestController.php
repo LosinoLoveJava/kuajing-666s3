@@ -39,7 +39,9 @@ class SellerWithdrawRequestController extends Controller
             ->paginate(9, ['*'], 'opage')
             ->withQueryString();
 
-        $rechargeList = Wallet::query()->where('user_id', $userId)->latest()->orderByDesc('id')->paginate(9, ['*'], 'rpage')
+        $rechargeList = Wallet::query()->where('user_id', $userId)->where(function ($query) {
+            $query->whereNull('payment_method')->orWhere('payment_method', '!=', \App\Services\WalletService::ADMIN_DEBIT);
+        })->latest()->orderByDesc('id')->paginate(9, ['*'], 'rpage')
             ->withQueryString();
         $shop = $user->shop;
         
@@ -52,7 +54,7 @@ class SellerWithdrawRequestController extends Controller
         // Keep source records distinct: a paid withdrawal can also have a payment receipt.
         $history = DB::table('wallets')->where('user_id', $userId)
             ->select('id', 'created_at', 'amount', 'payment_method')
-            ->selectRaw("'recharge' as source, approval as status")
+            ->selectRaw("CASE WHEN payment_method = ? THEN 'deduction' ELSE 'recharge' END as source, approval as status", [\App\Services\WalletService::ADMIN_DEBIT])
             ->unionAll(DB::table('seller_withdraw_requests')->where('user_id', $userId)
                 ->select('id', 'created_at', 'amount')->selectRaw("w_type as payment_method, 'withdrawal' as source, status"))
             ->unionAll(DB::table('payments')->where('seller_id', $userId)->where('t_type', 1)
