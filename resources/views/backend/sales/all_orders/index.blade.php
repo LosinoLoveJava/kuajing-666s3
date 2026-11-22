@@ -5,7 +5,7 @@
 <div class="card">
     <form class="" action="" id="sort_orders" method="GET">
         <div class="card-header row gutters-5">
-            <div class="col">
+            <div class="col-12 mb-2">
                 <h5 class="mb-md-0 h6">{{ translate('All Orders') }}</h5>
             </div>
 
@@ -52,7 +52,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-2 ml-auto">
+            <div class="col-lg-2 ml-auto mb-2 mb-lg-0">
                 <select class="form-control aiz-selectpicker" name="delivery_status" id="delivery_status">
                     <option value="">{{translate('Filter by Delivery Status')}}</option>
                     <option value="pending" @if ($delivery_status == 'pending') selected @endif>{{translate('Pending')}}</option>
@@ -63,12 +63,17 @@
                     <option value="cancelled" @if ($delivery_status == 'cancelled') selected @endif>{{translate('Cancel')}}</option>
                 </select>
             </div>
-            <div class="col-lg-2">
+            <div class="col-lg-2 mb-2 mb-lg-0">
                 <div class="form-group mb-0">
                     <input type="text" class="aiz-date-range form-control" value="{{ $date }}" name="date" placeholder="{{ translate('Filter by date') }}" data-format="DD-MM-Y" data-separator=" to " data-advanced-range="true" autocomplete="off">
                 </div>
             </div>
-            <div class="col-lg-2">
+            <div class="col-lg-2 mb-2 mb-lg-0">
+                <div class="form-group mb-0">
+                    <input type="text" class="form-control" id="shop_name" name="shop_name" value="{{ $shop_name }}" maxlength="255" placeholder="{{ translate('Shop Name') }}" aria-label="{{ translate('Shop Name') }}">
+                </div>
+            </div>
+            <div class="col-lg-2 mb-2 mb-lg-0">
                 <div class="form-group mb-0">
                     <input type="text" class="form-control" id="search" name="search"@isset($sort_search) value="{{ $sort_search }}" @endisset placeholder="{{ translate('Type Order code & hit Enter') }}">
                 </div>

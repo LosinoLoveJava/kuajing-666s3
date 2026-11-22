@@ -98,11 +98,18 @@ class OrderController extends Controller
     {
         CoreComponentRepository::instantiateShopRepository();
 
+        $request->validate(['shop_name' => 'nullable|string|max:255']);
+        $shop_name = trim($request->input('shop_name') ?? '');
         $date = $request->date;
         $sort_search = null;
         $delivery_status = null;
 
         $orders = Order::orderBy('id', 'desc');
+        if ($shop_name !== '') {
+            $orders->whereHas('shop', function ($query) use ($shop_name) {
+                $query->where('name', 'like', '%' . $shop_name . '%');
+            });
+        }
         if ($request->has('search')) {
             $sort_search = $request->search;
             $orders = $orders->where('code', 'like', '%' . $sort_search . '%');
@@ -115,7 +122,7 @@ class OrderController extends Controller
             $orders = $orders->where('created_at', '>=', date('Y-m-d', strtotime(explode(" to ", $date)[0])))->where('created_at', '<=', date('Y-m-d', strtotime(explode(" to ", $date)[1])));
         }
         $orders = $orders->paginate(15);
-        return view('backend.sales.all_orders.index', compact('orders', 'sort_search', 'delivery_status', 'date'));
+        return view('backend.sales.all_orders.index', compact('orders', 'shop_name', 'sort_search', 'delivery_status', 'date'));
     }
 
     // Storehouse Orders
