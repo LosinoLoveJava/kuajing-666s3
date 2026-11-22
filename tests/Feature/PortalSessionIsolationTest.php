@@ -32,6 +32,7 @@ class PortalSessionIsolationTest extends TestCase
         $this->withoutMiddleware([\App\Http\Middleware\Language::class, \App\Http\Middleware\HttpsProtocol::class,
             \App\Http\Middleware\CheckForMaintenanceMode::class]);
         Schema::create('users', function (Blueprint $t) {
+            $t->dateTime('last_login_at')->nullable();
             $t->increments('id'); $t->string('name'); $t->string('email'); $t->string('phone');
             $t->string('phone_normalized')->nullable(); $t->timestamp('phone_verified_at')->nullable();
             $t->timestamp('email_verified_at')->nullable(); $t->string('password'); $t->string('user_type');
@@ -174,6 +175,7 @@ class PortalSessionIsolationTest extends TestCase
         $this->signIn($base, 'customer');
         $adminCsrf = $this->browser('GET', $base.'/admin/__portal_identity')->json('csrf');
         $this->browser('POST', $base.'/admin/__portal_impersonate', ['role' => 'seller'])->assertRedirect();
+        $this->assertNull($this->accounts['seller']->fresh()->last_login_at);
         $this->browser('GET', $base.'/seller/__portal_identity')->assertJsonPath('id', $this->accounts['seller']->id);
         $this->browser('GET', $base.'/admin/__portal_identity')->assertJsonPath('id', $this->accounts['admin']->id)->assertJsonPath('csrf', $adminCsrf);
         $this->browser('GET', $base.'/__portal/identity?portal=customer')->assertJsonPath('id', $this->accounts['customer']->id);

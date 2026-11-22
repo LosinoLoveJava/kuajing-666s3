@@ -31,6 +31,7 @@ class AccountFeaturesTest extends TestCase
             'chuanx.appkey' => 'test-key', 'chuanx.appcode' => 'test-code', 'chuanx.appsecret' => 'test-secret']);
         DB::purge('sqlite');
         Schema::create('users', function (Blueprint $t) {
+            $t->dateTime('last_login_at')->nullable();
             $t->increments('id'); $t->string('name'); $t->string('email')->nullable();
             $t->string('phone')->nullable(); $t->string('password')->nullable();
             $t->string('user_type')->default('customer'); $t->boolean('banned')->default(false);
@@ -449,6 +450,49 @@ class AccountFeaturesTest extends TestCase
         $this->postJson('/api/v2/auth/phone/login',['phone'=>$user->phone,'code'=>'123456'])->assertOk()->assertJsonPath('user.type','seller');
         $this->postJson('/api/v2/auth/phone/login',['phone'=>$user->phone,'password'=>'password123'])->assertOk();
         $this->postJson('/api/v2/auth/phone/login',['phone'=>$user->phone,'code'=>'123456'])->assertStatus(422);
+    }
+
+    public function sellerLoginEndpoints()
+    {
+        return [['/login'], ['/users/phone'], ['/api/v2/auth/phone/login'], ['/api/v2/auth/login']];
+    }
+
+    /** @dataProvider sellerLoginEndpoints */
+    public function testSellerSuccessfulLoginRecordsTimeWithoutChangingRegistrationOrUpdatedTime($url)
+    {
+        $user = $this->user('seller'); $user->phone_verified_at = now(); $user->save();
+        $created = $user->getRawOriginal('created_at'); $updated = $user->getRawOriginal('updated_at');
+        $this->travelTo(\Carbon\Carbon::parse('2026-11-22 16:20:30'));
+        $response = $this->post($url, ['mode'=>'login', 'phone'=>$user->phone, 'password'=>'password123']);
+        if (strpos($url, '/api/') === 0) $response->assertOk(); else $response->assertRedirect();
+        $this->assertSame('2026-11-22 16:20:30', $user->fresh()->last_login_at);
+        $this->assertSame($created, $user->fresh()->getRawOriginal('created_at'));
+        $this->assertSame($updated, $user->fresh()->getRawOriginal('updated_at'));
+        $this->travelBack();
+    }
+
+    public function testFailedLoginAndPasswordResetDoNotChangeLastLoginTime()
+    {
+        $user = $this->user('seller'); $user->phone_verified_at = now();
+        $user->last_login_at = '2026-11-01 12:00:00'; $user->save();
+        $this->postJson('/api/v2/auth/phone/login', ['phone'=>$user->phone, 'password'=>'incorrect'])
+            ->assertStatus(422);
+        $this->assertSame('2026-11-01 12:00:00', $user->fresh()->last_login_at);
+        $this->postJson('/api/v2/auth/phone/reset-password', ['phone'=>$user->phone, 'code'=>'89001',
+            'password'=>'newpassword123', 'password_confirmation'=>'newpassword123'])->assertOk();
+        $this->assertSame('2026-11-01 12:00:00', $user->fresh()->last_login_at);
+    }
+
+    public function testVerificationCodeLoginRecordsSellerTime()
+    {
+        $user = $this->user('seller');
+        $this->travelTo(\Carbon\Carbon::parse('2026-11-22 16:30:00'));
+        $this->postJson('/api/v2/auth/phone/login', ['phone'=>$user->phone, 'code'=>'89001'])->assertOk();
+        $this->assertSame('2026-11-22 16:30:00', $user->fresh()->last_login_at);
+        $this->travel(60)->seconds();
+        $this->postJson('/api/v2/auth/phone/login', ['phone'=>$user->phone, 'password'=>'password123'])->assertOk();
+        $this->assertSame('2026-11-22 16:31:00', $user->fresh()->last_login_at);
+        $this->travelBack();
     }
 
     public function testPrivilegedAndBannedAccountsCannotUsePhoneLogin()

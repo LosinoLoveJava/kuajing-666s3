@@ -101,6 +101,12 @@ class PhoneAuth
             throw ValidationException::withMessages(['password' => translate('Invalid credentials or unverified phone.')]);
         }
         RateLimiter::clear($key);
+        if ($user->user_type === 'seller') {
+            // Record credential logins only; administrative impersonation uses PortalLogin directly.
+            $user->last_login_at = now();
+            \Illuminate\Support\Facades\DB::table('users')->where('id', $user->id)
+                ->update(['last_login_at' => $user->last_login_at]);
+        }
         return $user;
     }
 

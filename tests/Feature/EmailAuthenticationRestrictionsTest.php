@@ -27,6 +27,7 @@ class EmailAuthenticationRestrictionsTest extends TestCase
         Http::fake();
         Notification::fake();
         Schema::create('users', function (Blueprint $t) {
+            $t->dateTime('last_login_at')->nullable();
             $t->increments('id'); $t->string('name'); $t->string('email')->nullable();
             $t->string('phone')->nullable(); $t->string('phone_normalized')->nullable();
             $t->timestamp('phone_verified_at')->nullable(); $t->timestamp('email_verified_at')->nullable();

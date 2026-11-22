@@ -88,7 +88,7 @@
                     </th>
                     <th class="aiz-table-text">{{translate('Name')}}</th>
                     <th data-breakpoints="lg">{{translate('Phone')}}</th>
-                    <th data-breakpoints="lg" class="aiz-table-text">{{translate('Email Address')}}</th>
+                    <th data-breakpoints="lg" class="aiz-table-text">{{ __('seller_activity.registered_at') }}<br>{{ __('seller_activity.last_login_at') }}</th>
                     <th data-breakpoints="lg">{{translate('Verification Info')}}</th>
                     <th data-breakpoints="lg">{{translate('Approval')}}</th>
                     <th data-breakpoints="lg">{{ translate('Num. of Products') }}</th>
@@ -125,7 +125,10 @@
                         </td>
                         <td>@if($shop->user->banned == 1) <i class="fa fa-ban text-danger" aria-hidden="true"></i> @endif {{$shop->name}} @if($shop->user->is_virtual == 1) (<font color="red">{{translate('Virtual')}}</font>) @endif</td>
                         <td>{{$shop->user->phone}}</td>
-                        <td>{{$shop->user->email}}</td>
+                        <td class="seller-account-times">
+                            <div class="text-nowrap"><span class="text-muted">{{ __('seller_activity.registered_at') }}：</span>{{ $shop->user->created_at ? $shop->user->created_at->format('Y-m-d H:i:s') : '—' }}</div>
+                            <div class="text-nowrap"><span class="text-muted">{{ __('seller_activity.last_login_at') }}：</span>{{ $shop->user->last_login_at ?: __('seller_activity.no_record') }}</div>
+                        </td>
                         <td>
                             @if ($shop->verification_info != null)
                                 <a href="{{ route('sellers.show_verification_request', $shop->id) }}">

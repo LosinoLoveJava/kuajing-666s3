@@ -26,6 +26,9 @@ class AdminSellerListingTest extends TestCase
             $t->integer('pid')->nullable(); $t->boolean('is_virtual')->default(0); $t->boolean('banned')->default(0);
             $t->decimal('balance', 20, 2)->default(0); $t->timestamps();
         });
+        require_once database_path('migrations/2026_11_22_160000_add_seller_last_login_at.php');
+        (new \AddSellerLastLoginAt)->up();
+        (new \AddSellerLastLoginAt)->up();
         Schema::create('shops', function (Blueprint $t) {
             $t->increments('id'); $t->integer('user_id'); $t->string('name');
             $t->integer('verification_status')->default(0); $t->text('verification_info')->nullable();
@@ -94,6 +97,23 @@ class AdminSellerListingTest extends TestCase
         $this->assertStringContainsString('set_pid(1,999)', $html);
         $this->assertStringNotContainsString('<script>Sales</script>', $html);
         $this->assertEquals(0, $data['shops']->first()->user->products_count);
+    }
+
+    public function testAccountTimesReplaceEmailAndMissingLoginIsExplicit()
+    {
+        $this->seller(1, ['email'=>'hidden-seller@example.test', 'created_at'=>'2026-10-01 08:30:00',
+            'last_login_at'=>'2026-11-22 15:20:30']);
+        $this->seller(2);
+        foreach (['cn'=>['注册时间','最后登录时间','暂无记录'], 'en'=>['Registration time','Last login time','No record'],
+            'tr'=>['Kayıt zamanı','Son giriş zamanı','Kayıt yok']] as $locale=>$labels) {
+            app()->setLocale($locale);
+            $html = $this->listing()->render();
+            foreach ($labels as $label) $this->assertStringContainsString($label, $html);
+            $this->assertStringContainsString('2026-10-01 08:30:00', $html);
+            $this->assertStringContainsString('2026-11-22 15:20:30', $html);
+            $this->assertStringNotContainsString('hidden-seller@example.test', $html);
+            $this->assertStringNotContainsString('Email Address', $html);
+        }
     }
 
     public function testAggregatesKeepLedgerRulesWithoutHydratingCollections()
