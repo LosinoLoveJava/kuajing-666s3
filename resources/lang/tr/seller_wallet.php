@@ -1,5 +1,6 @@
 <?php
-return ['account_details' => 'Hesap bilgilerini görüntüle',
+return ['iban_hint' => 'IBAN isteğe bağlıdır. Bankanızın verdiği bilgiyi girin; başvurunuz manuel olarak incelenecektir.',
+'account_details' => 'Hesap bilgilerini görüntüle',
 'history' => 'Cüzdan İşlem Geçmişi',
 'recharge_history' => 'Cüzdan Yükleme Geçmişi',
 'recharge' => 'Bakiye Yükle',

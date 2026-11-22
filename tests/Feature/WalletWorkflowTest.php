@@ -122,6 +122,32 @@ class WalletWorkflowTest extends TestCase
         $this->assertEquals(100, $user->fresh()->balance);
     }
 
+    public function manualIbans()
+    {
+        return [['AE000', 'AE'], ['gb82 west 1234 5698 7654 32', 'GB'],
+            ['TR330006100519786457841327', 'TR'], ['自由填写 / bank-123', '中国'],
+            [str_repeat('A', 2000), 'SG'], ['', 'TR'], [null, 'TR']];
+    }
+
+    /** @dataProvider manualIbans */
+    public function testSellerRechargeAndWithdrawalPreserveFreeformIbanForManualReview($iban, $country)
+    {
+        $user = $this->user('seller');
+        $wallet = app(WalletService::class)->submit($this->request(array_merge($this->rechargeData('seller'),
+            ['recharge_method'=>'IBAN', 'iban_number'=>$iban, 'iban_country'=>$country])), $user);
+        $this->assertStringContainsString('IBAN: '.($iban ?? '').' | Country: '.$country, $wallet->payment_details);
+        $this->assertEquals(0, $wallet->approval);
+        $this->assertEquals(100, $user->fresh()->balance);
+
+        $withdrawal = app(WithdrawalService::class)->apply($this->request(array_merge($this->withdrawalData(),
+            ['withdrawal_market'=>'TR', 'iban_number'=>$iban, 'iban_country'=>$country])), $user);
+        $this->assertSame($iban ?? '', $withdrawal->iban_details['iban']);
+        $this->assertSame($country, $withdrawal->iban_details['country']);
+        $this->assertSame('TRY', $withdrawal->iban_details['currency']);
+        $this->assertEquals(0, $withdrawal->status);
+        $this->assertEquals(79.50, $user->fresh()->balance);
+    }
+
     private function assertConflict(callable $action)
     {
         try { $action(); $this->fail('A second review must be rejected.'); }

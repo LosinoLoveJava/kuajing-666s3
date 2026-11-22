@@ -71,7 +71,7 @@ class SellerRechargeFormTest extends TestCase
     {
         $this->post('/offline-wallet-recharge-modal', ['type' => 1])->assertOk()
             ->assertSee('name="recharge_method"', false)->assertSee('value="Crypto"', false)
-            ->assertSee('value="IBAN"', false)->assertSee('name="currency"', false)->assertSee('name="amount_local"', false)
+            ->assertSee('value="IBAN"', false)->assertSee('name="iban_number"', false)->assertSee('name="currency"', false)->assertSee('name="amount_local"', false)
             ->assertDontSee('value="SGD"', false)->assertSee('value="TRY"', false)
             ->assertSee('Test transfer instructions')->assertDontSee('name="amount_aed"', false)->assertDontSee('aiz-megabox')
             ->assertSee('USDT_TRC20')->assertSee('USDT_ERC20')->assertSee('currencies/btc.svg')->assertSee('currencies/trx.svg')

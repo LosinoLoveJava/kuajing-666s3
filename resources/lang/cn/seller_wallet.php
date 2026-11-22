@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'iban_hint' => 'IBAN 为选填，请按银行资料填写，提交后由人工审核。',
     'account_details' => '查看账户明细',
     'history' => '钱包收支明细',
     'recharge_history' => '钱包充值记录',

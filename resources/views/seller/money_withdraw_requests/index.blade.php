@@ -486,8 +486,9 @@
                             <div id="withdraw-country-panel">
                                 @include('partials.iban_form', ['fixedBank' => true, 'manualReview' => true, 'bankOnly' => true])
                                 <div class="form-group" id="turkey-iban-field" hidden>
-                                    <label for="withdraw-turkey-iban">IBAN <span class="text-danger">*</span></label>
-                                    <input id="withdraw-turkey-iban" class="form-control" dir="ltr" name="iban_number" value="{{ old('iban_number') }}" maxlength="64" placeholder="TR00 0000 0000 0000 0000 0000 00" autocomplete="off" disabled>
+                                    <label for="withdraw-turkey-iban">IBAN ({{ translate('Optional') }})</label>
+                                    <input id="withdraw-turkey-iban" class="form-control" dir="ltr" name="iban_number" value="{{ old('iban_number') }}" maxlength="2000" autocomplete="off" aria-describedby="withdraw-iban-hint" disabled>
+                                    <small id="withdraw-iban-hint" class="form-text text-muted">{{ __('seller_wallet.iban_hint') }}</small>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -587,23 +588,8 @@
                 form.elements.bank_account.disabled = true;
                 document.getElementById('turkey-iban-field').hidden = false;
                 form.elements.iban_number.disabled = crypto;
-                form.elements.iban_number.required = !crypto;
-                validateIban();
+                form.elements.iban_number.required = false;
             }
-            function validateIban() {
-                var input = form.elements.iban_number, iban = input.value.replace(/\s+/g, '').toUpperCase();
-                var valid = true;
-                if (!input.disabled && iban) {
-                    valid = /^TR[0-9]{24}$/.test(iban);
-                    if (valid) {
-                        var rearranged = iban.slice(4) + '2927' + iban.slice(2, 4), remainder = 0;
-                        for (var i = 0; i < rearranged.length; i++) remainder = (remainder * 10 + Number(rearranged[i])) % 97;
-                        valid = remainder === 1;
-                    }
-                }
-                input.setCustomValidity(valid ? '' : @json(translate('Invalid IBAN or account country.')));
-            }
-            form.elements.iban_number.addEventListener('input', validateIban);
             amount.addEventListener('input', updateAmount);
             var firstCrypto = form.querySelector('[name="crypto_asset"]:not(:disabled)');
             var oldAsset = @json(old('wallet_form') === 'withdraw' ? old('crypto_asset') : null);

@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'iban_hint' => 'IBAN is optional. Enter it as provided by your bank for manual review.',
     'account_details' => 'View account details',
     'history' => 'Wallet Transaction History',
     'recharge_history' => 'Wallet Recharge History',

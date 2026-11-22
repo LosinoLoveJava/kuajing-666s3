@@ -123,7 +123,7 @@ class TurkeyMarketTest extends TestCase
         $seller = $this->seller(); $service = app(WithdrawalService::class); $request = $this->turkeyWithdrawal();
         $withdrawal = $service->apply($request,$seller);
         $this->assertEquals(979.5, $seller->fresh()->balance);
-        $this->assertSame('TR330006100519786457841326', $withdrawal->iban_details['iban']);
+        $this->assertSame('TR33 0006 1005 1978 6457 8413 26', $withdrawal->iban_details['iban']);
         $this->assertSame('TRY', $withdrawal->iban_details['currency']);
         $this->assertSame('1035.25', $withdrawal->iban_details['estimated_amount']);
         $this->assertSame($withdrawal->id, $service->apply($request,$seller)->id);
@@ -139,7 +139,7 @@ class TurkeyMarketTest extends TestCase
     }
 
     /** @dataProvider invalidWithdrawals */
-    public function testTurkeyRequiresFullRecipientAndTurkishIban($overrides, $field)
+    public function testTurkeyRequiresRecipientAndEnabledMarket($overrides, $field)
     {
         $seller = $this->seller();
         try { app(WithdrawalService::class)->apply($this->turkeyWithdrawal($overrides),$seller); $this->fail('Invalid withdrawal accepted'); }
@@ -150,10 +150,9 @@ class TurkeyMarketTest extends TestCase
 
     public function invalidWithdrawals()
     {
-        return [[['iban_holder'=>''],'iban_holder'],[['iban_bank'=>''],'iban_bank'],[['iban_number'=>''],'iban_number'],
-            [['iban_number'=>'TR330006100519786457841327'],'iban_number'],[['iban_country'=>'AE'],'iban_country'],[['w_type'=>2],'w_type'],
+        return [[['iban_holder'=>''],'iban_holder'],[['iban_bank'=>''],'iban_bank'],[['w_type'=>2],'w_type'],
             [['withdrawal_market'=>'SG'],'withdrawal_market'], [['withdrawal_market'=>null],'withdrawal_market'],
-            [['withdrawal_market'=>null,'iban_country'=>'SG'],'iban_country']];
+            [['withdrawal_market'=>null,'iban_country'=>'SG'],'withdrawal_market']];
     }
 
     public function testSingaporeWithdrawalIsRejectedWithoutReservingFunds()

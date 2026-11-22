@@ -30,6 +30,11 @@
             <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr"><span id="recharge-rate"></span></bdi></div>
             <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="recharge-usd">0.00</span> USD</bdi></div>
         </div>
+        <div class="form-group">
+            <label for="recharge-iban">IBAN ({{ translate('Optional') }})</label>
+            <input id="recharge-iban" name="iban_number" class="form-control" dir="ltr" maxlength="2000" autocomplete="off" aria-describedby="recharge-iban-hint">
+            <small id="recharge-iban-hint" class="form-text text-muted">{{ __('seller_wallet.iban_hint') }}</small>
+        </div>
         @include('partials.wallet_bank_instructions')
         </div>
         <div id="recharge-crypto-fields" hidden>

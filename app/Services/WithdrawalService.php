@@ -86,7 +86,6 @@ class WithdrawalService
             foreach (['iban_country', 'iban_holder', 'iban_bank', 'bank_account', 'iban_number', 'iban_bic'] as $field) {
                 $rules[$field] = 'nullable|string|max:2000';
             }
-            $rules['iban_country'] .= '|not_in:SG,sg';
         }
         $crypto = (string) $request->input('w_type') === '5';
         if ($manualReview && (string) $request->input('w_type') === '4' && !$request->has('withdrawal_market')) {
@@ -97,10 +96,9 @@ class WithdrawalService
         if ($turkey) {
             $rules['withdrawal_market'] = 'required|in:TR';
             $rules['w_type'] = 'required|integer|in:4';
-            $rules['iban_country'] = 'required|in:TR';
             $rules['iban_holder'] = 'required|string|max:200';
             $rules['iban_bank'] = 'required|string|max:200';
-            $rules['iban_number'] = 'required|string|max:64';
+            if (!$manualReview) $rules['iban_country'] = 'required|in:TR';
         }
         $data = $request->validate($rules);
         $snapshot = null;
@@ -118,12 +116,12 @@ class WithdrawalService
                 'usd_price' => $asset['usd_price'], 'estimated_amount' => $quantity];
         }
         if ((int) $data['w_type'] === 4) {
-            if ((!$manualReview || $turkey) && !Iban::valid($data['iban_number'], $data['iban_country'])) {
+            if (!$manualReview && !Iban::valid($data['iban_number'], $data['iban_country'])) {
                 throw ValidationException::withMessages(['iban_number' => 'Invalid IBAN or account country.']);
             }
             $snapshot = [
                 'country' => $manualReview ? ($data['iban_country'] ?? '') : strtoupper($data['iban_country']), 'holder' => $data['iban_holder'] ?? '',
-                'bank' => $data['iban_bank'] ?? '', 'iban' => $manualReview && !$turkey ? ($data['iban_number'] ?? '') : Iban::normalize($data['iban_number']),
+                'bank' => $data['iban_bank'] ?? '', 'iban' => $manualReview ? ($data['iban_number'] ?? '') : Iban::normalize($data['iban_number']),
                 'account_number' => $data['bank_account'] ?? '', 'bic' => $manualReview ? ($data['iban_bic'] ?? '') : strtoupper($data['iban_bic'] ?? ''),
             ];
         }
