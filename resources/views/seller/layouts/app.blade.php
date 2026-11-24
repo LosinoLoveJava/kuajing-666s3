@@ -29,6 +29,7 @@
 	<link rel="stylesheet" href="{{ static_asset('assets/css/aiz-seller.css') }}">
     <link rel="stylesheet" href="{{ static_asset('assets/css/responsive-tables.css') }}">
     <link rel="stylesheet" href="{{ static_asset('assets/css/custom-style.css') }}">
+    <link rel="stylesheet" href="{{ static_asset('assets/css/seller-ui.css') }}">
 
     <style>
         body {
@@ -62,7 +63,7 @@
 	</script>
 
 </head>
-<body class="">
+<body class="seller-portal">
 
 	<div class="aiz-main-wrapper">
         @include('seller.inc.seller_sidenav')

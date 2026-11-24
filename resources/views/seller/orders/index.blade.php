@@ -1,7 +1,7 @@
 @extends('seller.layouts.app')
 
 @section('panel_content')
-    <div class="row gutters-10 justify-content-center">
+    <div class="row gutters-10 justify-content-center seller-order-summary">
         @php
             $count = DB::table('orders')->where('seller_id', Auth::user()->id)
                 ->count();
@@ -15,7 +15,7 @@
         <div class="col-md-4 mx-auto mb-3">
             <div class="bg-grad-1 text-white rounded-lg overflow-hidden">
                   <span class="size-30px rounded-circle mx-auto bg-soft-primary d-flex align-items-center justify-content-center mt-3">
-                      <i class="las la-upload la-2x" style="color: #007bff"></i>
+                      <i class="las la-shopping-bag la-2x" aria-hidden="true"></i>
                   </span>
                 <div class="px-3 pt-3 pb-3">
                     <div class="h4 fw-700 text-center">{{ $count }}</div>
@@ -26,7 +26,7 @@
         <div class="col-md-4 mx-auto mb-3">
             <div class="bg-grad-1 text-white rounded-lg overflow-hidden">
                   <span class="size-30px rounded-circle mx-auto bg-soft-primary d-flex align-items-center justify-content-center mt-3">
-                      <i class="las la-upload la-2x" style="color: #007bff"></i>
+                      <i class="las la-chart-line la-2x" aria-hidden="true"></i>
                   </span>
                 <div class="px-3 pt-3 pb-3">
                     <div class="h4 fw-700 text-center">{{ $total_turnover }}</div>
@@ -37,7 +37,7 @@
         <div class="col-md-4 mx-auto mb-3">
             <div class="bg-grad-1 text-white rounded-lg overflow-hidden">
                   <span class="size-30px rounded-circle mx-auto bg-soft-primary d-flex align-items-center justify-content-center mt-3">
-                      <i class="las la-upload la-2x" style="color: #007bff"></i>
+                      <i class="las la-coins la-2x" aria-hidden="true"></i>
                   </span>
                 <div class="px-3 pt-3 pb-3">
                     <div class="h4 fw-700 text-center">{{ $total_profit }}</div>
@@ -47,22 +47,24 @@
         </div>
     </div>
 
-    <div class="card">
+    <div class="card seller-orders-card">
         <form id="sort_orders" action="" method="GET">
-          <div class="card-header row gutters-5">
-            <div class="col text-center text-md-left">
-              <h5 class="mb-md-0 h6">{{ translate('Orders') }}</h5>
+          <div class="card-header seller-order-filters">
+            <div class="seller-orders-heading">
+              <h5 class="mb-0 h6">{{ translate('Orders') }}</h5>
             </div>
-              <div class="col-md-3 ml-auto">
-                  <select class="form-control aiz-selectpicker" data-placeholder="{{ translate('Filter by Payment Status')}}" name="payment_status" onchange="sort_orders()">
+              <div>
+                  <label for="order-payment-status">{{ translate('Payment Status') }}</label>
+                  <select id="order-payment-status" class="form-control aiz-selectpicker" data-placeholder="{{ translate('Filter by Payment Status')}}" name="payment_status" onchange="sort_orders()">
                       <option value="">{{ translate('Filter by Payment Status')}}</option>
                       <option value="paid" @isset($payment_status) @if($payment_status == 'paid') selected @endif @endisset>{{ translate('Paid')}}</option>
                       <option value="unpaid" @isset($payment_status) @if($payment_status == 'unpaid') selected @endif @endisset>{{ translate('Un-Paid')}}</option>
                   </select>
               </div>
 
-              <div class="col-md-3 ml-auto">
-                <select class="form-control aiz-selectpicker" data-placeholder="{{ translate('Filter by Payment Status')}}" name="delivery_status" onchange="sort_orders()">
+              <div>
+                <label for="order-delivery-status">{{ translate('Delivery Status') }}</label>
+                <select id="order-delivery-status" class="form-control aiz-selectpicker" data-placeholder="{{ translate('Filter by Deliver Status')}}" name="delivery_status" onchange="sort_orders()">
                     <option value="">{{ translate('Filter by Deliver Status')}}</option>
                     <option value="pending" @isset($delivery_status) @if($delivery_status == 'pending') selected @endif @endisset>{{ translate('Pending')}}</option>
                     <option value="confirmed" @isset($delivery_status) @if($delivery_status == 'confirmed') selected @endif @endisset>{{ translate('Confirmed')}}</option>
@@ -70,9 +72,15 @@
                     <option value="delivered" @isset($delivery_status) @if($delivery_status == 'delivered') selected @endif @endisset>{{ translate('Delivered')}}</option>
                 </select>
               </div>
-              <div class="col-md-3">
+              <div class="seller-order-search">
                 <div class="from-group mb-0">
-                    <input type="text" class="form-control" id="search" name="search" @isset($sort_search) value="{{ $sort_search }}" @endisset placeholder="{{ translate('Type Order code & hit Enter') }}">
+                    <label for="search">{{ translate('Order Code') }}</label>
+                    <div class="input-group">
+                        <input type="search" class="form-control" id="search" name="search" @isset($sort_search) value="{{ $sort_search }}" @endisset placeholder="{{ translate('Order Code') }}">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-primary" aria-label="{{ translate('Search') }}"><i class="las la-search" aria-hidden="true"></i></button>
+                        </div>
+                    </div>
                 </div>
               </div>
           </div>
@@ -80,19 +88,20 @@
 
         @if (count($orders) > 0)
             <div class="card-body p-3">
-                <table class="table aiz-table mb-0">
+                <table class="table aiz-table mb-0 seller-orders-table">
                     <thead>
                         <tr>
-                            <th>#</th>
-                            <th>{{ translate('Order Code')}}</th>
+                            <th data-breakpoints="" data-priority="1" class="seller-order-actions">{{ translate('Options')}}</th>
+                            <th data-breakpoints="sm">#</th>
+                            <th data-breakpoints="" data-priority="2">{{ translate('Order Code')}}</th>
                             <th data-breakpoints="lg">{{ translate('Num. of Products')}}</th>
                             <th data-breakpoints="lg">{{ translate('Customer')}}</th>
                             <th data-breakpoints="md">{{ translate('Amount')}}</th>
                             <th data-breakpoints="md">{{ translate('Profit')}}</th>
                             <th data-breakpoints="md">{{ translate('Purchase Status') }}</th>
                             <th data-breakpoints="lg">{{ translate('Delivery Status')}}</th>
-                            <th>{{ translate('Payment Status')}}</th>
-                            <th class="text-right">{{ translate('Options')}}</th>
+                            <th data-breakpoints="sm">{{ translate('Payment Status')}}</th>
+                            <th data-breakpoints="md">{{ translate('Download Invoice') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -102,11 +111,17 @@
                             @endphp
                             @if($order != null)
                                 <tr>
+                                    <td class="seller-order-actions">
+                                        <a href="{{ route('seller.orders.show', encrypt($order->id)) }}" class="btn seller-order-view" title="{{ translate('Order Details') }}">
+                                            <i class="las la-eye" aria-hidden="true"></i>
+                                            <span>{{ translate('Order Details') }}</span>
+                                        </a>
+                                    </td>
                                     <td>
                                         {{ $key+1 }}
                                     </td>
                                     <td>
-                                        <a href="#{{ $order->code }}" onclick="show_order_details({{ $order->id }})">{{ $order->code }}</a>
+                                        <a class="seller-order-code" href="{{ route('seller.orders.show', encrypt($order->id)) }}">{{ $order->code }}</a>
                                     </td>
                                     <td>
                                         {{ count($order->orderDetails->where('seller_id', Auth::user()->id)) }}
@@ -150,12 +165,9 @@
                                             <span class="badge badge-inline badge-danger">{{ translate('Unpaid')}}</span>
                                         @endif
                                     </td>
-                                    <td class="text-right">
-                                        <a href="{{ route('seller.orders.show', encrypt($order->id)) }}" class="btn btn-soft-info btn-icon btn-circle btn-sm" title="{{ translate('Order Details') }}">
-                                            <i class="las la-eye"></i>
-                                        </a>
-                                        <a href="{{ route('seller.invoice.download', $order->id) }}" class="btn btn-soft-warning btn-icon btn-circle btn-sm" title="{{ translate('Download Invoice') }}">
-                                            <i class="las la-download"></i>
+                                    <td>
+                                        <a href="{{ route('seller.invoice.download', $order->id) }}" class="btn seller-order-invoice" title="{{ translate('Download Invoice') }}" aria-label="{{ translate('Download Invoice') }}">
+                                            <i class="las la-download" aria-hidden="true"></i>
                                         </a>
                                     </td>
                                 </tr>

@@ -48,7 +48,7 @@ class WalletWorkflowTest extends TestCase
     private function withdrawalData($method = 4)
     {
         return ['amount' => '20.50', 'w_type' => $method, 'request_token' => (string) Str::uuid(),
-            'iban_country' => 'TR', 'iban_holder' => 'Test Holder', 'iban_bank' => 'Test bank',
+            'withdrawal_market' => $method === 4 ? 'MY' : null, 'iban_country' => 'MY', 'iban_holder' => 'Test Holder', 'iban_bank' => 'Test bank',
             'iban_number' => 'TR330006100519786457841326', 'bank_account' => '123456'];
     }
 
@@ -75,20 +75,20 @@ class WalletWorkflowTest extends TestCase
         $this->assertStringContainsString('Country: 中国', $wallet->payment_details);
         $withdrawal = app(WithdrawalService::class)->apply($this->request(array_merge($this->withdrawalData(),
             ['iban_bic'=>$input])), $user);
-        $this->assertSame($expected, $withdrawal->iban_details['bic']);
-        $this->assertSame('TR330006100519786457841326', $withdrawal->iban_details['iban']);
-        $this->assertSame('TR', $withdrawal->iban_details['country']);
+        $this->assertArrayNotHasKey('bic', $withdrawal->iban_details);
+        $this->assertSame('123456', $withdrawal->iban_details['account_number']);
+        $this->assertSame('MY', $withdrawal->iban_details['country']);
         $this->assertEquals(0, $withdrawal->status);
         $this->assertEquals(79.50, $user->fresh()->balance);
         $this->assertDatabaseCount('wallets', 1);
         $this->assertDatabaseCount('seller_withdraw_requests', 1);
     }
 
-    public function testSellerCanOmitRechargeBankDetailsAndReferenceWithoutDuplicateCredit()
+    public function testSellerCanOmitRechargeReferenceWithoutDuplicateCredit()
     {
         $user = $this->user('seller'); $admin = $this->user('admin');
         $service = app(WalletService::class);
-        $data = ['currency'=>'TRY', 'amount_local'=>'5052.02', 'recharge_method'=>'IBAN', 'request_token'=>(string) Str::uuid()];
+        $data = ['bank_name'=>'Test Bank', 'account_holder'=>'Test Holder', 'bank_account'=>'123456', 'currency'=>'MYR', 'amount_local'=>'417.17', 'recharge_method'=>'IBAN', 'request_token'=>(string) Str::uuid()];
         $wallet = $service->submit($this->request($data), $user);
         $this->assertEquals(100.04, $wallet->amount);
         $this->assertEquals(100, $user->fresh()->balance);
@@ -100,16 +100,16 @@ class WalletWorkflowTest extends TestCase
         $this->assertDatabaseCount('wallets', 1);
 
         $withdrawal = app(WithdrawalService::class)->apply($this->request($this->withdrawalData()), $user);
-        $this->assertSame('', $withdrawal->iban_details['bic']);
-        $this->assertSame('TR330006100519786457841326', $withdrawal->iban_details['iban']);
+        $this->assertArrayNotHasKey('bic', $withdrawal->iban_details);
+        $this->assertSame('123456', $withdrawal->iban_details['account_number']);
         $this->assertEquals(179.54, $user->fresh()->balance);
         $this->assertEquals(0, $withdrawal->status);
     }
 
-    public function testBuyerBankFormatChecksRemainInPlace()
+    public function testBuyerMalaysianBankDetailsRemainRequired()
     {
         $user = $this->user('customer');
-        foreach ([['iban_number'=>'123'], ['iban_bic'=>'123'], ['iban_holder'=>'']] as $change) {
+        foreach ([['bank_account'=>''], ['iban_bank'=>''], ['iban_holder'=>'']] as $change) {
             try {
                 app(WithdrawalService::class)->apply($this->request(array_merge($this->withdrawalData(), $change)), $user);
                 $this->fail('Buyer validation was removed');
@@ -130,7 +130,7 @@ class WalletWorkflowTest extends TestCase
     }
 
     /** @dataProvider manualIbans */
-    public function testSellerRechargeAndWithdrawalPreserveFreeformIbanForManualReview($iban, $country)
+    public function testLegacyRechargeDetailsDoNotReplaceMalaysianWithdrawalAccount($iban, $country)
     {
         $user = $this->user('seller');
         $wallet = app(WalletService::class)->submit($this->request(array_merge($this->rechargeData('seller'),
@@ -140,10 +140,11 @@ class WalletWorkflowTest extends TestCase
         $this->assertEquals(100, $user->fresh()->balance);
 
         $withdrawal = app(WithdrawalService::class)->apply($this->request(array_merge($this->withdrawalData(),
-            ['withdrawal_market'=>'TR', 'iban_number'=>$iban, 'iban_country'=>$country])), $user);
-        $this->assertSame($iban ?? '', $withdrawal->iban_details['iban']);
-        $this->assertSame($country, $withdrawal->iban_details['country']);
-        $this->assertSame('TRY', $withdrawal->iban_details['currency']);
+            ['withdrawal_market'=>'MY', 'iban_number'=>$iban, 'iban_country'=>'MY'])), $user);
+        $this->assertArrayNotHasKey('iban', $withdrawal->iban_details);
+        $this->assertSame('123456', $withdrawal->iban_details['account_number']);
+        $this->assertSame('MY', $withdrawal->iban_details['country']);
+        $this->assertSame('MYR', $withdrawal->iban_details['currency']);
         $this->assertEquals(0, $withdrawal->status);
         $this->assertEquals(79.50, $user->fresh()->balance);
     }
@@ -186,13 +187,13 @@ class WalletWorkflowTest extends TestCase
         $this->assertConflict(function () use ($service, $admin, $wallet) { $service->review($this->request(['id' => $wallet->id, 'status' => 1], $admin)); });
     }
 
-    public function testSellerTryConversionIgnoresTamperedHiddenUsd()
+    public function testSellerMyrConversionIgnoresTamperedHiddenUsd()
     {
         $user = $this->user('seller');
-        $data = array_merge($this->rechargeData('seller'), ['currency' => 'TRY', 'amount_local' => '5050.00', 'amount' => 'not-a-number']);
+        $data = array_merge($this->rechargeData('seller'), ['currency' => 'MYR', 'amount_local' => '417.00', 'amount' => 'not-a-number']);
         $wallet = app(WalletService::class)->submit($this->request($data), $user);
         $this->assertEquals(100, $wallet->amount);
-        $this->assertStringContainsString('TRY: 5050.00', $wallet->payment_details);
+        $this->assertStringContainsString('MYR: 417.00', $wallet->payment_details);
         $this->assertEquals(100, $user->fresh()->balance);
     }
 
@@ -273,7 +274,7 @@ class WalletWorkflowTest extends TestCase
         foreach (['recharge', 'withdrawal'] as $kind) {
             try {
                 if ($kind === 'recharge') app(WalletService::class)->submit($this->request([
-                    'recharge_method'=>'IBAN', 'request_token'=>(string) Str::uuid(), 'currency'=>'TRY', 'amount_local'=>$amount, 'amount'=>'100.00']), $user);
+                    'recharge_method'=>'IBAN', 'request_token'=>(string) Str::uuid(), 'currency'=>'MYR', 'amount_local'=>$amount, 'amount'=>'100.00']), $user);
                 else app(WithdrawalService::class)->apply($this->request(['w_type'=>4, 'amount'=>$amount]), $user);
                 $this->fail('Invalid seller amount accepted');
             } catch (ValidationException $e) {
@@ -285,14 +286,14 @@ class WalletWorkflowTest extends TestCase
         $this->assertEquals(100, $user->fresh()->balance);
     }
 
-    public function tryAmounts() { return [['0.26','0.01'], ['0.76','0.02'], ['50.5','1.00'], ['5052.02','100.04'], ['9999999999.99','198019801.98']]; }
+    public function myrAmounts() { return [['0.03','0.01'], ['0.07','0.02'], ['4.17','1.00'], ['417.17','100.04'], ['9999999999.99','2398081534.77']]; }
 
-    /** @dataProvider tryAmounts */
-    public function testTryRechargeUsesPreciseServerSideRounding($local, $usd)
+    /** @dataProvider myrAmounts */
+    public function testMyrRechargeUsesPreciseServerSideRounding($local, $usd)
     {
         $user = $this->user('seller');
         $wallet = app(WalletService::class)->submit($this->request([
-            'currency'=>'TRY', 'amount_local'=>$local, 'recharge_method'=>'IBAN', 'request_token'=>(string) Str::uuid()]), $user);
+            'bank_name'=>'Test Bank', 'account_holder'=>'Test Holder', 'bank_account'=>'123456', 'currency'=>'MYR', 'amount_local'=>$local, 'recharge_method'=>'IBAN', 'request_token'=>(string) Str::uuid()]), $user);
         $this->assertSame($usd, number_format((float) $wallet->amount, 2, '.', ''));
         $this->assertEquals(100, $user->fresh()->balance);
     }
@@ -301,7 +302,7 @@ class WalletWorkflowTest extends TestCase
     {
         $user = $this->user('seller');
         try {
-            app(WalletService::class)->submit($this->request(['currency'=>'TRY', 'amount_local'=>'5050.00', 'recharge_method'=>'IBAN']), $user);
+            app(WalletService::class)->submit($this->request(['bank_name'=>'Test Bank', 'account_holder'=>'Test Holder', 'bank_account'=>'123456', 'currency'=>'MYR', 'amount_local'=>'417.00', 'recharge_method'=>'IBAN']), $user);
             $this->fail('Missing duplicate protection accepted');
         } catch (ValidationException $e) { $this->assertArrayHasKey('request_token', $e->errors()); }
         try {

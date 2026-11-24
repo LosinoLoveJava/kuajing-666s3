@@ -22,7 +22,7 @@
 !/tests/Feature/SellerWalletDisplayTest.php
 !/tests/Feature/SellerOrderDeliveryPermissionTest.php
 !/tests/Feature/WalletWorkflowTest.php
-!/tests/Feature/TurkeyMarketTest.php
+!/tests/Feature/MalaysiaMarketTest.php
 !/tests/Feature/TurkishFrontendTest.php
 !/tests/Concerns/
 !/tests/Concerns/InteractsWithPortalSessions.php

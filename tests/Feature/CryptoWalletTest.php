@@ -78,7 +78,7 @@ class CryptoWalletTest extends TestCase
     {
         $user = $this->user();
         $request = $this->request(['w_type' => 5, 'amount' => '20.50', 'crypto_asset' => $code,
-            'crypto_address' => $address, 'withdrawal_market' => 'TR', 'request_token' => (string) Str::uuid()]);
+            'crypto_address' => $address, 'withdrawal_market' => 'MY', 'request_token' => (string) Str::uuid()]);
         $withdrawal = app(WithdrawalService::class)->apply($request, $user);
         $this->assertSame(0, bccomp('79.50', (string) $user->fresh()->balance, 2));
         $this->assertSame($address, $withdrawal->iban_details['address']);

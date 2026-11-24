@@ -77,7 +77,7 @@ class WithdrawalService
             'bank_account' => 'required_if:w_type,2|nullable|string|max:100',
             'iban_number' => 'required_if:w_type,4|nullable|string|max:64',
             'iban_bic' => ['nullable', 'string', 'regex:/^[a-zA-Z]{6}[a-zA-Z0-9]{2}([a-zA-Z0-9]{3})?$/D'],
-            'withdrawal_market' => 'nullable|in:TR',
+            'withdrawal_market' => 'nullable|in:MY',
             'crypto_asset' => 'required_if:w_type,5|nullable|string|in:'.implode(',', array_keys(CryptoWallet::catalog())),
             'crypto_address' => 'required_if:w_type,5|nullable|string|max:128',
         ];
@@ -89,16 +89,20 @@ class WithdrawalService
         }
         $crypto = (string) $request->input('w_type') === '5';
         if ($manualReview && (string) $request->input('w_type') === '4' && !$request->has('withdrawal_market')) {
-            $request->merge(['withdrawal_market' => 'TR']);
+            $request->merge(['withdrawal_market' => 'MY']);
         }
-        $turkey = !$crypto && ($request->input('withdrawal_market') === 'TR'
+        $malaysia = !$crypto && ($request->input('withdrawal_market') === 'MY'
             || ($manualReview && (string) $request->input('w_type') === '4'));
-        if ($turkey) {
-            $rules['withdrawal_market'] = 'required|in:TR';
+        if ($malaysia) {
+            $rules['withdrawal_market'] = 'required|in:MY';
             $rules['w_type'] = 'required|integer|in:4';
             $rules['iban_holder'] = 'required|string|max:200';
             $rules['iban_bank'] = 'required|string|max:200';
-            if (!$manualReview) $rules['iban_country'] = 'required|in:TR';
+            $rules['bank_account'] = 'required|string|max:100';
+            $rules['iban_number'] = 'exclude';
+            $rules['iban_bic'] = 'exclude';
+            $rules['iban_country'] = 'required|in:MY';
+            if (!$request->has('iban_country')) $request->merge(['iban_country' => 'MY']);
         }
         $data = $request->validate($rules);
         $snapshot = null;
@@ -116,17 +120,20 @@ class WithdrawalService
                 'usd_price' => $asset['usd_price'], 'estimated_amount' => $quantity];
         }
         if ((int) $data['w_type'] === 4) {
-            if (!$manualReview && !Iban::valid($data['iban_number'], $data['iban_country'])) {
+            if (!$malaysia && !$manualReview && !Iban::valid($data['iban_number'], $data['iban_country'])) {
                 throw ValidationException::withMessages(['iban_number' => 'Invalid IBAN or account country.']);
             }
-            $snapshot = [
+            $snapshot = $malaysia ? [
+                'method' => 'Bank', 'country' => 'MY', 'holder' => $data['iban_holder'],
+                'bank' => $data['iban_bank'], 'account_number' => $data['bank_account'],
+            ] : [
                 'country' => $manualReview ? ($data['iban_country'] ?? '') : strtoupper($data['iban_country']), 'holder' => $data['iban_holder'] ?? '',
                 'bank' => $data['iban_bank'] ?? '', 'iban' => $manualReview ? ($data['iban_number'] ?? '') : Iban::normalize($data['iban_number']),
                 'account_number' => $data['bank_account'] ?? '', 'bic' => $manualReview ? ($data['iban_bic'] ?? '') : strtoupper($data['iban_bic'] ?? ''),
             ];
         }
         if (!$crypto && !empty($data['withdrawal_market']) && $snapshot !== null) {
-            $currency = 'TRY';
+            $currency = 'MYR';
             try {
                 $rates = app(ExchangeRate::class);
                 $quote = $rates->rate($currency);

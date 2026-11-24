@@ -104,20 +104,20 @@ class WalletService
         $rules = [
             'type' => 'nullable|integer|in:1', 'amount' => self::amountRules(),
             'trx_id' => 'required|string|max:200', 'photo' => 'nullable|integer',
-            'currency' => 'nullable|in:TRY',
+            'currency' => 'nullable|in:MYR',
         ];
         if ($principal->user_type === 'seller') {
             $rules = array_merge($rules, [
                 'recharge_method' => 'required|in:Bank,IBAN',
-                'bank_name' => 'nullable|string|max:2000', 'account_holder' => 'nullable|string|max:2000',
-                'bank_account' => 'nullable|string|max:2000',
+                'bank_name' => 'required|string|max:200', 'account_holder' => 'required|string|max:200',
+                'bank_account' => 'required|string|max:100',
                 'iban_country' => 'nullable|string|max:2000',
                 'iban_number' => 'nullable|string|max:2000',
                 'iban_bic' => 'nullable|string|max:2000',
                 'request_token' => 'required_without:trx_id|nullable|uuid',
                 'amount_aed' => 'prohibited',
                 'amount_sgd' => 'prohibited',
-                'currency' => 'required_with:amount_local|nullable|in:TRY',
+                'currency' => 'required_with:amount_local|nullable|in:MYR',
                 'amount_local' => array_merge(['required_with:currency'], self::amountRules()),
             ]);
             if (!$request->has('currency') && !$request->has('amount_local')) unset($rules['amount_local']);

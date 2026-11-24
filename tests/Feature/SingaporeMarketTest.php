@@ -27,7 +27,7 @@ class SingaporeMarketTest extends TestCase
         $this->createWalletDatabase();
         Schema::table('currencies', function (Blueprint $t) { $t->string('name')->default(''); $t->string('symbol')->default(''); $t->integer('status')->default(0); });
         Schema::create('countries', function (Blueprint $t) { $t->increments('id'); $t->string('code'); $t->string('name'); $t->integer('status'); });
-        DB::table('countries')->insert([['code'=>'SG','name'=>'Singapore','status'=>1], ['code'=>'AE','name'=>'UAE','status'=>1], ['code'=>'TR','name'=>'Turkey','status'=>1]]);
+        DB::table('countries')->insert([['code'=>'SG','name'=>'Singapore','status'=>1], ['code'=>'AE','name'=>'UAE','status'=>1], ['code'=>'MY','name'=>'Malaysia','status'=>1]]);
     }
 
     public function testMigrationIsIdempotentAndKeepsExistingUsdAndOtherCurrencies()
@@ -43,7 +43,7 @@ class SingaporeMarketTest extends TestCase
         $this->assertEquals(7.345, DB::table('currencies')->where('code','AED')->value('exchange_rate'));
         $this->assertEquals(1, DB::table('countries')->where('code','SG')->value('status'));
         $this->assertSame(1, DB::table('currencies')->where('code','SGD')->count());
-        $this->assertSame(['TRY'], array_keys(app(ExchangeRate::class)->availableRates()));
+        $this->assertSame(['MYR'], array_keys(app(ExchangeRate::class)->availableRates()));
     }
 
     public function testMigrationCreatesMissingSingaporeConfiguration()
@@ -53,12 +53,12 @@ class SingaporeMarketTest extends TestCase
         require_once database_path('migrations/2026_11_09_100000_configure_singapore_market.php');
         (new \ConfigureSingaporeMarket)->up();
         $this->assertEquals(50.5, DB::table('currencies')->where('code','TRY')->value('exchange_rate'));
-        $this->assertSame(['TR'], array_column(app(PhoneNumber::class)->countries(), 'country'));
+        $this->assertSame(['MY'], array_column(app(PhoneNumber::class)->countries(), 'country'));
     }
 
     public function testPublicRateRejectsOldCurrencyParameters()
     {
-        $this->getJson('/api/v2/exchange-rate')->assertOk()->assertJsonPath('data.rate','50.500000')->assertJsonPath('data.to','TRY');
+        $this->getJson('/api/v2/exchange-rate')->assertOk()->assertJsonPath('data.rate','4.170000')->assertJsonPath('data.to','MYR');
         $this->getJson('/api/v2/exchange-rate?to=AED')->assertStatus(422);
         $this->getJson('/api/v2/exchange-rate?to=SGD')->assertStatus(422);
     }
@@ -71,7 +71,7 @@ class SingaporeMarketTest extends TestCase
                 catch (ValidationException $error) { $this->assertArrayHasKey('phone', $error->errors()); }
             }
         }
-        $this->getJson('/api/v2/auth/phone/countries')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.country', 'TR');
+        $this->getJson('/api/v2/auth/phone/countries')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.country', 'MY');
         $this->postJson('/api/v2/auth/phone/send-code', ['phone'=>'+6581234567', 'country'=>'SG', 'purpose'=>'register'])
             ->assertStatus(422)->assertJsonValidationErrors('phone');
         // Existing staff authentication is independent of the public country selector.

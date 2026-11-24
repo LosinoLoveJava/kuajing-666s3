@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
-class TurkeyMarketTest extends TestCase
+class MalaysiaMarketTest extends TestCase
 {
     use \Tests\Concerns\WalletDatabase;
 
@@ -27,8 +27,8 @@ class TurkeyMarketTest extends TestCase
         Schema::table('currencies', function (Blueprint $t) { $t->string('name')->default(''); $t->string('symbol')->default(''); $t->integer('status')->default(1); });
         Schema::create('countries', function (Blueprint $t) { $t->increments('id'); $t->string('code'); $t->string('name'); $t->integer('status'); });
         DB::table('countries')->insert(['code'=>'SG','name'=>'Singapore','status'=>1]);
-        require_once database_path('migrations/2026_11_16_100000_add_turkey_market.php');
-        (new \AddTurkeyMarket)->up();
+        require_once database_path('migrations/2026_11_23_100000_configure_malaysia_market.php');
+        (new \ConfigureMalaysiaMarket)->up();
     }
 
     private function seller()
@@ -38,39 +38,63 @@ class TurkeyMarketTest extends TestCase
         return $user;
     }
 
-    public function testConfiguredTryRateUsesUsdBaseAndLeavesSingaporeUntouched()
+    public function testMigrationCreatesMissingMalaysiaConfigurationAndKeepsCustomLabels()
+    {
+        DB::table('currencies')->where('code','MYR')->delete();
+        DB::table('countries')->where('code','MY')->delete();
+        (new \ConfigureMalaysiaMarket)->up();
+        $this->assertSame('4.170000', app(ExchangeRate::class)->rate());
+        $this->assertSame(['MY'], array_column(app(PhoneNumber::class)->countries(), 'country'));
+        $this->assertDatabaseHas('translations', ['lang'=>'cn','lang_key'=>'account_holder','lang_value'=>'持户人姓名']);
+        DB::table('translations')->where('lang','cn')->where('lang_key','account_holder')->update(['lang_value'=>'自定义持户人']);
+        (new \ConfigureMalaysiaMarket)->up();
+        $this->assertSame(1, DB::table('currencies')->where('code','MYR')->count());
+        $this->assertDatabaseHas('translations', ['lang'=>'cn','lang_key'=>'account_holder','lang_value'=>'自定义持户人']);
+    }
+
+    public function testConfiguredMyrRateUsesUsdBaseAndLeavesSingaporeUntouched()
     {
         DB::table('currencies')->where('code','USD')->update(['exchange_rate'=>2]);
-        (new \AddTurkeyMarket)->up(); (new \AddTurkeyMarket)->up();
-        $this->assertSame('50.500000', app(ExchangeRate::class)->rate('TRY'));
+        (new \ConfigureMalaysiaMarket)->up(); (new \ConfigureMalaysiaMarket)->up();
+        $this->assertSame('4.170000', app(ExchangeRate::class)->rate('MYR'));
         $this->assertEquals(1.28, DB::table('currencies')->where('code','SGD')->value('exchange_rate'));
-        $this->assertSame(1, DB::table('currencies')->where('code','TRY')->count());
-        $this->getJson('/api/v2/exchange-rate?from=USD&to=TRY')->assertOk()->assertJsonPath('data.rate','50.500000')->assertJsonPath('data.to','TRY');
+        $this->assertSame(1, DB::table('currencies')->where('code','MYR')->count());
+        $this->getJson('/api/v2/exchange-rate?from=USD&to=MYR')->assertOk()->assertJsonPath('data.rate','4.170000')->assertJsonPath('data.to','MYR');
         $this->getJson('/api/v2/exchange-rate?to=EUR')->assertStatus(422);
     }
 
-    /** @dataProvider turkishNumbers */
-    public function testTurkishPhoneFormatsNormalizeToOneAccount($value, $country)
+    /** @dataProvider malaysianNumbers */
+    public function testMalaysianPhoneFormatsNormalizeToOneAccount($value, $country)
     {
-        $this->assertSame('+905321234567', app(PhoneNumber::class)->normalize($value, $country));
+        $this->assertSame('+60123456789', app(PhoneNumber::class)->normalize($value, $country));
     }
 
-    public function turkishNumbers()
+    public function malaysianNumbers()
     {
-        return [['5321234567','TR'], ['0532 123 45 67','TR'], ['+90 (532) 123-45-67','TR'],
-            ['00905321234567','TR'], ['905321234567','TR'], ['+905321234567',null], ['905321234567',null]];
+        return [['123456789','MY'], ['012-345 6789','MY'], ['+60 (12) 345-6789','MY'],
+            ['0060123456789','MY'], ['60123456789','MY'], ['+60123456789',null], ['60123456789',null]];
     }
 
-    public function testCountryMismatchNonMobileAndDisabledTurkeyAreRejected()
+    public function testLongMobilePrefixesAndLocalTrunkPrefix()
     {
-        foreach ([['+905321234567','SG'],['+6581234567','TR'],['2121234567','TR'],['532123456','TR'],['005321234567','TR']] as $case) {
+        foreach (['011-1234 5678', '1112345678', '+601112345678', '00601112345678', '601112345678'] as $number) {
+            $this->assertSame('+601112345678', app(PhoneNumber::class)->normalize($number));
+        }
+        foreach (['015-1234 5678', '+60 15 1234 5678'] as $number) {
+            $this->assertSame('+601512345678', app(PhoneNumber::class)->normalize($number));
+        }
+    }
+
+    public function testCountryMismatchNonMobileAndDisabledMalaysiaAreRejected()
+    {
+        foreach ([['+60123456789','SG'],['+6581234567','MY'],['2121234567','MY'],['532123456','MY'],['00123456789','MY']] as $case) {
             try { app(PhoneNumber::class)->normalize(...$case); $this->fail('Invalid phone accepted'); }
             catch (ValidationException $error) { $this->assertArrayHasKey('phone', $error->errors()); }
         }
-        DB::table('countries')->where('code','TR')->update(['status'=>0]);
+        DB::table('countries')->where('code','MY')->update(['status'=>0]);
         $this->assertCount(0, app(PhoneNumber::class)->countries());
         $this->expectException(ValidationException::class);
-        app(PhoneNumber::class)->normalize('+905321234567');
+        app(PhoneNumber::class)->normalize('+60123456789');
     }
 
     /** @dataProvider localAmounts */
@@ -78,7 +102,7 @@ class TurkeyMarketTest extends TestCase
     {
         $seller = $this->seller();
         $request = Request::create('/', 'POST', ['currency'=>$currency,'amount_local'=>$local,'amount'=>'999999',
-            'recharge_method'=>'IBAN','request_token'=>(string) Str::uuid()]);
+            'recharge_method'=>'Bank','bank_name'=>'Test Bank','account_holder'=>'Test Holder','bank_account'=>'00123456','request_token'=>(string) Str::uuid()]);
         $wallet = app(WalletService::class)->submit($request,$seller);
         $this->assertEquals($usd, $wallet->amount);
         $this->assertEquals(0, $wallet->approval);
@@ -89,15 +113,15 @@ class TurkeyMarketTest extends TestCase
 
     public function localAmounts()
     {
-        return [['TRY','5050.00','100.00'],['TRY','50.75','1.00'],['TRY','50.76','1.01'],
-            ['TRY','0.51','0.01'],['TRY','9999999999.99','198019801.98']];
+        return [['MYR','417.00','100.00'],['MYR','4.19','1.00'],['MYR','4.20','1.01'],
+            ['MYR','0.03','0.01'],['MYR','9999999999.99','2398081534.77']];
     }
 
     /** @dataProvider invalidRecharges */
     public function testInvalidOrAmbiguousCurrencyCannotCreditUsdFallback($overrides, $field)
     {
-        $request = Request::create('/', 'POST', array_merge(['currency'=>'TRY','amount_local'=>'5050','amount'=>'100',
-            'recharge_method'=>'IBAN','request_token'=>(string) Str::uuid()], $overrides));
+        $request = Request::create('/', 'POST', array_merge(['currency'=>'MYR','amount_local'=>'417','amount'=>'100',
+            'recharge_method'=>'Bank','bank_name'=>'Test Bank','account_holder'=>'Test Holder','bank_account'=>'00123456','request_token'=>(string) Str::uuid()], $overrides));
         try { app(WalletService::class)->submit($request,$this->seller()); $this->fail('Invalid recharge accepted'); }
         catch (ValidationException $error) { $this->assertArrayHasKey($field, $error->errors()); }
         $this->assertDatabaseCount('wallets',0);
@@ -105,30 +129,31 @@ class TurkeyMarketTest extends TestCase
 
     public function invalidRecharges()
     {
-        return [[['currency'=>'EUR'],'currency'], [['currency'=>null],'currency'], [['amount_local'=>''],'amount_local'],
+        return [[['bank_name'=>''],'bank_name'], [['account_holder'=>''],'account_holder'], [['bank_account'=>''],'bank_account'],
+            [['currency'=>'TRY'],'currency'], [['currency'=>'EUR'],'currency'], [['currency'=>null],'currency'], [['amount_local'=>''],'amount_local'],
             [['amount_local'=>'0'],'amount_local'], [['amount_local'=>'0.01'],'amount_local'],
             [['amount_local'=>'-1'],'amount_local'], [['amount_local'=>'1.234'],'amount_local'],
             [['amount_sgd'=>'128'],'amount_sgd'], [['amount_aed'=>'367'],'amount_aed']];
     }
 
-    private function turkeyWithdrawal($overrides = [])
+    private function malaysiaWithdrawal($overrides = [])
     {
-        return Request::create('/', 'POST', array_merge(['withdrawal_market'=>'TR','amount'=>'20.50','w_type'=>4,
-            'iban_country'=>'TR','iban_holder'=>'Test Holder','iban_bank'=>'Test Bank','iban_number'=>'TR33 0006 1005 1978 6457 8413 26',
+        return Request::create('/', 'POST', array_merge(['withdrawal_market'=>'MY','amount'=>'20.50','w_type'=>4,
+            'iban_country'=>'MY','iban_holder'=>'Test Holder','iban_bank'=>'Test Bank','bank_account'=>'00123456',
             'request_token'=>(string) Str::uuid()], $overrides));
     }
 
-    public function testTurkeyWithdrawalSavesRecipientAndRateSnapshotAndRefundsExactlyOnce()
+    public function testMalaysiaWithdrawalSavesRecipientAndRateSnapshotAndRefundsExactlyOnce()
     {
-        $seller = $this->seller(); $service = app(WithdrawalService::class); $request = $this->turkeyWithdrawal();
+        $seller = $this->seller(); $service = app(WithdrawalService::class); $request = $this->malaysiaWithdrawal();
         $withdrawal = $service->apply($request,$seller);
         $this->assertEquals(979.5, $seller->fresh()->balance);
-        $this->assertSame('TR33 0006 1005 1978 6457 8413 26', $withdrawal->iban_details['iban']);
-        $this->assertSame('TRY', $withdrawal->iban_details['currency']);
-        $this->assertSame('1035.25', $withdrawal->iban_details['estimated_amount']);
+        $this->assertSame('00123456', $withdrawal->iban_details['account_number']);
+        $this->assertSame('MYR', $withdrawal->iban_details['currency']);
+        $this->assertSame('85.49', $withdrawal->iban_details['estimated_amount']);
         $this->assertSame($withdrawal->id, $service->apply($request,$seller)->id);
-        DB::table('currencies')->where('code','TRY')->update(['exchange_rate'=>60]);
-        $this->assertSame('50.500000', $withdrawal->fresh()->iban_details['exchange_rate']);
+        DB::table('currencies')->where('code','MYR')->update(['exchange_rate'=>60]);
+        $this->assertSame('4.170000', $withdrawal->fresh()->iban_details['exchange_rate']);
         $review = Request::create('/', 'POST');
         $admin = new User; $admin->forceFill(['name'=>'Admin','user_type'=>'admin'])->save();
         $review->setUserResolver(function () use ($admin) { return $admin; });
@@ -139,10 +164,10 @@ class TurkeyMarketTest extends TestCase
     }
 
     /** @dataProvider invalidWithdrawals */
-    public function testTurkeyRequiresRecipientAndEnabledMarket($overrides, $field)
+    public function testMalaysiaRequiresRecipientAndEnabledMarket($overrides, $field)
     {
         $seller = $this->seller();
-        try { app(WithdrawalService::class)->apply($this->turkeyWithdrawal($overrides),$seller); $this->fail('Invalid withdrawal accepted'); }
+        try { app(WithdrawalService::class)->apply($this->malaysiaWithdrawal($overrides),$seller); $this->fail('Invalid withdrawal accepted'); }
         catch (ValidationException $error) { $this->assertArrayHasKey($field,$error->errors()); }
         $this->assertEquals(1000,$seller->fresh()->balance);
         $this->assertDatabaseCount('seller_withdraw_requests',0);
@@ -150,7 +175,8 @@ class TurkeyMarketTest extends TestCase
 
     public function invalidWithdrawals()
     {
-        return [[['iban_holder'=>''],'iban_holder'],[['iban_bank'=>''],'iban_bank'],[['w_type'=>2],'w_type'],
+        return [[['bank_account'=>''],'bank_account'],[['iban_holder'=>''],'iban_holder'],[['iban_bank'=>''],'iban_bank'],[['w_type'=>2],'w_type'],
+            [['withdrawal_market'=>'TR'],'withdrawal_market'], [['iban_country'=>'TR'],'iban_country'],
             [['withdrawal_market'=>'SG'],'withdrawal_market'], [['withdrawal_market'=>null],'withdrawal_market'],
             [['withdrawal_market'=>null,'iban_country'=>'SG'],'withdrawal_market']];
     }
@@ -166,21 +192,21 @@ class TurkeyMarketTest extends TestCase
         $this->assertDatabaseCount('seller_withdraw_requests', 0);
     }
 
-    public function testMissingTryRateBlocksBankingWithoutSingaporeFallback()
+    public function testMissingMyrRateBlocksBankingWithoutSingaporeFallback()
     {
-        DB::table('currencies')->where('code','TRY')->delete();
-        $this->getJson('/api/v2/exchange-rate?to=TRY')->assertStatus(503);
+        DB::table('currencies')->where('code','MYR')->delete();
+        $this->getJson('/api/v2/exchange-rate?to=MYR')->assertStatus(503);
         $this->getJson('/api/v2/exchange-rate')->assertStatus(503);
-        $this->assertNull(app(ExchangeRate::class)->availableRates()['TRY']);
+        $this->assertNull(app(ExchangeRate::class)->availableRates()['MYR']);
         $this->expectException(ValidationException::class);
-        app(WithdrawalService::class)->apply($this->turkeyWithdrawal(),$this->seller());
+        app(WithdrawalService::class)->apply($this->malaysiaWithdrawal(),$this->seller());
     }
 
     public function testEmptyLegacySgdCannotFallBackToHiddenUsd()
     {
         $this->expectException(ValidationException::class);
         app(WalletService::class)->submit(Request::create('/', 'POST', ['amount_sgd'=>'','amount'=>'100',
-            'recharge_method'=>'IBAN','request_token'=>(string) Str::uuid()]),$this->seller());
+            'recharge_method'=>'Bank','bank_name'=>'Test Bank','account_holder'=>'Test Holder','bank_account'=>'00123456','request_token'=>(string) Str::uuid()]),$this->seller());
     }
 
     public function testTranslatedProductNameAndUnitRetainOriginalDescriptionFallback()

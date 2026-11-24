@@ -8,18 +8,19 @@
         var country;
         syncPhone = function () {
             country = form.elements.country.value;
-            var dialCode = country === 'TR' ? '90' : '971';
+            var dialCode = country === 'MY' ? '60' : '971';
             var number = input.value.replace(/[\s().-]+/g, '');
             if (number.indexOf('00') === 0) number = '+' + number.slice(2);
             if (number && number.charAt(0) !== '+') {
-                if (country === 'TR' && number.length === 11 && number.charAt(0) === '0') number = number.slice(1);
-                var hasDialCode = country === 'TR' ? number.length === 12 && number.indexOf(dialCode) === 0 : number.indexOf(dialCode) === 0;
+                if (country === 'MY' && number.charAt(0) === '0') number = number.slice(1);
+                var hasDialCode = number.indexOf(dialCode) === 0;
                 number = hasDialCode ? '+' + number : '+' + dialCode + number.replace(/^0+/, '');
             }
             form.elements.country.value = country;
             form.elements.phone.value = number;
-            var pattern = country === 'TR' ? /^\+905[0-9]{9}$/ : /^\+971[1-9][0-9]{7,8}$/;
-            var valid = pattern.test(number) && intlTelInputUtils.isValidNumber(number, country);
+            var pattern = country === 'MY' ? /^\+601(?:1[0-9]{8}|[02-46-9][0-9]{7}|5[0-9]{7,8})$/ : /^\+971[1-9][0-9]{7,8}$/;
+            // Keep Malaysia validation consistent with the server's supported mobile ranges.
+            var valid = pattern.test(number) && (country === 'MY' || intlTelInputUtils.isValidNumber(number, country));
             input.setCustomValidity(input.value && !valid ? @json(translate('Invalid phone number')) : '');
             return valid;
         };

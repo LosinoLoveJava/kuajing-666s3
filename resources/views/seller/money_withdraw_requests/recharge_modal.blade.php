@@ -12,28 +12,35 @@
     <div class="modal-body p-4" style="max-height:calc(100vh - 180px);overflow-y:auto">
         <div class="form-group">
             <label for="recharge-method">{{ translate('Payment method') }} <span class="text-danger">*</span></label>
-            <select id="recharge-method" name="recharge_method" class="form-control"><option value="IBAN">{{ __('crypto_wallet.bank') }}</option><option value="Crypto">{{ __('crypto_wallet.crypto') }}</option></select>
+            <select id="recharge-method" name="recharge_method" class="form-control"><option value="Bank">{{ __('crypto_wallet.bank') }}</option><option value="Crypto">{{ __('crypto_wallet.crypto') }}</option></select>
         </div>
         <div id="recharge-bank-fields">
         <div class="form-group">
             <label for="recharge-currency">{{ translate('Currency') }} <span class="text-danger">*</span></label>
-            <div class="d-flex align-items-center"><img id="recharge-fiat-logo" src="{{ static_asset('assets/img/currencies/try.svg') }}" width="28" height="28" class="mr-2" alt="TRY">
+            <div class="d-flex align-items-center"><img id="recharge-fiat-logo" src="{{ static_asset('assets/img/currencies/myr.svg') }}" width="28" height="28" class="mr-2" alt="MYR">
             <select id="recharge-currency" name="currency" class="form-control aiz-selectpicker" required>
-                <option value="TRY" data-content="&lt;img src='{{ static_asset('assets/img/currencies/try.svg') }}' width='24' height='24' alt=''&gt; TRY — {{ translate('Turkish Lira') }}" @if(!$rechargeRates['TRY']) disabled @endif>TRY — {{ translate('Turkish Lira') }}</option>
+                <option value="MYR" data-content="&lt;img src='{{ static_asset('assets/img/currencies/myr.svg') }}' width='24' height='24' alt=''&gt; MYR — {{ translate('Malaysian Ringgit') }}" @if(!$rechargeRates['MYR']) disabled @endif>MYR — {{ translate('Malaysian Ringgit') }}</option>
             </select>
             </div>
         </div>
         <div class="form-group">
-            <label for="recharge-amount">{{ translate('Amount') }} (<span id="recharge-currency-label">TRY</span>) <span class="text-danger">*</span></label>
+            <label for="recharge-amount">{{ translate('Amount') }} (<span id="recharge-currency-label">MYR</span>) <span class="text-danger">*</span></label>
             <input id="recharge-amount" class="form-control" dir="ltr" type="number" name="amount_local" min="0.01" max="9999999999.99" step="0.01" inputmode="decimal" placeholder="{{ translate('Please enter the amount') }}" required>
             <input type="hidden" name="amount" value="0.00">
             <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr"><span id="recharge-rate"></span></bdi></div>
             <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="recharge-usd">0.00</span> USD</bdi></div>
         </div>
         <div class="form-group">
-            <label for="recharge-iban">IBAN ({{ translate('Optional') }})</label>
-            <input id="recharge-iban" name="iban_number" class="form-control" dir="ltr" maxlength="2000" autocomplete="off" aria-describedby="recharge-iban-hint">
-            <small id="recharge-iban-hint" class="form-text text-muted">{{ __('seller_wallet.iban_hint') }}</small>
+            <label for="recharge-holder">{{ translate('Account holder') }} <span class="text-danger">*</span></label>
+            <input id="recharge-holder" name="account_holder" class="form-control" maxlength="200" autocomplete="name" required>
+        </div>
+        <div class="form-group">
+            <label for="recharge-bank">{{ translate('Bank Name') }} <span class="text-danger">*</span></label>
+            <input id="recharge-bank" name="bank_name" class="form-control" maxlength="200" required>
+        </div>
+        <div class="form-group">
+            <label for="recharge-account">{{ translate('Bank Account Number') }} <span class="text-danger">*</span></label>
+            <input id="recharge-account" name="bank_account" class="form-control" dir="ltr" maxlength="100" autocomplete="off" required>
         </div>
         @include('partials.wallet_bank_instructions')
         </div>
@@ -101,7 +108,8 @@
     form.elements.currency.addEventListener('change', updateAmount);
     form.addEventListener('submit', updateAmount);
     var previous = @json(old('wallet_form') === 'recharge' ? old() : []);
-    if (previous.currency && previous.currency !== 'TRY') delete previous.amount_local;
+    if (previous.currency && previous.currency !== 'MYR') delete previous.amount_local;
+    if (previous.recharge_method === 'IBAN') previous.recharge_method = 'Bank';
     Object.keys(previous).forEach(function (name) { if (form.elements[name] && name !== '_token' && name !== 'crypto_asset' && name !== 'currency') form.elements[name].value = previous[name]; });
     var firstAsset = form.querySelector('[name="crypto_asset"]:not(:disabled)');
     if (previous.crypto_asset) firstAsset = form.querySelector('[name="crypto_asset"][value="' + previous.crypto_asset + '"]:not(:disabled)') || firstAsset;

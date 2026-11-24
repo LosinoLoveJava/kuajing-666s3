@@ -15,9 +15,9 @@ class PhoneNumber
 
     public function countries()
     {
-        return Country::where('status', 1)->where('code', 'TR')->get(['code', 'name'])->map(function ($country) {
+        return Country::where('status', 1)->where('code', 'MY')->get(['code', 'name'])->map(function ($country) {
             return ['country' => strtoupper($country->code), 'name' => $country->name,
-                'dial_code' => '+90'];
+                'dial_code' => '+60'];
         })->values()->all();
     }
 
@@ -25,14 +25,14 @@ class PhoneNumber
     {
         $number = preg_replace('/[\s().-]+/', '', (string) $value);
         if (strpos($number, '00') === 0) { $number = '+'.substr($number, 2); }
-        $country = $country ? strtoupper($country) : 'TR';
+        $country = $country ? strtoupper($country) : 'MY';
         if ($number !== '' && strpos($number, '+') !== 0) {
-            if ($country === 'TR') {
-                if (strlen($number) === 11 && $number[0] === '0') $number = substr($number, 1);
-                $number = strlen($number) === 12 && strpos($number, '90') === 0 ? '+'.$number : '+90'.$number;
+            if ($country === 'MY') {
+                if ($number[0] === '0') $number = substr($number, 1);
+                $number = strpos($number, '60') === 0 ? '+'.$number : '+60'.$number;
             }
         }
-        $patterns = ['TR' => '/^\+905[0-9]{9}$/D'];
+        $patterns = ['MY' => '/^\+601(?:1[0-9]{8}|[02-46-9][0-9]{7}|5[0-9]{7,8})$/D'];
         if (!isset($patterns[$country]) || !preg_match($patterns[$country], $number)) {
             throw ValidationException::withMessages(['phone' => translate('Invalid phone number')]);
         }

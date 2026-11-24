@@ -7,28 +7,28 @@ use RuntimeException;
 
 class ExchangeRate
 {
-    public function quote($to = 'TRY')
+    public function quote($to = 'MYR')
     {
-        if ($to !== 'TRY') throw new RuntimeException('Unsupported exchange currency.');
+        if ($to !== 'MYR') throw new RuntimeException('Unsupported exchange currency.');
         $currencies = Currency::whereIn('code', ['USD', $to])->get()->keyBy('code');
         $usd = $currencies->get('USD');
-        $sgd = $currencies->get($to);
-        foreach ([$usd, $sgd] as $currency) {
+        $local = $currencies->get($to);
+        foreach ([$usd, $local] as $currency) {
             if (!$currency || !preg_match('/^[0-9]+(?:\.[0-9]+)?$/D', (string) $currency->exchange_rate)
                 || bccomp((string) $currency->exchange_rate, '0', 12) <= 0) {
                 throw new RuntimeException('USD/'.$to.' exchange rate is not configured.');
             }
         }
-        $rate = bcdiv((string) $sgd->exchange_rate, (string) $usd->exchange_rate, 6);
+        $rate = bcdiv((string) $local->exchange_rate, (string) $usd->exchange_rate, 6);
         if (bccomp($rate, '0', 6) <= 0) {
             throw new RuntimeException('USD/'.$to.' exchange rate is not configured.');
         }
         return ['from' => 'USD', 'to' => $to, 'rate' => $rate,
             'source' => 'platform_configuration',
-            'updated_at' => collect([$usd->updated_at, $sgd->updated_at])->filter()->sort()->last()];
+            'updated_at' => collect([$usd->updated_at, $local->updated_at])->filter()->sort()->last()];
     }
 
-    public function rate($to = 'TRY')
+    public function rate($to = 'MYR')
     {
         return $this->quote($to)['rate'];
     }
@@ -46,7 +46,7 @@ class ExchangeRate
     public function availableRates()
     {
         $rates = [];
-        foreach (['TRY'] as $currency) {
+        foreach (['MYR'] as $currency) {
             try { $rates[$currency] = $this->rate($currency); }
             catch (RuntimeException $error) { $rates[$currency] = null; }
         }

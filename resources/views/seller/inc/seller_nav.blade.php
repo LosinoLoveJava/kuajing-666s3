@@ -1,16 +1,16 @@
-<div class="aiz-topbar px-15px px-lg-25px d-flex align-items-stretch justify-content-between">
-    <div class="d-flex">
+<div class="aiz-topbar seller-topbar px-15px px-lg-25px d-flex align-items-stretch justify-content-between">
+    <div class="d-flex seller-header-brand">
         <div class="aiz-topbar-nav-toggler d-flex align-items-center justify-content-start mr-2 mr-md-3 ml-0" data-toggle="aiz-mobile-nav">
-            <button class="aiz-mobile-toggler">
+            <button class="aiz-mobile-toggler" type="button" aria-label="{{ translate('Menu') }}">
                 <span></span>
             </button>
         </div>
-        <a href="{{ route('seller.dashboard') }}" class="d-flex d-xl-none align-items-center flex-shrink-0 mr-2">
-            <img src="{{ uploaded_asset(Auth::user()->shop->logo ?? get_setting('header_logo')) }}"
-                alt="{{ get_setting('site_name') }}" width="70" height="36" style="object-fit: contain;">
+        <a href="{{ route('seller.dashboard') }}" class="seller-brand-link d-flex d-xl-none align-items-center flex-shrink-0" aria-label="{{ translate('Dashboard') }}">
+            <img src="{{ uploaded_asset(get_setting('header_logo') ?? Auth::user()->shop->logo) }}"
+                class="seller-brand-logo" alt="{{ get_setting('site_name') }}" width="112" height="40">
         </a>
     </div>
-    <div class="d-flex justify-content-between align-items-stretch flex-grow-xl-1">
+    <div class="seller-header-tools d-flex justify-content-between align-items-stretch flex-grow-xl-1">
         <div class="d-flex justify-content-around align-items-center align-items-stretch">
             <div class="d-flex justify-content-around align-items-center align-items-stretch">
                 <div class="aiz-topbar-item">

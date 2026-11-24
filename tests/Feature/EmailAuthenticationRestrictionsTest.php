@@ -38,7 +38,7 @@ class EmailAuthenticationRestrictionsTest extends TestCase
         Schema::create('countries', function (Blueprint $t) {
             $t->increments('id'); $t->string('code'); $t->string('name'); $t->integer('status');
         });
-        DB::table('countries')->insert(['code' => 'TR', 'name' => 'Turkey', 'status' => 1]);
+        DB::table('countries')->insert(['code' => 'MY', 'name' => 'Malaysia', 'status' => 1]);
         Schema::create('translations', function (Blueprint $t) {
             $t->increments('id'); $t->string('lang'); $t->string('lang_key'); $t->text('lang_value'); $t->timestamps();
         });
@@ -56,7 +56,7 @@ class EmailAuthenticationRestrictionsTest extends TestCase
     {
         $user = new User;
         $user->name = 'Fixture'; $user->email = $role.'@example.test';
-        $user->phone = '+905321234567'; $user->phone_normalized = $user->phone;
+        $user->phone = '+60123456789'; $user->phone_normalized = $user->phone;
         $user->phone_verified_at = now(); $user->email_verified_at = now();
         $user->password = Hash::make('password123'); $user->user_type = $role;
         $user->save();
@@ -116,7 +116,7 @@ class EmailAuthenticationRestrictionsTest extends TestCase
     public function testPasswordOnlyWebLoginRejectsVerificationCodes()
     {
         foreach (['/users/phone', '/seller/phone', '/login'] as $path) {
-            $payload = ['mode' => 'login', 'phone' => '+905321234567', 'code' => '89001'];
+            $payload = ['mode' => 'login', 'phone' => '+60123456789', 'code' => '89001'];
             $this->postJson($path, $payload)->assertStatus(422)
                 ->assertJsonValidationErrors(['password', 'code']);
             $this->postJson($path, $payload + ['password' => 'password123'])->assertStatus(422)
@@ -128,7 +128,7 @@ class EmailAuthenticationRestrictionsTest extends TestCase
     public function testPasswordOnlyWebLoginCannotRequestLoginCodes()
     {
         foreach (['/users/phone/send-code', '/seller/phone/send-code'] as $path) {
-            $this->postJson($path, ['phone' => '+905321234567', 'purpose' => 'login'])
+            $this->postJson($path, ['phone' => '+60123456789', 'purpose' => 'login'])
                 ->assertStatus(422)->assertJsonValidationErrors('purpose');
         }
         Http::assertNothingSent();
@@ -160,7 +160,7 @@ class EmailAuthenticationRestrictionsTest extends TestCase
         $payload = ['name' => 'Fixture', 'email' => 'new@example.test',
             'password' => 'password123', 'password_confirmation' => 'password123'];
         $this->postJson('/register', $payload)->assertStatus(422)->assertJsonValidationErrors('email');
-        $this->postJson('/register', $payload + ['phone' => '+905321234567', 'code' => '89001'])
+        $this->postJson('/register', $payload + ['phone' => '+60123456789', 'code' => '89001'])
             ->assertStatus(422)->assertJsonValidationErrors('email');
         $this->postJson('/api/v2/auth/signup', ['register_by' => 'email', 'email_or_phone' => 'new@example.test'] + $payload)
             ->assertStatus(422)->assertJsonValidationErrors('register_by');

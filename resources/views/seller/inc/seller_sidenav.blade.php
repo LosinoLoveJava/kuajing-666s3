@@ -1,23 +1,21 @@
 <div class="aiz-sidebar-wrap">
     <div class="aiz-sidebar left c-scrollbar">
-        <div class="aiz-side-nav-logo-wrap">
-            <div class="d-block text-center px-3 py-4">
-                @if (Auth::user()->shop->logo != null)
-                    <img class="mw-100 mb-3" src="{{ uploaded_asset(Auth::user()->shop->logo) }}" class="brand-icon"
-                        alt="{{ get_setting('site_name') }}">
-                @else
-                    <img class="mw-100 mb-3" src="{{ uploaded_asset(get_setting('header_logo')) }}" class="brand-icon"
-                        alt="{{ get_setting('site_name') }}">
-                @endif
-                <h3 class="fs-16 m-0 text-white text-break">{{ Auth::user()->shop->name }}</h3>
+        <div class="aiz-side-nav-logo-wrap seller-shop-brand">
+            <div class="seller-shop-identity">
+                <a href="{{ route('seller.dashboard') }}" class="seller-shop-logo" aria-label="{{ translate('Dashboard') }}">
+                    <img src="{{ uploaded_asset(Auth::user()->shop->logo ?? get_setting('header_logo')) }}"
+                        alt="{{ get_setting('site_name') }}" width="184" height="64">
+                </a>
+                <h3 class="seller-shop-name">{{ Auth::user()->shop->name }}</h3>
                 @if (Auth::user()->email)
-                    <p class="text-white text-break mt-2 mb-0">{{ Auth::user()->email }}</p>
+                    <p class="seller-shop-email">{{ Auth::user()->email }}</p>
                 @endif
             </div>
         </div>
         <div class="aiz-side-nav-wrap">
             <div class="px-20px mb-3">
-                <input class="form-control bg-soft-secondary border-0 form-control-sm text-white" type="text"
+                <label class="sr-only" for="menu-search">{{ translate('Search in menu') }}</label>
+                <input class="form-control seller-menu-search" type="search"
                     name="" placeholder="{{ translate('Search in menu') }}" id="menu-search"
                     onkeyup="menuSearch()">
             </div>

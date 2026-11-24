@@ -463,10 +463,10 @@
                         <input type="hidden" name="request_token" value="{{ old('request_token', (string) \Illuminate\Support\Str::uuid()) }}">
                         <div class="modal-body p-4" style="max-height:calc(100vh - 180px);overflow-y:auto">
                             <div id="withdraw-bank-market" class="d-flex align-items-center mb-4">
-                                <img src="{{ static_asset('assets/img/currencies/try.svg') }}" width="22" height="22" class="mr-2" alt="TRY"> {{ translate('Turkey') }}
+                                <img src="{{ static_asset('assets/img/currencies/myr.svg') }}" width="22" height="22" class="mr-2" alt="MYR"> {{ translate('Malaysia') }}
                             </div>
-                            <input type="hidden" name="withdrawal_market" value="TR">
-                            <input type="hidden" name="iban_country" value="TR">
+                            <input type="hidden" name="withdrawal_market" value="MY">
+                            <input type="hidden" name="iban_country" value="MY">
                             <div class="row">
                                 <div class="col">
                                     <div class="alert alert-success" role="alert">
@@ -488,18 +488,13 @@
                                 <div id="withdraw-crypto-unavailable" class="alert alert-warning" hidden>{{ __('crypto_wallet.unavailable') }}</div>
                             </div>
                             <div id="withdraw-country-panel">
-                                @include('partials.iban_form', ['fixedBank' => true, 'manualReview' => true, 'bankOnly' => true])
-                                <div class="form-group" id="turkey-iban-field" hidden>
-                                    <label for="withdraw-turkey-iban">IBAN ({{ translate('Optional') }})</label>
-                                    <input id="withdraw-turkey-iban" class="form-control" dir="ltr" name="iban_number" value="{{ old('iban_number') }}" maxlength="2000" autocomplete="off" aria-describedby="withdraw-iban-hint" disabled>
-                                    <small id="withdraw-iban-hint" class="form-text text-muted">{{ __('seller_wallet.iban_hint') }}</small>
-                                </div>
+                                @include('partials.iban_form', ['fixedBank' => true, 'bankOnly' => true])
                             </div>
                             <div class="form-group">
                                 <label for="withdraw-amount">{{ translate('Amount')}} (USD) <span class="text-danger">*</span></label>
                                 <input id="withdraw-amount" type="number" lang="en" dir="ltr" class="form-control" name="amount" value="{{ old('amount') }}" min="0.01" max="9999999999.99" step="0.01" placeholder="{{ translate('Amount') }}" required>
                                 <div class="mt-2 text-muted">{{ translate('Exchange rate') }}: <bdi dir="ltr" id="withdraw-rate"></bdi></div>
-                                <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="withdraw-estimate">0.00</span> <span id="withdraw-currency">TRY</span></bdi></div>
+                                <div class="mt-1 text-primary" aria-live="polite">{{ translate('Estimated amount') }}: <bdi dir="ltr">≈ <span id="withdraw-estimate">0.00</span> <span id="withdraw-currency">MYR</span></bdi></div>
                             </div>
 
                             <div class="form-group">
@@ -572,7 +567,7 @@
                     return;
                 }
                 form.querySelector('button[type="submit"]').disabled = false;
-                var currency = 'TRY';
+                var currency = 'MYR';
                 var rate = Number(rates[currency]);
                 document.getElementById('withdraw-currency').textContent = currency;
                 document.getElementById('withdraw-rate').textContent = rate > 0 ? '1 USD = ' + numberFormat.format(rate) + ' ' + currency : @json(translate('Exchange rate is not configured. Please contact support.'));
@@ -581,18 +576,15 @@
                 output.textContent = numberFormat.format(rate > 0 && Number.isFinite(usd) && usd > 0 ? Math.round(Math.round(usd * 100) * rate) / 100 : 0);
             }
             function configureBankFields(crypto) {
-                ['iban_holder', 'iban_bank'].forEach(function (name) {
+                ['iban_holder', 'iban_bank', 'bank_account'].forEach(function (name) {
                     form.elements[name].disabled = crypto;
                     form.elements[name].required = !crypto;
                     form.elements[name].maxLength = 200;
                 });
-                form.querySelector('label[for="withdraw-holder"]').textContent = @json(translate('Full name')) + ' *';
+                form.querySelector('label[for="withdraw-holder"]').textContent = @json(translate('Account holder')) + ' *';
                 form.querySelector('label[for="withdraw-bank"]').textContent = @json(translate('Bank Name')) + ' *';
-                form.elements.bank_account.closest('.form-group').hidden = true;
-                form.elements.bank_account.disabled = true;
-                document.getElementById('turkey-iban-field').hidden = false;
-                form.elements.iban_number.disabled = crypto;
-                form.elements.iban_number.required = false;
+                form.elements.bank_account.maxLength = 100;
+                form.querySelector('label[for="withdraw-account"]').textContent = @json(translate('Bank Account Number')) + ' *';
             }
             amount.addEventListener('input', updateAmount);
             var firstCrypto = form.querySelector('[name="crypto_asset"]:not(:disabled)');

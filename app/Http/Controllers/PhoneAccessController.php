@@ -18,7 +18,7 @@ class PhoneAccessController extends Controller
             return redirect()->route('shops.create', ['source' => 'seller']);
         }
         $countries = app(PhoneNumber::class)->countries();
-        $defaultCountry = $countries[0]['country'] ?? 'TR';
+        $defaultCountry = $countries[0]['country'] ?? 'MY';
         return view('frontend.phone_access', compact('mode', 'countries', 'defaultCountry', 'isSellerPortal'));
     }
 
