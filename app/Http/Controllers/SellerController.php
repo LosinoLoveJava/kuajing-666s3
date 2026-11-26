@@ -279,6 +279,7 @@ class SellerController extends Controller
     public function profile_modal(Request $request)
     {
         $shop = Shop::findOrFail($request->id);
+        app(\App\Services\ManagedPhoneAccounts::class)->authorize(Auth::user(), $shop->user);
         return view('backend.sellers.profile_modal', compact('shop'));
     }
 
@@ -382,6 +383,7 @@ class SellerController extends Controller
     public function salesman_profile_modal(Request $request)
     {
         $shop = Shop::findOrFail($request->id);
+        app(\App\Services\ManagedPhoneAccounts::class)->authorize(Auth::user(), $shop->user);
         return view('salesman.sellers.profile_modal', compact('shop'));
     }
 }

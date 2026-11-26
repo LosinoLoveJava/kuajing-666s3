@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\SellerPackage;
 use App\Models\SellerPackagePayment;
 use App\Models\Shop;
+use App\Models\Upload;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -70,10 +71,19 @@ class ManagedPhoneAccounts
             if (!$package) {
                 throw ValidationException::withMessages(['name' => translate('Sorry! Something went wrong.')]);
             }
-            // Only the operator's images or unclaimed public-application images may be used.
+            // Anonymous images must belong to this browser session as well.
+            $guestToken = $request->hasSession() ? Upload::guestToken($request) : null;
             $ids = array_values(array_unique(array_filter([$data['identity_card_front'], $data['identity_card_back'] ?? null])));
             $images = DB::table('uploads')->whereIn('id', $ids)->where('type', 'image')
-                ->whereIn('user_id', [0, $operator->id])->lockForUpdate()->get();
+                ->where('file_name', 'like', 'private/uploads/%')
+                ->where(function ($query) use ($operator, $guestToken) {
+                    $query->where('user_id', $operator->id);
+                    if ($guestToken) {
+                        $query->orWhere(function ($guest) use ($guestToken) {
+                            $guest->where('user_id', 0)->where('guest_token', $guestToken);
+                        });
+                    }
+                })->lockForUpdate()->get();
             foreach (['identity_card_front', 'identity_card_back'] as $field) {
                 if (!empty($data[$field]) && !$images->contains('id', $data[$field])) {
                     throw ValidationException::withMessages([$field => translate('Choose File')]);
@@ -109,7 +119,8 @@ class ManagedPhoneAccounts
             $payment->offline_payment = 0;
             $payment->save();
             // Management-owned media stays reusable; claim anonymous submitted images only.
-            DB::table('uploads')->where('user_id', 0)->whereIn('id', $ids)->update(['user_id' => $user->id]);
+            DB::table('uploads')->where('user_id', 0)->where('guest_token', $guestToken)->whereIn('id', $ids)
+                ->update(['user_id' => $user->id, 'guest_token' => null]);
             return $user;
         });
     }

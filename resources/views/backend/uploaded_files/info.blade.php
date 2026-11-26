@@ -13,7 +13,7 @@
 	</div>
 	<div class="form-group">
 		<label>{{ translate('Uploaded By') }}</label>
-		<input type="text" class="form-control" value="{{ $file->user->name }}" disabled>
+		<input type="text" class="form-control" value="{{ optional($file->user)->name ?: translate('Guest') }}" disabled>
 	</div>
 	<div class="form-group">
 		<label>{{ translate('Uploaded At') }}</label>
@@ -27,6 +27,6 @@
 				$file_name = $file->file_original_name;
 			}
 		@endphp
-		<a class="btn btn-secondary" href="{{ my_asset($file->file_name) }}" target="_blank" download="{{ $file_name }}.{{ $file->extension }}">{{ translate('Download') }}</a>
+		<a class="btn btn-secondary" href="{{ $file->url }}" target="_blank" download="{{ $file_name }}.{{ $file->extension }}">{{ translate('Download') }}</a>
 	</div>
 </div>

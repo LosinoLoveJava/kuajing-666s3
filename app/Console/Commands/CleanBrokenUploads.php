@@ -105,7 +105,7 @@ class CleanBrokenUploads extends Command
      */
     protected function cleanRemoteUploads(array $usedIds, $dryRun)
     {
-        $query = Upload::query()->where(function ($q) {
+        $query = Upload::query()->whereRaw('(file_name IS NULL OR file_name NOT LIKE ?)', ['private/uploads/%'])->where(function ($q) {
             $q->where('file_name', 'like', 'http%')
                 ->orWhere('file_name', 'like', 'https%')
                 ->orWhereNotNull('external_link');
@@ -128,7 +128,7 @@ class CleanBrokenUploads extends Command
      */
     protected function cleanOrphanUrlUploads(array $usedIds, $dryRun)
     {
-        $query = Upload::query()->where(function ($q) {
+        $query = Upload::query()->whereRaw('(file_name IS NULL OR file_name NOT LIKE ?)', ['private/uploads/%'])->where(function ($q) {
             $q->where('file_original_name', 'like', 'http%')
                 ->orWhere('file_original_name', 'like', '//%')
                 ->orWhere('file_name', 'like', 'download/%');
@@ -188,6 +188,7 @@ class CleanBrokenUploads extends Command
     protected function cleanMissingLocalUploads(array $usedIds, $dryRun)
     {
         $query = Upload::query()
+            ->where('file_name', 'not like', 'private/uploads/%')
             ->whereNotNull('file_name')
             ->where('file_name', 'not like', 'http%')
             ->whereNull('external_link');

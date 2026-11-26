@@ -43,6 +43,14 @@ return [
 
     'disks' => [
 
+        'private' => [
+            'driver' => 'local',
+            'root' => storage_path('app'),
+            'visibility' => 'private',
+            'permissions' => ['file' => ['public' => 0600, 'private' => 0600],
+                'dir' => ['public' => 0700, 'private' => 0700]],
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => public_path(),

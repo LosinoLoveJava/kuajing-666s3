@@ -102,12 +102,13 @@ Route::get('/refresh-csrf', function() {
 });
 
 // AIZ Uploader
-Route::controller(AizUploadController::class)->group(function () {
+Route::controller(AizUploadController::class)->middleware(\App\Http\Middleware\VerifyCsrfToken::class)->group(function () {
     Route::post('/aiz-uploader', 'show_uploader');
     Route::post('/aiz-uploader/upload', 'upload');
     Route::get('/aiz-uploader/get_uploaded_files', 'get_uploaded_files');
     Route::post('/aiz-uploader/get_file_by_ids', 'get_preview_files');
     Route::get('/aiz-uploader/download/{id}', 'attachment_download')->name('download_attachment');
+    Route::get('/aiz-uploader/private/{id}', 'private_file')->whereNumber('id')->name('uploads.private');
 });
 
 Auth::routes(['verify' => true]);

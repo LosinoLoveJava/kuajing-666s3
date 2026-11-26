@@ -56,12 +56,16 @@ class SellerPhoneRegistrationTest extends TestCase
         });
         Schema::create('uploads', function (Blueprint $t) {
             $t->increments('id'); $t->integer('user_id'); $t->string('type'); $t->timestamps();
+            $t->string('guest_token', 64)->nullable();
+            $t->string('file_name')->default('private/uploads/test.png');
         });
         DB::table('uploads')->insert([
             ['id'=>1,'user_id'=>0,'type'=>'image'], ['id'=>2,'user_id'=>0,'type'=>'image'],
             ['id'=>3,'user_id'=>0,'type'=>'image'], ['id'=>4,'user_id'=>999,'type'=>'image'],
             ['id'=>5,'user_id'=>0,'type'=>'document'],
         ]);
+        $this->withSession(['upload_guest_token' => 'registration-browser']);
+        DB::table('uploads')->where('user_id', 0)->update(['guest_token' => hash('sha256', 'registration-browser')]);
         Schema::create('phone_verifications', function (Blueprint $t) {
             $t->increments('id'); $t->string('phone')->unique(); $t->string('purpose'); $t->string('code_hash')->nullable();
             $t->integer('attempts')->default(0); $t->timestamp('expires_at')->nullable(); $t->timestamps();
@@ -85,6 +89,38 @@ class SellerPhoneRegistrationTest extends TestCase
             'purpose'=>$purpose, 'code_hash'=>Hash::make('123456'), 'attempts'=>0,
             'expires_at'=>$expired ? now()->subSecond() : now()->addMinutes(5),
         ]);
+    }
+
+    public function testAnotherGuestsOrLegacyUnclaimedDocumentsCannotBeSubmitted()
+    {
+        foreach (['another-browser', null] as $token) {
+            DB::table('uploads')->where('id', 1)->update(['guest_token' => $token ? hash('sha256', $token) : null]);
+            $this->postJson('/shops', $this->payload())->assertStatus(422)
+                ->assertJsonValidationErrors('identity_card_front');
+            $this->assertDatabaseCount('users', 0);
+            $this->assertDatabaseCount('shops', 0);
+            $this->assertDatabaseHas('uploads', ['id' => 1, 'user_id' => 0]);
+            $this->assertNotNull(DB::table('phone_verifications')->value('code_hash'));
+        }
+    }
+
+    public function testSalesmanCannotClaimAnotherGuestsDocuments()
+    {
+        $operator = $this->operator('salesman');
+        DB::table('uploads')->where('id', 1)->update(['guest_token' => hash('sha256', 'another-browser')]);
+        $this->actingAs($operator)->postJson('/shops', $this->payload())->assertStatus(422)
+            ->assertJsonValidationErrors('identity_card_front');
+        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('shops', 0);
+        $this->assertDatabaseHas('uploads', ['id' => 1, 'user_id' => 0]);
+    }
+
+    public function testPublicImagesCannotBeSubmittedAsPrivateIdentityDocuments()
+    {
+        DB::table('uploads')->where('id', 1)->update(['file_name' => 'uploads/all/public.png']);
+        $this->postJson('/shops', $this->payload())->assertStatus(422)->assertJsonValidationErrors('identity_card_front');
+        $this->assertDatabaseCount('users', 0);
+        $this->assertNotNull(DB::table('phone_verifications')->value('code_hash'));
     }
 
     private function payload($overrides = [])
@@ -320,7 +356,7 @@ class SellerPhoneRegistrationTest extends TestCase
     {
         $this->post('/shops', $this->payload())->assertRedirect();
         auth()->logout();
-        DB::table('uploads')->insert(['id'=>6,'user_id'=>0,'type'=>'image']);
+        DB::table('uploads')->insert(['id'=>6,'user_id'=>0,'type'=>'image', 'guest_token'=>hash('sha256', 'registration-browser')]);
         $documents = ['identity_card_front'=>3,'identity_card_back'=>6];
         $this->postJson('/shops', $this->payload(array_merge($documents, ['phone'=>'+60123456790'])))
             ->assertStatus(422)->assertJsonValidationErrors('code');
@@ -470,6 +506,13 @@ class SellerPhoneRegistrationTest extends TestCase
         return $user;
     }
 
+    private function managedRequest()
+    {
+        $request = Request::create('/', 'POST', $this->payload());
+        $request->setLaravelSession(app('session.store'));
+        return $request;
+    }
+
     /** @dataProvider managedSellerEntrypoints */
     public function testManagedSellerCreationUsesPhoneAndCanReallyLogIn($role, $route, $virtual)
     {
@@ -549,7 +592,7 @@ class SellerPhoneRegistrationTest extends TestCase
         $operator = $this->operator();
         Shop::creating(function () { throw new \RuntimeException('Simulated shop failure'); });
         try {
-            app(\App\Services\ManagedPhoneAccounts::class)->createSeller(Request::create('/', 'POST', $this->payload()), $operator);
+            app(\App\Services\ManagedPhoneAccounts::class)->createSeller($this->managedRequest(), $operator);
             $this->fail('Expected the simulated persistence failure');
         } catch (\RuntimeException $e) {
             $this->assertSame('Simulated shop failure', $e->getMessage());
@@ -579,7 +622,7 @@ class SellerPhoneRegistrationTest extends TestCase
     public function testSellerEditingMigratesOldAccountToPhoneWithoutDeletingHistoricalEmail()
     {
         $operator = $this->operator();
-        $seller = app(\App\Services\ManagedPhoneAccounts::class)->createSeller(Request::create('/', 'POST', $this->payload()), $operator);
+        $seller = app(\App\Services\ManagedPhoneAccounts::class)->createSeller($this->managedRequest(), $operator);
         $seller->phone = null; $seller->phone_normalized = null; $seller->phone_verified_at = null;
         $seller->email = 'legacy@example.test'; $seller->save();
         $seller->createToken('old-device');
@@ -601,7 +644,7 @@ class SellerPhoneRegistrationTest extends TestCase
     public function testSalesmanCanOnlyEditOwnSellersAndCannotStealAnotherNumber()
     {
         $operator = $this->operator('salesman');
-        $seller = app(\App\Services\ManagedPhoneAccounts::class)->createSeller(Request::create('/', 'POST', $this->payload()), $operator);
+        $seller = app(\App\Services\ManagedPhoneAccounts::class)->createSeller($this->managedRequest(), $operator);
         $shop = $seller->shop;
         $this->actingAs($operator)->patch(route('salesman.sellers.update', $shop->id), [
             'name' => 'Updated', 'phone' => $seller->phone,
@@ -669,7 +712,7 @@ class SellerPhoneRegistrationTest extends TestCase
         view()->share('errors', new \Illuminate\Support\ViewErrorBag);
         app('request')->setLaravelSession(app('session.store'));
         $operator = $this->operator(); $this->actingAs($operator);
-        $seller = app(\App\Services\ManagedPhoneAccounts::class)->createSeller(Request::create('/', 'POST', $this->payload()), $operator);
+        $seller = app(\App\Services\ManagedPhoneAccounts::class)->createSeller($this->managedRequest(), $operator);
         $html = app(\App\Http\Controllers\SellerController::class)->edit(encrypt($seller->shop->id))->render();
         $this->assertStringNotContainsString('name="email"', $html);
         $this->assertStringContainsString('name="phone" value="+60123456789"', $html);
@@ -694,5 +737,15 @@ class SellerPhoneRegistrationTest extends TestCase
                 ->assertStatus(422)->assertJsonValidationErrors('code');
         } finally { app()->instance('env', 'testing'); }
         $this->assertDatabaseCount('users', 0);
+    }
+
+    public function testUploaderMutationsRequireCsrfOutsideTheTestingBypass()
+    {
+        app()->instance('env', 'production');
+        try {
+            foreach (['/aiz-uploader', '/aiz-uploader/upload', '/aiz-uploader/get_file_by_ids'] as $url) {
+                $this->postJson($url, [])->assertStatus(419);
+            }
+        } finally { app()->instance('env', 'testing'); }
     }
 }

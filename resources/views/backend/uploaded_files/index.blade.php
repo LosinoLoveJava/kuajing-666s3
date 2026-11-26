@@ -45,10 +45,7 @@
     				}else{
     					$file_name = $file->file_original_name;
 	    			}
-                    $file_path = my_asset($file->file_name);
-                    if($file->external_link) {
-                        $file_path = $file->external_link;
-                    }
+                    $file_path = $file->url;
                     
     			@endphp
     			<div class="col-auto w-140px w-lg-220px">
@@ -62,11 +59,11 @@
     								<i class="las la-info-circle mr-2"></i>
     								<span>{{ translate('Details Info') }}</span>
     							</a>
-    							<a href="{{ my_asset($file->file_name) }}" target="_blank" download="{{ $file_name }}.{{ $file->extension }}" class="dropdown-item">
+							<a href="{{ $file->url }}" target="_blank" download="{{ $file_name }}.{{ $file->extension }}" class="dropdown-item">
     								<i class="la la-download mr-2"></i>
     								<span>{{ translate('Download') }}</span>
     							</a>
-    							<a href="javascript:void(0)" class="dropdown-item" onclick="copyUrl(this)" data-url="{{ my_asset($file->file_name) }}">
+							<a href="javascript:void(0)" class="dropdown-item" onclick="copyUrl(this)" data-url="{{ $file->url }}">
     								<i class="las la-clipboard mr-2"></i>
     								<span>{{ translate('Copy Link') }}</span>
     							</a>

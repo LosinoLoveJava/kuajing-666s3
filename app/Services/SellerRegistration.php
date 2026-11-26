@@ -17,22 +17,28 @@ class SellerRegistration
 {
     public function register(Request $request)
     {
+        $guestToken = Upload::guestToken($request);
+        $documentRule = Rule::exists('uploads', 'id')->where(function ($query) use ($guestToken) {
+            $query->where('user_id', 0)->where('guest_token', $guestToken)->where('type', 'image')
+                ->where('file_name', 'like', 'private/uploads/%');
+        });
         $data = $request->validate([
             'account_name' => 'required|string|max:191',
             'name' => 'required|string|max:191',
             'address' => 'required|string|max:500',
             'certtype' => ['required', Rule::in(['idcard', 'passport', 'driving license', 'mobile phone bill', 'water/electric bill'])],
-            'identity_card_front' => ['required', 'integer', Rule::exists('uploads', 'id')->where('user_id', 0)->where('type', 'image')],
-            'identity_card_back' => ['nullable', 'integer', Rule::exists('uploads', 'id')->where('user_id', 0)->where('type', 'image')],
+            'identity_card_front' => ['required', 'integer', $documentRule],
+            'identity_card_back' => ['nullable', 'integer', $documentRule],
         ]);
         $package = app(AccountMembership::class)->sellerPackage();
         if (!$package) {
             throw ValidationException::withMessages(['name' => translate('Sorry! Something went wrong.')]);
         }
 
-        return app(PhoneAuth::class)->register($request, function (User $user) use ($data, $package) {
+        return app(PhoneAuth::class)->register($request, function (User $user) use ($data, $package, $guestToken) {
             $uploads = array_values(array_unique(array_filter([$data['identity_card_front'], $data['identity_card_back'] ?? null])));
-            $available = DB::table('uploads')->where('user_id', 0)->whereIn('id', $uploads)->lockForUpdate()->get();
+            $available = DB::table('uploads')->where('user_id', 0)->where('guest_token', $guestToken)
+                ->whereIn('id', $uploads)->where('type', 'image')->where('file_name', 'like', 'private/uploads/%')->lockForUpdate()->get();
             if ($available->count() !== count($uploads)) {
                 throw ValidationException::withMessages(['identity_card_front' => translate('Choose File')]);
             }
@@ -73,7 +79,8 @@ class SellerRegistration
             $payment->save();
 
             // Claim only the documents submitted with this application.
-            Upload::where('user_id', 0)->whereIn('id', $uploads)->update(['user_id' => $user->id]);
+            Upload::where('user_id', 0)->where('guest_token', $guestToken)->whereIn('id', $uploads)
+                ->update(['user_id' => $user->id, 'guest_token' => null]);
         });
     }
 }

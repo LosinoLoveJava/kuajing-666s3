@@ -16,7 +16,7 @@ class AizUploadController extends Controller
     public function index(Request $request){
 
 
-        $all_uploads = (auth()->user()->user_type == 'seller') ? Upload::where('user_id',auth()->user()->id) : Upload::query();
+        $all_uploads = Upload::accessibleTo($request);
         $search = null;
         $sort_by = null;
 
@@ -60,6 +60,9 @@ class AizUploadController extends Controller
 
 
     public function show_uploader(Request $request){
+        if (!Auth::check()) {
+            Upload::guestToken($request);
+        }
         return view('uploader.aiz-uploader');
     }
     public function upload(Request $request){
@@ -103,6 +106,27 @@ class AizUploadController extends Controller
         if($request->hasFile('aiz_file')){
             $upload = new Upload;
             $extension = strtolower($request->file('aiz_file')->getClientOriginalExtension());
+
+            // Anonymous applications and explicitly selected identity documents never enter public storage.
+            if (!Auth::check() || $request->input('purpose') === 'identity') {
+                abort_unless(isset($type[$extension]), 422);
+                $path = $request->file('aiz_file')->store('private/uploads', 'private');
+                abort_unless($path, 503);
+                try {
+                    $upload->file_original_name = pathinfo($request->file('aiz_file')->getClientOriginalName(), PATHINFO_FILENAME);
+                    $upload->extension = $extension;
+                    $upload->file_name = $path;
+                    $upload->user_id = Auth::id() ?: 0;
+                    $upload->guest_token = Auth::check() ? null : Upload::guestToken($request);
+                    $upload->type = $type[$extension];
+                    $upload->file_size = $request->file('aiz_file')->getSize();
+                    $upload->save();
+                } catch (\Throwable $error) {
+                    Storage::disk('private')->delete($path);
+                    throw $error;
+                }
+                return response()->json((object) []);
+            }
 
             if(isset($type[$extension])){
                 $upload->file_original_name = null;
@@ -193,6 +217,9 @@ class AizUploadController extends Controller
                 $upload->extension = $extension;
                 $upload->file_name = $path;
                 $upload->user_id = Auth::check()?Auth::user()->id:0;
+                if (!Auth::check()) {
+                    $upload->guest_token = Upload::guestToken($request);
+                }
                 $upload->type = $type[$upload->extension];
                 $upload->file_size = $size;
                 $upload->save();
@@ -203,9 +230,9 @@ class AizUploadController extends Controller
 
     public function get_uploaded_files(Request $request)
     {
-        $uploads = Upload::where('user_id', 0);
-        if(Auth::check()){//用户未登录
-            $uploads = Upload::where('user_id', Auth::user()->id);
+        $uploads = Upload::accessibleTo($request);
+        if ($request->input('purpose') === 'identity') {
+            $uploads->where('file_name', 'like', 'private/uploads/%');
         }
         if ($request->search != null) {
             $uploads->where('file_original_name', 'like', '%'.$request->search.'%');
@@ -234,10 +261,11 @@ class AizUploadController extends Controller
 
     public function destroy(Request $request,$id)
     {
-        $upload = Upload::findOrFail($id);
-
-        if(auth()->user()->user_type == 'seller' && $upload->user_id != auth()->user()->id){
-            flash(translate("You don't have permission for deleting this!"))->error();
+        $upload = Upload::accessibleTo($request)->findOrFail($id);
+        if ($upload->isPrivate()) {
+            abort_unless(Storage::disk('private')->delete($upload->file_name), 503);
+            $upload->delete();
+            flash(translate('File deleted successfully'))->success();
             return back();
         }
         try{
@@ -262,13 +290,10 @@ class AizUploadController extends Controller
 
     public function get_preview_files(Request $request){
         $ids = explode(',', $request->ids);
-        $files = Upload::whereIn('id', $ids)->get();
+        $files = Upload::readableBy($request)->whereIn('id', $ids)->get();
         $new_file_array = [];
         foreach($files as $file){
-            $file['file_name'] = my_asset($file->file_name);
-            if($file->external_link) {
-                $file['file_name'] = $file->external_link;
-            }
+            $file['file_name'] = $file->url;
             $new_file_array[] = $file;
         }
         // dd($new_file_array);
@@ -277,22 +302,49 @@ class AizUploadController extends Controller
     }
 
     //Download project attachment
-    public function attachment_download($id)
+    public function attachment_download(Request $request, $id)
     {
-        $project_attachment = Upload::find($id);
+        $project_attachment = Upload::readableBy($request)->findOrFail($id);
+        if ($project_attachment->isPrivate()) {
+            return $this->privateResponse($project_attachment, true);
+        }
         try{
            $file_path = public_path($project_attachment->file_name);
-            return Response::download($file_path);
+            return Response::download($file_path, null, [
+                'Cache-Control' => 'private, no-store, max-age=0',
+                'CDN-Cache-Control' => 'no-store',
+            ])->setPrivate();
         }catch(\Exception $e){
             flash(translate('File does not exist!'))->error();
             return back();
         }
 
     }
+
+    public function private_file(Request $request, $id)
+    {
+        $file = Upload::readableBy($request)->findOrFail($id);
+        abort_unless($file->isPrivate(), 404);
+        return $this->privateResponse($file);
+    }
+
+    private function privateResponse(Upload $file, $download = false)
+    {
+        $path = Storage::disk('private')->path($file->file_name);
+        abort_unless(is_file($path), 404);
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($path);
+        $headers = ['Cache-Control' => 'private, no-store, max-age=0', 'CDN-Cache-Control' => 'no-store',
+            'Cloudflare-CDN-Cache-Control' => 'no-store', 'X-Content-Type-Options' => 'nosniff',
+            'Content-Security-Policy' => "default-src 'none'; sandbox"];
+        if (!$download && in_array($mime, ['image/jpeg', 'image/png', 'image/gif', 'image/webp'], true)) {
+            return response()->file($path, $headers)->setPrivate();
+        }
+        return response()->download($path, basename($file->file_original_name).'.'.$file->extension, $headers)->setPrivate();
+    }
     //Download project attachment
     public function file_info(Request $request)
     {
-        $file = Upload::findOrFail($request['id']);
+        $file = Upload::accessibleTo($request)->findOrFail($request['id']);
 
         return (auth()->user()->user_type == 'seller')
             ? view('seller.uploads.info',compact('file'))

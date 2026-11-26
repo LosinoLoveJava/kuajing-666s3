@@ -21,6 +21,7 @@ class MediaUploadTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $user = new \App\Models\User; $user->id = 1; $user->user_type = 'admin'; $this->actingAs($user);
         $this->root = sys_get_temp_dir().'/media-upload-'.bin2hex(random_bytes(8));
         mkdir($this->root, 0700);
         $this->app->instance('path.public', $this->root);
@@ -31,6 +32,7 @@ class MediaUploadTest extends TestCase
             $table->increments('id'); $table->string('file_original_name')->nullable();
             $table->string('file_name'); $table->integer('user_id'); $table->string('extension');
             $table->string('type'); $table->integer('file_size'); $table->timestamps();
+            $table->string('guest_token', 64)->nullable();
         });
     }
 
@@ -50,6 +52,7 @@ class MediaUploadTest extends TestCase
         $request = Request::create('/aiz-uploader/upload', 'POST', [], [], [
             'aiz_file'=>UploadedFile::fake()->createWithContent('sample.txt', 'test upload'),
         ]);
+        $request->setLaravelSession(app('session.store'));
         return app(AizUploadController::class)->upload($request);
     }
 

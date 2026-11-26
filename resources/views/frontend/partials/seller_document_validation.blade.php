@@ -10,7 +10,7 @@
     error.setAttribute('role', 'alert');
     error.textContent = @json(translate('Identity Card Front Not Allow Empty!'));
     error.hidden = true;
-    uploader.parentNode.insertBefore(error, uploader.nextSibling);
+    uploader.parentNode.appendChild(error);
     uploader.tabIndex = 0;
     uploader.setAttribute('aria-required', 'true');
     uploader.setAttribute('aria-describedby', error.id);

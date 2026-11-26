@@ -21,6 +21,7 @@
 !/tests/Feature/SellerStorehouseBulkAddTest.php
 !/tests/Feature/SellerWalletDisplayTest.php
 !/tests/Feature/SellerOrderDeliveryPermissionTest.php
+!/tests/Feature/UploadIsolationTest.php
 !/tests/Feature/WalletWorkflowTest.php
 !/tests/Feature/MalaysiaMarketTest.php
 !/tests/Feature/TurkishFrontendTest.php

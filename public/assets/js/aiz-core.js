@@ -213,6 +213,7 @@ $.fn.toggleAttr = function (attr, attr1, attr2) {
                 '<div class="align-items-center d-flex h-100 justify-content-center w-100"><div class="spinner-border" role="status"></div></div>'
             );
             var params = {};
+            params.purpose = AIZ.uploader.data.purpose || '';
             if (search_key != null && search_key.length > 0) {
                 params["search"] = search_key;
             }
@@ -659,6 +660,7 @@ $.fn.toggleAttr = function (attr, attr1, attr2) {
             // $("body").append('<div class="aiz-uploader-backdrop"></div>');
 
             var elem = $(elem);
+            AIZ.uploader.data.purpose = elem.data('purpose') || '';
             var multiple = multiple;
             var type = type;
             var oldSelectedFiles = selectd;
@@ -1124,6 +1126,7 @@ $.fn.toggleAttr = function (attr, attr1, attr2) {
                     autoProceed: true,
                     locale: AIZ.local.uppy ? {strings: AIZ.local.uppy} : undefined,
                 });
+                uppy.setMeta({ purpose: AIZ.uploader.data.purpose || '' });
                 uppy.use(Uppy.Dashboard, {
                     target: "#aiz-upload-files",
                     inline: true,
