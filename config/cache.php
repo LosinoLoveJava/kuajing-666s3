@@ -32,6 +32,12 @@ return [
 
     'stores' => [
 
+        // Counting guards must survive catalogue/page cache clears, including local array cache.
+        'shop_views' => [
+            'driver' => 'file',
+            'path' => storage_path('framework/cache/shop-views'),
+        ],
+
         'apc' => [
             'driver' => 'apc',
         ],

@@ -5,6 +5,7 @@
 !/tests/Feature/SellerBalanceDeductionTest.php
 !/tests/Feature/SellerDashboardPerformanceTest.php
 !/tests/Feature/ShopViewCounterTest.php
+!/tests/Feature/ShopVisitTest.php
 !/tests/Feature/PortalSessionIsolationTest.php
 !/tests/Feature/PortalDomainAliasesTest.php
 !/tests/Feature/SellerHomeEntryTest.php
@@ -66,6 +67,7 @@ yarn-error.log*
 !/storage/logs/.gitignore
 /storage/framework/cache/data/*
 !/storage/framework/cache/data/.gitignore
+/storage/framework/cache/shop-views/
 /storage/framework/sessions/*
 !/storage/framework/sessions/.gitignore
 /storage/framework/views/*

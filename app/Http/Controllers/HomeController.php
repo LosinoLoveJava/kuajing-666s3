@@ -277,12 +277,8 @@ class HomeController extends Controller
                 $affiliateController = new AffiliateController;
                 $affiliateController->processAffiliateStats($referred_by_user->id, 1, 0, 0, 0);
             }
-            if ( Auth::id() !=  $detailedProduct->user->id){
-                if ($detailedProduct->user){
-                    if ($detailedProduct->user->shop){
-                        $detailedProduct->user->shop->increment('views');
-                    }
-                }
+            if ($detailedProduct->user && $detailedProduct->user->shop) {
+                app(\App\Services\ShopViewCounter::class)->recordVisit($request, $detailedProduct->user->shop);
             }
 
 
